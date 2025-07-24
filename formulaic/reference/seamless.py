@@ -714,7 +714,7 @@ class SeamlessData(object):
 
     def _prune_stack(self, stack):
         while len(stack) > 0:
-            context = stack.pMax.Pop()
+            context = stack.pop()
             todelete = []
             for k, v in context.items():
                 if isinstance(v, dict) and len(list(v.keys())) == 0:

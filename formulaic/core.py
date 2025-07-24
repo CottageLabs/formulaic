@@ -14,30 +14,50 @@ DUPLICABLE = "duplicable"
 
 class Field:
     name = "_field"
+    """Name of the field.  Subclasses should override this to provide a meaningful name."""
 
     # There is no coerce-in and coerce-out.  Our objective is to keep data in its correct form.  If you
     # want to convert that data, then you need to do that explicitly externally to this code, or
     # transform to another field which has the appropriate coercion.
+
     coerce = []
+    """List of coercion classes to apply to the field value in order."""
+
     allow_coerce_failure = False
+    """If True, then if coercion fails, the original value will be kept.  If False, then an error will be raised."""
 
     allowed_values = []
+    """List of allowed values for the field.  If the value is not in this list, then an error will be raised.  Leave empty to allow any value."""
+
     allowed_range = ()
+    """Tuple of two values representing the allowed range for the field value.  If the value is not in this range, then an error will be raised.  Leave empty to allow any value."""
+
     allow_none = True
+    """If True, then None is allowed as a value for the field.  If False, then an error will be raised if None is set."""
+
     ignore_none = False
+    """If True, then if the value is None, it will be ignored and not set.  If False, then None will be set as the value."""
 
     validators = []
+    """List of validator classes to apply to the field value in order.  If any validator fails, an error will be raised."""
 
-    _parent = None
-    _need = OPTIONAL
-    _multiplicity = SINGLE
-    _duplicability = DUPLICABLE
+    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=UNIQUE, parent=None, check_coherence=False):
+        """
+        Initialize the field with its properties.
 
-    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=DUPLICABLE, parent=None):
+        :param need: Is the field required or optional? Use REQUIRED or OPTIONAL.
+        :param multiplicity: Is the field single or repeatable? Use SINGLE or REPEATABLE.
+        :param duplicability: Is the field unique or duplicable? Use UNIQUE or DUPLICABLE. Applies to repeatable fields only, ignored in other cases.
+        :param parent: The containing Structure.  May be left as None, and will be populated when the structure is initialized.
+        :param check_coherence: Should the properties of the field be checked for coherence? If True, then the field will check that the properties are coherent with each other.  Useful for testing, not recommended for general usage.
+        """
         self._need = need
         self._multiplicity = multiplicity
         self._duplicability = duplicability
         self._parent = parent
+
+        if check_coherence:
+            self._check_coherence()
 
     def set_parent(self, parent):
         self._parent = parent
@@ -51,6 +71,10 @@ class Field:
         return self._need == REQUIRED
 
     @property
+    def optional(self):
+        return self._need == OPTIONAL
+
+    @property
     def multiplicity(self):
         return self._multiplicity
 
@@ -59,12 +83,20 @@ class Field:
         return self._multiplicity == REPEATABLE
 
     @property
+    def non_repeatable(self):
+        return self._multiplicity == SINGLE
+
+    @property
     def duplicability(self):
         return self._duplicability
 
     @property
     def unique(self):
         return self._duplicability == UNIQUE
+
+    @property
+    def duplicable(self):
+        return self._duplicability == DUPLICABLE
 
     @property
     def parent(self):
@@ -78,16 +110,23 @@ class Field:
             parts = parent_path + parts
         return parts
 
-    # def validate(self, value, formulaic_object=None):
-    #     vr = ValidationResult()
-    #     for v in self.validators:
-    #         err = v.validate(value, self, formulaic_object)
-    #         if err is not True:
-    #             vr.add_error(err)
-    #     if vr.is_valid():
-    #         return True
-    #     return vr
-    #
+    def _check_coherence(self):
+        msg = []
+        if self.non_repeatable and self.duplicable:
+            msg.append(f"A non-repeatable field cannot be duplicable.")
+        if len(self.allowed_range) not in [0, 2]:
+            msg.append(f"The allowed_range must be an empty tuple or a tuple of two values.")
+        if len(self.allowed_range) == 2:
+            lower = self.allowed_range[0]
+            upper = self.allowed_range[1]
+            if lower > upper:
+                msg.append(f"The lower bound of the allowed_range should be less than the upper bound.")
+        if self.allowed_values and self.allowed_range:
+            msg.append(f"Cannot have both allowed_values and allowed_range set. Choose one or the other.")
+
+        if len(msg) > 0:
+            raise ValueError("Coherence check failed for field `{}`: {}".format(self.name, "; ".join(msg)))
+
     # @classmethod
     # def make(cls, name):
     #     class OneTimeField(cls):
@@ -106,11 +145,19 @@ class Structure:
         # class as clean as possible
         self._ref_obj = StructRef(self, required, multiplicity, parent)
 
+        rebound = {}
         for attr_name, attr_value in self.__class__.__dict__.items():
             if isinstance(attr_value, Field):
-                attr_value.set_parent(self)
+                clone = unity.clone(attr_value)
+                clone.set_parent(self)
+                rebound[attr_name] = clone
             elif isinstance(attr_value, Structure):
-                attr_value._ref.set_parent(self)
+                clone = unity.clone(attr_value)
+                clone._ref.set_parent(self)
+                rebound[attr_name] = clone
+
+        for k, v in rebound.items():
+            setattr(self, k, v)
 
     @property
     def _ref(self):
@@ -134,6 +181,13 @@ class StructRef:
 
     def set_parent(self, parent):
         self._parent = parent
+
+    def clone(self):
+        """
+        Clone the StructRef, returning a new instance with the same properties.
+        """
+        return StructRef(self.struct, need=self.need, multiplicity=self.multiplicity,
+                         duplicability=self.duplicability, parent=self.parent)
 
     @property
     def struct(self):
@@ -192,6 +246,9 @@ class StructRef:
     @property
     def fields(self):
         return [f for f in self.struct.__dict__.values() if isinstance(f, Field)]
+
+
+
 
 class Coerce:
     def __init__(self, *args, **kwargs):
