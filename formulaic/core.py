@@ -41,7 +41,7 @@ class Field:
     validators = []
     """List of validator classes to apply to the field value in order.  If any validator fails, an error will be raised."""
 
-    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=UNIQUE, parent=None, check_coherence=False):
+    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=UNIQUE, parent: "Structure"=None, check_coherence=False):
         """
         Initialize the field with its properties.
 
@@ -103,6 +103,16 @@ class Field:
         return self._parent
 
     @property
+    def root(self):
+        """
+        Returns the root structure of the field, which is the parent structure that does not have a parent.
+        """
+        if self.parent is None:
+            return self
+        else:
+            return self.parent._ref.root
+
+    @property
     def path(self):
         parts = [self.name]
         if self.parent is not None:
@@ -127,48 +137,27 @@ class Field:
         if len(msg) > 0:
             raise ValueError("Coherence check failed for field `{}`: {}".format(self.name, "; ".join(msg)))
 
+    def clone(self):
+        """
+        Clone the Field, returning a new instance with the same properties.
+        """
+        return self.__class__(need=self.need, multiplicity=self.multiplicity,
+                              duplicability=self.duplicability, parent=self.parent)
+
     # @classmethod
     # def make(cls, name):
     #     class OneTimeField(cls):
     #         name = name
     #     return OneTimeField
 
-class Structure:
-    _name = "_structure"
-
-    # subclasses should add their fields as class attributes
-    #
-    # my_field = MyField(REQUIRED, SINGLE)
-
-    def __init__(self, required=OPTIONAL, multiplicity=SINGLE, parent=None):
-        # separate the properties out into a reference object to keep this
-        # class as clean as possible
-        self._ref_obj = StructRef(self, required, multiplicity, parent)
-
-        rebound = {}
-        for attr_name, attr_value in self.__class__.__dict__.items():
-            if isinstance(attr_value, Field):
-                clone = unity.clone(attr_value)
-                clone.set_parent(self)
-                rebound[attr_name] = clone
-            elif isinstance(attr_value, Structure):
-                clone = unity.clone(attr_value)
-                clone._ref.set_parent(self)
-                rebound[attr_name] = clone
-
-        for k, v in rebound.items():
-            setattr(self, k, v)
-
-    @property
-    def _ref(self):
-        return self._ref_obj
 
 class StructRef:
-    def __init__(self, struct: Union[Structure, Structure.__class__],
+    def __init__(self, struct: Union["Structure", "Structure.__class__"],
                  need=OPTIONAL,
                  multiplicity=SINGLE,
                  duplicability=DUPLICABLE,
-                 parent=None):
+                 parent: "Structure"=None,
+                 **kwargs):
 
         if isinstance(struct, type):
             struct = struct()
@@ -186,7 +175,7 @@ class StructRef:
         """
         Clone the StructRef, returning a new instance with the same properties.
         """
-        return StructRef(self.struct, need=self.need, multiplicity=self.multiplicity,
+        return self.__class__(self.struct, need=self.need, multiplicity=self.multiplicity,
                          duplicability=self.duplicability, parent=self.parent)
 
     @property
@@ -222,6 +211,16 @@ class StructRef:
         return self._parent
 
     @property
+    def root(self):
+        """
+        Returns the root structure, which is the parent structure that does not have a parent.
+        """
+        if self.parent is None:
+            return self
+        else:
+            return self.parent._ref.root
+
+    @property
     def path(self):
         # if there is no container above this, then the path is empty, as this object
         # is the root of the structure
@@ -247,7 +246,63 @@ class StructRef:
     def fields(self):
         return [f for f in self.struct.__dict__.values() if isinstance(f, Field)]
 
+    @property
+    def all(self):
+        """
+        Returns all fields and structures in the structure
+        """
+        return [f for f in self.struct.__dict__.values() if isinstance(f, (Field, Structure))]
 
+    def by_name(self, name:str) -> Union[Field, "Structure", None]:
+        options = [f for f in self.struct.__dict__.values() if unity.name(f) == name]
+        if len(options) == 1:
+            return options[0]
+        elif len(options) > 1:
+            raise ValueError(f"Multiple fields found with name '{name}' in structure '{self.struct._name}'")
+        return None
+
+    def get_path(self, ref_str:str):
+        path = ref_str.split('.')
+        ctx = self
+        for part in path:
+            if isinstance(ctx, Field):
+                raise KeyError(f"Field '{ctx.name}' does not have subfields.")
+            ctx = ctx.by_name(part)
+            if ctx is None:
+                return None
+        return ctx
+
+
+class Structure:
+    _name = "_structure"
+    _ref_class = StructRef
+
+    # subclasses should add their fields as class attributes
+    #
+    # my_field = MyField(REQUIRED, SINGLE)
+
+    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=DUPLICABLE, parent=None, **kwargs):
+        # separate the properties out into a reference object to keep this
+        # class as clean as possible
+        self._ref_obj = self._ref_class(self, need, multiplicity, duplicability, parent, **kwargs)
+
+        rebound = {}
+        for attr_name, attr_value in self.__class__.__dict__.items():
+            if isinstance(attr_value, Field):
+                clone = unity.clone(attr_value)
+                clone.set_parent(self)
+                rebound[attr_name] = clone
+            elif isinstance(attr_value, Structure):
+                clone = unity.clone(attr_value)
+                clone._ref.set_parent(self)
+                rebound[attr_name] = clone
+
+        for k, v in rebound.items():
+            setattr(self, k, v)
+
+    @property
+    def _ref(self):
+        return self._ref_obj
 
 
 class Coerce:
@@ -261,7 +316,10 @@ class Validator:
     def __init__(self, *args, **kwargs):
         pass
 
-    def validate(self, val, field):
+    def validate(self, val, field, data):
+        pass
+
+    def html_attrs(self, attrs):
         pass
 
 class DataError(Exception):

@@ -34,9 +34,18 @@ def clone(f: Union["Field", "Structure"]) -> Union["Field", "Structure"]:
     from formulaic.core import Field, Structure
 
     if isinstance(f, Field):
-        return f.__class__(need=f.need, multiplicity=f.multiplicity,
-                              duplicability=f.duplicability, parent=f.parent)
+        return f.clone()
     elif isinstance(f, Structure):
-        return f.__class__(f._ref.need, f._ref.multiplicity, f._ref.parent)
+        return f._ref.clone()
+    else:
+        raise TypeError("Expected Field or Structure instance.")
+
+def get_prop(f: Union["Field", "Structure"], prop: str) -> Union[str, bool]:
+    from formulaic.core import Field, Structure
+
+    if isinstance(f, Field):
+        return getattr(f, prop)
+    elif isinstance(f, Structure):
+        return getattr(f._ref, prop)
     else:
         raise TypeError("Expected Field or Structure instance.")
