@@ -13,11 +13,16 @@ class HTMLGenerator:
         """
         if content is None:
             content = ''
-        attrs = ' '.join(f'{key}="{value}"' for key, value in attributes.items())
+
+        attrs = ""
+        if attributes is not None:
+            attrs = ' '.join(f'{key}="{value}"' for key, value in attributes.items())
+            attrs = " " + attrs if attrs else ""
+
         if close:
-            return f'<{tag_name} {attrs}>{content}</{tag_name}>'
+            return f'<{tag_name}{attrs}>{content}</{tag_name}>'
         else:
-            return f'<{tag_name} {attrs} />'
+            return f'<{tag_name}{attrs} />'
 
 # Form Controls
 #####################################
@@ -112,7 +117,7 @@ class TextInput(FormControl):
         return tags
 
     def draw(self):
-        super(TextInput, self).draw()
+        return super(TextInput, self).draw()
 
 class NumberInput(FormControl):
     def inputs_and_labels(self):
@@ -131,7 +136,7 @@ class NumberInput(FormControl):
         return tags
 
     def draw(self):
-        super(NumberInput, self).draw()
+        return super(NumberInput, self).draw()
 
 class Select(FormControl):
     def inputs_and_labels(self):
@@ -157,7 +162,7 @@ class Select(FormControl):
             option_tag = self._make_tag('option', attributes=opt_attrs, content=label)
             opt_tags.append(option_tag)
 
-        opts_frag = "\n".join(opt_tags)
+        opts_frag = "\n" + "\n".join(opt_tags) + "\n"
         select_tag = self._make_tag('select', attributes=attrs, content=opts_frag)
 
         label = self._owner.label or ""
@@ -167,7 +172,7 @@ class Select(FormControl):
         return tags
 
     def draw(self):
-        super(Select, self).draw()
+        return super(Select, self).draw()
 
 # Field Field/Entry Renderers
 ######################################
@@ -229,14 +234,14 @@ class DefaultFormRenderer(FormRenderer):
         for fs in fieldsets:
             r = fs.renderer(ctx, fs)
             fieldset_frags.append(r.draw())
-        fieldsets_frag = "\n".join(fieldset_frags)
+        fieldsets_frag = "\n" + "\n".join(fieldset_frags) + "\n"
 
         html = self._make_tag('form',
                        content=fieldsets_frag,
                        attributes={
                           "id": ctx.name + "_form",
-                          "action": None,
-                          "method": "method"
+                          "action": ctx.action,
+                          "method": ctx.method
                        }
                     )
 
@@ -249,14 +254,20 @@ class DefaultFieldsetRenderer(FieldsetRenderer):
         fields = self._context.get_fieldset_fields(fs)
         field_frags = []
         for f in fields:
-            r = f.field_renderer(self._context, f)
-            field_frags.append(r.draw())
-        fields_frag = "\n".join(field_frags)
+            r = None
+            if isinstance(f, FormField):
+                r = f.field_renderer(self._context, f)
+            elif isinstance(f, FormGroup):
+                r = f._form.group_renderer(self._context, f)
+            if r is not None:
+                field_frags.append(r.draw())
+
+        fields_frag = "\n" + "\n".join(field_frags) + "\n"
 
         html = self._make_tag('fieldset',
                               content=fields_frag,
                               attributes={
-                                  id: fs.name + "_fieldset",
+                                  "id": fs.name + "_fieldset",
                               }
                             )
 
@@ -264,8 +275,9 @@ class DefaultFieldsetRenderer(FieldsetRenderer):
 
 class DefaultFieldRenderer(FieldRenderer):
     def draw(self):
-        control = self._field.control
+        control = self._field.get_control()
         field_frag = control.draw()
+        field_frag = "\n" + field_frag + "\n"
         html = self._make_tag("div", content=field_frag)
         return html
 
@@ -274,11 +286,17 @@ class DefaultFieldEntryRenderer(FieldEntryRenderer):
 
 class DefaultGroupRenderer(GroupRenderer):
     def draw(self):
-        return "Group Renderer not implemented"
-        # form_info = self._structure._form
-        # label = form_info.label or ""
-        # html = self._make_tag("div", content=group_frag)
-        # return html
+        subs = self._structure._ref.all
+        frag = []
+        for sub in subs:
+            if isinstance(sub, FormField):
+                r = sub.field_renderer(self._context, sub)
+                frag.append(r.draw())
+            elif isinstance(sub, FormGroup):
+                r = sub._form.group_renderer(self._context, sub)
+                frag.append(r.draw())
+        group_frag = "\n".join(frag)
+        return group_frag
 
 class DefaultGroupEntryRenderer(GroupEntryRenderer):
     pass
@@ -361,6 +379,11 @@ class FormField(Field):
         elif callable(self.options):
             return self.options()
         return []
+
+    def get_control(self):
+        if self.control is None:
+            raise ValueError("Field control not defined")
+        return self.control(self)
 
     @property
     def fieldset(self):

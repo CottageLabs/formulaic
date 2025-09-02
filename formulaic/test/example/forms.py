@@ -112,7 +112,7 @@ class OAStatementURL(DOAJFormField):
 
 
 class APC(FormField):
-    name = "apc",
+    name = "apc"
     coerce = [Boolean]
     allow_none = False
 
@@ -137,7 +137,7 @@ class APCCurrency(DOAJFormField):
 
     label = "What is the currency of the APC?"
     control = Select
-    options = lambda: currency_list()
+    options = lambda x: currency_list()
     placeholder = "Currency"
     default = ""
     js = ["select"]
@@ -205,6 +205,7 @@ class PublicApplicationFormContext(FormContext):
     name = "public_application_form_context"
     form = PublicApplicationForm()
     action = "/application"
+    method = "POST"
     fieldset_ordering = [
         BasicCompliance,
         APCFieldset
