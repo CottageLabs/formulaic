@@ -127,10 +127,13 @@ class TestStructure(TestCase):
 
         assert nr.need == REQUIRED
         assert nr.required is True
+        assert nr.optional is False
         assert nr.multiplicity == SINGLE
         assert nr.repeatable is False
+        assert nr.non_repeatable is True
         assert nr.duplicability == DUPLICABLE
         assert nr.unique is False
+        assert nr.duplicable is True
 
         field = nr.by_name("field_b")
         assert field.name == "field_b"

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Callable, Tuple, Any
 
 from formulaic.lib import unity
 
@@ -18,35 +18,39 @@ class Field:
     local use, and refinement modules (e.g. forms) may subclass this to provide additional functionality.
     """
 
-    name = "_field"
+    name:str = "_field"
     """Name of the field.  Subclasses should override this to provide a meaningful name."""
 
     # There is no coerce-in and coerce-out.  Our objective is to keep data in its correct form.  If you
     # want to convert that data, then you need to do that explicitly externally to this code, or
     # transform to another field which has the appropriate coercion.
 
-    coerce = []
+    coerce:list[Callable] = []
     """List of coercion classes to apply to the field value in order."""
 
-    allow_coerce_failure = False
+    allow_coerce_failure:bool = False
     """If True, then if coercion fails, the original value will be kept.  If False, then an error will be raised."""
 
-    allowed_values = []
+    allowed_values:list[str] = []
     """List of allowed values for the field.  If the value is not in this list, then an error will be raised.  Leave empty to allow any value."""
 
-    allowed_range = ()
+    allowed_range:Tuple[Any, Any] = ()
     """Tuple of two values representing the allowed range for the field value.  If the value is not in this range, then an error will be raised.  Leave empty to allow any value."""
 
-    allow_none = True
+    allow_none:bool = True
     """If True, then None is allowed as a value for the field.  If False, then an error will be raised if None is set."""
 
-    ignore_none = False
+    ignore_none:bool = False
     """If True, then if the value is None, it will be ignored and not set.  If False, then None will be set as the value."""
 
-    validators = []
+    validators:list["Validator"] = []
     """List of validator classes to apply to the field value in order.  If any validator fails, an error will be raised."""
 
-    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=UNIQUE, parent: "Structure"=None, check_coherence=False):
+    def __init__(self, need:str=OPTIONAL,
+                 multiplicity:str=SINGLE,
+                 duplicability:str=UNIQUE,
+                 parent: "Structure"=None,
+                 check_coherence:bool=False):
         """
         Initialize the field with its properties.
 
@@ -65,51 +69,51 @@ class Field:
             self._check_coherence()
 
     @property
-    def need(self):
+    def need(self) -> str:
         return self._need
 
     @property
-    def required(self):
+    def required(self) -> bool:
         return self._need == REQUIRED
 
     @property
-    def optional(self):
+    def optional(self) -> bool:
         return self._need == OPTIONAL
 
     @property
-    def multiplicity(self):
+    def multiplicity(self) -> str:
         return self._multiplicity
 
     @property
-    def repeatable(self):
+    def repeatable(self) -> bool:
         return self._multiplicity == REPEATABLE
 
     @property
-    def non_repeatable(self):
+    def non_repeatable(self) -> bool:
         return self._multiplicity == SINGLE
 
     @property
-    def duplicability(self):
+    def duplicability(self) -> str:
         return self._duplicability
 
     @property
-    def unique(self):
+    def unique(self) -> bool:
         return self._duplicability == UNIQUE
 
     @property
-    def duplicable(self):
+    def duplicable(self) -> bool:
         return self._duplicability == DUPLICABLE
 
     @property
-    def parent(self):
+    def parent(self) -> Union[None, "Structure"]:
         return self._parent
 
     @parent.setter
-    def parent(self, parent):
+    def parent(self, parent: "Structure"):
         self._parent = parent
 
     @property
-    def root(self):
+    def root(self) -> Union["Field", "Structure"]:
         """
         Returns the root structure of the field, which is the parent structure that does not have a parent.
         """
@@ -119,7 +123,11 @@ class Field:
             return self.parent._ref.root
 
     @property
-    def path(self):
+    def path(self) -> list[str]:
+        """
+        Returns the path to this field from the root structure as a list of names.
+        :return:
+        """
         parts = [self.name]
         if self.parent is not None:
             parent_path = self.parent._ref.path
@@ -127,6 +135,10 @@ class Field:
         return parts
 
     def _check_coherence(self):
+        """
+        Check the coherence of the field properties.  Raises a ValueError if any incoherence is found.
+        :return:
+        """
         msg = []
         if self.non_repeatable and self.duplicable:
             msg.append(f"A non-repeatable field cannot be duplicable.")
@@ -146,6 +158,9 @@ class Field:
     def clone(self):
         """
         Clone the Field, returning a new instance with the same properties.
+
+        Subclasses of Field that add features will need to override this method to ensure the
+        clones are suitable
         """
         return self.__class__(need=self.need, multiplicity=self.multiplicity,
                               duplicability=self.duplicability, parent=self.parent)
@@ -162,9 +177,9 @@ class StructRef:
     In addition, it provides interrogative functions, such as listing all fields, structures, required fields, etc.
     """
     def __init__(self, struct: Union["Structure", "Structure.__class__"],
-                 need=OPTIONAL,
-                 multiplicity=SINGLE,
-                 duplicability=DUPLICABLE,
+                 need:str=OPTIONAL,
+                 multiplicity:str=SINGLE,
+                 duplicability:str=DUPLICABLE,
                  parent: "Structure"=None,
                  **kwargs):
         """
@@ -191,54 +206,71 @@ class StructRef:
     def clone(self):
         """
         Clone the inner Structure, returning a new instance with the same properties.
+
+        Subclasses of StructRef that add features will need to override this method to ensure the
+        clones are suitable
         """
         return self.struct.__class__(need=self.need, multiplicity=self.multiplicity,
                          duplicability=self.duplicability, parent=self.parent)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.struct._name
 
     @property
-    def struct(self):
+    def struct(self) -> "Structure":
         return self._struct
 
     @property
-    def need(self):
+    def need(self) -> str:
         return self._need
 
     @property
-    def required(self):
+    def required(self) -> bool:
         return self._need == REQUIRED
 
     @property
-    def multiplicity(self):
+    def optional(self) -> bool:
+        return self._need == OPTIONAL
+
+    @property
+    def multiplicity(self) -> str:
         return self._multiplicity
 
     @property
-    def repeatable(self):
+    def repeatable(self) -> bool:
         return self._multiplicity == REPEATABLE
 
     @property
-    def duplicability(self):
+    def non_repeatable(self) -> bool:
+        return self._multiplicity == SINGLE
+
+    @property
+    def duplicability(self) -> str:
         return self._duplicability
 
     @property
-    def unique(self):
+    def unique(self) -> bool:
         return self._duplicability == UNIQUE
 
     @property
-    def parent(self):
+    def duplicable(self) -> bool:
+        return self._duplicability == DUPLICABLE
+
+    @property
+    def parent(self) -> Union[None, "Structure"]:
         return self._parent
 
     @parent.setter
-    def parent(self, parent):
+    def parent(self, parent: "Structure"):
         self._parent = parent
 
     @property
-    def root(self):
+    def root(self) -> "Structure":
         """
-        Returns the root structure, which is the parent structure that does not have a parent.
+        Returns the root structure, which is the first ancestral structure that does not itself have a parent.
+
+        If the structure has no parent, then it is the root, and so the structure itself is returned.
         """
         if self.parent is None:
             return self.struct
@@ -246,9 +278,17 @@ class StructRef:
             return self.parent._ref.root
 
     @property
-    def path(self):
-        # if there is no container above this, then the path is empty, as this object
-        # is the root of the structure
+    def path(self) -> list[str]:
+        """
+        Returns the path to this structure from the root structure as a list of names.
+
+        Note that the name of the root structure is not included; this is the path from the root structure TO this
+        point
+
+        Therefore, if this structure is the root structure, the path is an empty list.
+
+        :return:
+        """
         if self.parent is None or not hasattr(self.parent, '_ref'):
             return []
         parent_path = self.parent._ref.path
@@ -256,29 +296,51 @@ class StructRef:
         return parts
 
     @property
-    def all_required(self):
+    def all_required(self) -> list[Union["Field", "Structure"]]:
+        """
+        Return all fields and structures which are required in this structure
+        :return:
+        """
         return [f for f in self.struct.__dict__.values() if unity.is_required(f)]
 
     @property
-    def structures(self):
+    def structures(self) -> list["Structure"]:
+        """
+        Return all structures contained in this structure
+        :return:
+        """
         return [f for f in self.struct.__dict__.values() if isinstance(f, Structure)]
 
     @property
-    def all_names(self):
+    def all_names(self) -> list[str]:
+        """
+        Return the names of all fields and structures in this structure
+        :return:
+        """
         return [unity.name(f) for f in self.all]
 
     @property
-    def fields(self):
+    def fields(self) -> list[Field]:
+        """
+        Return all fields contained in this structure
+        :return:
+        """
         return [f for f in self.struct.__dict__.values() if isinstance(f, Field)]
 
     @property
-    def all(self):
+    def all(self) -> list[Union[Field, "Structure"]]:
         """
         Returns all fields and structures in the structure
         """
         return [f for f in self.struct.__dict__.values() if isinstance(f, (Field, Structure))]
 
     def by_name(self, name:str) -> Union[Field, "Structure", None]:
+        """
+        Return the field or structure with the given name, or None if not found.  If multiple fields or structures
+        are found with the same name, a ValueError is raised.
+        :param name:
+        :return:
+        """
         options = [f for f in self.all if unity.name(f) == name]
         if len(options) == 1:
             return options[0]
@@ -286,7 +348,14 @@ class StructRef:
             raise ValueError(f"Multiple fields found with name '{name}' in structure '{self.struct._name}'")
         return None
 
-    def get_path(self, ref_str:Union[str, list[str]]):
+    def get_path(self, ref_str:Union[str, list[str]]) -> Union[Field, "Structure", None]:
+        """
+        Get a field or structure by its path, given as a dot-separated string or a list of names, relative to this
+        structure.
+
+        :param ref_str:
+        :return:
+        """
         if isinstance(ref_str, list):
             path = ref_str
         else:
@@ -303,18 +372,70 @@ class StructRef:
 
 
 class Structure:
-    _name = "_structure"
-    _ref_class = StructRef
+    """
+    Core structure class.
 
-    # subclasses should add their fields as class attributes
-    #
-    # my_field = MyField(REQUIRED, SINGLE)
+    This class uses 3 "private" attributes:
 
-    def __init__(self, need=OPTIONAL, multiplicity=SINGLE, duplicability=DUPLICABLE, parent=None, **kwargs):
+    * _name: the name of the structure.  This is equivalent to the `name` property of a `Field`.
+    * _ref_class: the class to use for the `_ref` property.  Defaults to `StructRef`.
+    * _ref: an instance of the `_ref_class`, providing all the properties and methods for the structure.
+
+    Use of these allows the remaining properties of the class to be the nested fields and structures, and provides
+    a clean way to navigate the structure.
+
+    For example, if you have a structure like this:
+
+    ```
+    class MyStructure:
+        _name = "my_structure"
+        field_a = FieldA(REQUIRED, SINGLE)
+        field_b = FieldA(OPTIONAL, REPEATABLE)
+        nested_structure = NestedStructure(REQUIRED, SINGLE)
+    ```
+
+    You may access the fields and structures like this:
+
+    ```
+    mine = MyStructure()
+    mine.field_a
+    mine.field_b
+    mine.nested_structure
+    ```
+
+    The `_ref` property provides all the methods and properties you need
+    to interrogate the structure using a similar API to that as you would have for a Field.  In order to use it
+    you must access the "private" `_ref` property, like this:
+
+    ```
+    mine._ref.all_required
+    mine._ref.structures
+    mine._ref.all_names
+    ```
+
+    and so on.
+
+    Note also that when a Structure is instantiated it will clone all its fields and nested structures, so that
+    each instance is independent of any other instance.  This is what allows structures and fields to be
+    easily reused in different contexts within the same codebase and execution thread.
+
+    """
+    _name:str = "_structure"
+    """Name of the structure.  Subclasses should override this to provide a meaningful name."""
+
+    _ref_class:StructRef = StructRef
+    """The class to use for the structure reference.  Subclasses may override this to provide a custom reference class."""
+
+    def __init__(self, need:str=OPTIONAL,
+                 multiplicity:str=SINGLE,
+                 duplicability:str=DUPLICABLE,
+                 parent:"Structure"=None,
+                 **kwargs):
         # separate the properties out into a reference object to keep this
         # class as clean as possible
         self._ref_obj = self._ref_class(self, need, multiplicity, duplicability, parent, **kwargs)
 
+        # now clone all the fields and structures, and set their parent to this structure
         rebound = {}
         for attr_name, attr_value in self.__class__.__dict__.items():
             if isinstance(attr_value, Field):
@@ -326,11 +447,12 @@ class Structure:
                 clone._ref.parent = self
                 rebound[attr_name] = clone
 
+        # set all the cloned fields and structures onto this instance
         for k, v in rebound.items():
             setattr(self, k, v)
 
     @property
-    def _ref(self):
+    def _ref(self) -> StructRef:
         return self._ref_obj
 
 
