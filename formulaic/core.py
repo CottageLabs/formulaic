@@ -1,6 +1,6 @@
 from typing import Union, Callable, Tuple, Any
 
-from formulaic.lib import unity
+from formulaic.lib import unity, introspection
 
 OPTIONAL = "optional"
 REQUIRED = "required"
@@ -301,7 +301,7 @@ class StructRef:
         Return all fields and structures which are required in this structure
         :return:
         """
-        return [f for f in self.struct.__dict__.values() if unity.is_required(f)]
+        return [f for _, f in introspection.attributes(self.struct) if unity.is_required(f)]
 
     @property
     def structures(self) -> list["Structure"]:
@@ -309,7 +309,7 @@ class StructRef:
         Return all structures contained in this structure
         :return:
         """
-        return [f for f in self.struct.__dict__.values() if isinstance(f, Structure)]
+        return [f for _, f in introspection.attributes(self.struct) if isinstance(f, Structure)]
 
     @property
     def all_names(self) -> list[str]:
@@ -325,14 +325,14 @@ class StructRef:
         Return all fields contained in this structure
         :return:
         """
-        return [f for f in self.struct.__dict__.values() if isinstance(f, Field)]
+        return [f for _, f in introspection.attributes(self.struct) if isinstance(f, Field)]
 
     @property
     def all(self) -> list[Union[Field, "Structure"]]:
         """
         Returns all fields and structures in the structure
         """
-        return [f for f in self.struct.__dict__.values() if isinstance(f, (Field, Structure))]
+        return [f for _, f in introspection.attributes(self.struct) if isinstance(f, (Field, Structure))]
 
     def by_name(self, name:str) -> Union[Field, "Structure", None]:
         """
@@ -437,7 +437,7 @@ class Structure:
 
         # now clone all the fields and structures, and set their parent to this structure
         rebound = {}
-        for attr_name, attr_value in self.__class__.__dict__.items():
+        for attr_name, attr_value in introspection.attributes(self.__class__): #self.__class__.__dict__.items():
             if isinstance(attr_value, Field):
                 clone = unity.clone(attr_value)
                 clone.parent = self

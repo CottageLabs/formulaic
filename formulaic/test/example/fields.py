@@ -1,6 +1,7 @@
 from formulaic.core import Field, Coerce
 from formulaic.coerce import Unicode, Integer, LowerCase, UpperCaseUnicode
 from formulaic.fields import BasicUnicode, BasicBoolean, DateField, UTCDateTimeField, IntegerField
+from formulaic.schema.es7x import ES7xStorableField
 from formulaic.validate import IsURL
 from formulaic.test.example.validate import IsISSN
 
@@ -55,236 +56,257 @@ class URL(Field):
     coerce = [Unicode]
     validators = [IsURL]
 
+class ES7xKeywordField(ES7xStorableField):
+    es_keyword_field = True
+    es_keyword_ignore_above = 0 # no limit
+
+class ES7xDateOptionalTime(ES7xStorableField):
+    es_type = "date"
+    es_format = "date_optional_time"
+
+class ES7xBoolean(ES7xStorableField):
+    es_type = "boolean"
+
+class ES7xInteger(ES7xStorableField):
+    es_type="long"
+
+class ES7xYear(ES7xStorableField):
+    es_type = "date"
+    es_format = "year"
+
+class ES7xNotIndexed(ES7xStorableField):
+    es_index = False
+
 #############################################
 ## Common reusable fields
 
-class ID(BasicUnicode):
+class ID(BasicUnicode, ES7xKeywordField):
     name = "id"
 
-class CreatedDate(UTCDateTimeField):
+class CreatedDate(UTCDateTimeField, ES7xDateOptionalTime):
     name = "created_date"
 
-class LastUpdated(UTCDateTimeField):
+class LastUpdated(UTCDateTimeField, ES7xDateOptionalTime):
     name = "last_updated"
 
-class Scheme(BasicUnicode):
+class Scheme(BasicUnicode, ES7xKeywordField):
     name = "scheme"
 
-class Value(BasicUnicode):
+class Value(BasicUnicode, ES7xKeywordField):
     name = "value"
 
-class Name(BasicUnicode):
+class Name(BasicUnicode, ES7xKeywordField):
     name = "name"
 
-class Country(Field):
+class Country(ES7xKeywordField, Field):
     name = "country"
     coerce = [CountryCode]
     allow_coerce_failure = True
 
-class ESType(BasicUnicode):
+class ESType(BasicUnicode, ES7xKeywordField):
     name = "es_type"
 
 ############################################
 # Field elements
 
-class AlternativeTitle(BasicUnicode):
+class AlternativeTitle(BasicUnicode, ES7xKeywordField):
     name = "alternative_title"
 
-class BOAI(BasicBoolean):
+class BOAI(BasicBoolean, ES7xBoolean):
     name = "boai"
 
-class EISSN(ISSN):
+class EISSN(ISSN, ES7xKeywordField):
     name = "eissn"
 
-class PISSN(ISSN):
+class PISSN(ISSN, ES7xKeywordField):
     name = "pissn"
 
-class DiscontinuedDate(DateField):
+class DiscontinuedDate(DateField, ES7xDateOptionalTime):
     name = "discontinued_date"
 
-class PublicationTimeWeeks(IntegerField):
+class PublicationTimeWeeks(IntegerField, ES7xInteger):
     name = "publication_tile_weeks"
 
-class Title(BasicUnicode):
+class Title(BasicUnicode, ES7xKeywordField):
     name = "title"
 
-class OAStart(IntegerField):
+class OAStart(IntegerField, ES7xInteger):
     name = "oa_start"
 
-class IsReplacedBy(ISSN):
+class IsReplacedBy(ISSN, ES7xKeywordField):
     name = "is_replaced_by"
     allow_coerce_failure = True
 
-class Keywords(Field):
+class Keywords(ES7xKeywordField, Field):
     name = "keywords"
     corece = [Unicode, LowerCase],
 
-class Language(Field):
+class Language(ES7xKeywordField, Field):
     name = "language"
     coerce = [ISOLang2LetterLax]
 
-class Replaces(ISSN):
+class Replaces(ISSN, ES7xKeywordField):
     name = "replaces"
     allow_coerce_failure = True
 
-class Labels(BasicUnicode):
+class Labels(BasicUnicode, ES7xKeywordField):
     name = "labels"
     allowed_values = ["s2o"]
 
-class HasAPC(BasicBoolean):
+class HasAPC(BasicBoolean, ES7xBoolean):
     name = "has_apc"
 
-class Currency(Field):
+class Currency(ES7xKeywordField, Field):
     name = "currency"
     coerce = [CurrencyCodeLax]
 
-class Price(Field):
+class Price(ES7xInteger, Field):
     name = "price"
     coerce = [Integer]
 
-class LicenceDisplayExampleURL(URL):
+class LicenceDisplayExampleURL(URL, ES7xKeywordField):
     name = "license_display_example_url"
 
-class LicenceDisplay(BasicUnicode):
+class LicenceDisplay(BasicUnicode, ES7xKeywordField):
     name = "license_display"
     allowed_values = ["Embed", "Display", "No"]
 
-class AuthorRetainsCopyright(BasicBoolean):
+class AuthorRetainsCopyright(BasicBoolean, ES7xBoolean):
     name = "author_retains"
 
-class HasPolicy(BasicBoolean):
+class HasPolicy(BasicBoolean, ES7xBoolean):
     name = "has_policy"
 
-class IsRegistered(BasicBoolean):
+class IsRegistered(BasicBoolean, ES7xBoolean):
     name = "is_registered"
 
-class DepositPolicyService(BasicUnicode):
+class DepositPolicyService(BasicUnicode, ES7xKeywordField):
     name = "service"
 
-class ReviewURL(URL):
+class ReviewURL(URL, ES7xKeywordField):
     name = "review_url"
 
-class BoardURL(URL):
+class BoardURL(URL, ES7xKeywordField):
     name = "board_url"
 
-class ReviewProcess(BasicUnicode):
+class ReviewProcess(BasicUnicode, ES7xKeywordField):
     name = "review_process"
 
-class Type(BasicUnicode):
+class Type(BasicUnicode, ES7xKeywordField):
     name = "type"
 
-class BY(BasicBoolean):
+class BY(BasicBoolean, ES7xBoolean):
     name = "BY"
 
-class NC(BasicBoolean):
+class NC(BasicBoolean, ES7xBoolean):
     name = "NC"
 
-class ND(BasicBoolean):
+class ND(BasicBoolean, ES7xBoolean):
     name = "ND"
 
-class SA(BasicBoolean):
+class SA(BasicBoolean, ES7xBoolean):
     name = "SA"
 
-class HasOtherCharges(BasicBoolean):
+class HasOtherCharges(BasicBoolean, ES7xBoolean):
     name = "has_other_charges"
 
-class HasPIDScheme(BasicBoolean):
+class HasPIDScheme(BasicBoolean, ES7xBoolean):
     name = "has_pid_scheme"
 
-class PlagiarismDetection(BasicBoolean):
+class PlagiarismDetection(BasicBoolean, ES7xBoolean):
     name = "detection"
 
-class HasPreservation(BasicBoolean):
+class HasPreservation(BasicBoolean, ES7xBoolean):
     name = "has_preservation"
 
-class NationalLibrary(BasicUnicode):
+class NationalLibrary(BasicUnicode, ES7xKeywordField):
     name = "national_library"
 
-class PreservationService(BasicUnicode):
+class PreservationService(BasicUnicode, ES7xKeywordField):
     name = "service"
 
-class OAStatement(URL):
+class OAStatement(URL, ES7xKeywordField):
     name = "oa_statement"
 
-class Journal(URL):
+class Journal(URL, ES7xKeywordField):
     name = "journal"
 
-class AimsScope(URL):
+class AimsScope(URL, ES7xKeywordField):
     name = "aims_scope"
 
-class AuthorInstructions(URL):
+class AuthorInstructions(URL, ES7xKeywordField):
     name = "author_instructions"
 
-class LicenseTerms(URL):
+class LicenseTerms(URL, ES7xKeywordField):
     name = "license_terms"
 
-class Code(BasicUnicode):
+class Code(BasicUnicode, ES7xKeywordField):
     name = "code"
 
-class Term(BasicUnicode):
+class Term(BasicUnicode, ES7xKeywordField):
     name = "term"
 
-class HasWaiver(BasicBoolean):
+class HasWaiver(BasicBoolean, ES7xBoolean):
     name = "has_waiver"
 
-class LastManualUpdate(UTCDateTimeField):
+class LastManualUpdate(UTCDateTimeField, ES7xDateOptionalTime):
     name = "last_manual_update"
 
-class Owner(BasicUnicode):
+class Owner(BasicUnicode, ES7xKeywordField):
     name = "owner"
 
-class EditorGroup(BasicUnicode):
+class EditorGroup(BasicUnicode, ES7xKeywordField):
     name = "editor_group"
 
-class Editor(BasicUnicode):
+class Editor(BasicUnicode, ES7xKeywordField):
     name = "editor"
 
-class Note(BasicUnicode):
+class Note(BasicUnicode, ES7xKeywordField):
     name = "note"
 
-class Date(UTCDateTimeField):
+class Date(UTCDateTimeField, ES7xDateOptionalTime):
     name = "date"
 
-class AuthorID(BasicUnicode):
+class AuthorID(BasicUnicode, ES7xKeywordField):
     name = "author_id"
 
 ###############################################
 # Journal specific fields
 
-class InDOAJ(BasicBoolean):
+class InDOAJ(BasicBoolean, ES7xBoolean):
     name = "in_doaj"
 
-class Ticked(BasicBoolean):
+class Ticked(BasicBoolean, ES7xBoolean):
     name = "ticked"
 
-class CurrentApplication(BasicUnicode):
+class CurrentApplication(BasicUnicode, ES7xKeywordField):
     name = "current_application"
 
-class ApplicationID(BasicUnicode):
+class ApplicationID(BasicUnicode, ES7xKeywordField):
     name = "application_id"
 
-class DateAccepted(UTCDateTimeField):
+class DateAccepted(UTCDateTimeField, ES7xDateOptionalTime):
     name = "date_accepted"
 
-class RelatedApplicationStatus(BasicUnicode):
+class RelatedApplicationStatus(BasicUnicode, ES7xKeywordField):
     name = "status"
 
 ###############################################
 ## Application specific fields
 
-class CurrentJournal(BasicUnicode):
+class CurrentJournal(BasicUnicode, ES7xKeywordField):
     name = "current_journal"
 
-class RelatedJournal(BasicUnicode):
+class RelatedJournal(BasicUnicode, ES7xKeywordField):
     name = "related_journal"
 
-class ApplicationStatus(BasicUnicode):
+class ApplicationStatus(BasicUnicode, ES7xKeywordField):
     name = "application_status"
 
-class DateApplication(UTCDateTimeField):
+class DateApplication(UTCDateTimeField, ES7xDateOptionalTime):
     name = "date_applied"
 
-class ApplicationType(BasicUnicode):
+class ApplicationType(BasicUnicode, ES7xKeywordField):
     name = "application_type"
 
 ###############################################
