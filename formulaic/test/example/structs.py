@@ -18,7 +18,7 @@ class APC(Structure):
 
     has_apc = fields.HasAPC(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
-    max = MaxAPC(OPTIONAL, SINGLE)
+    max = MaxAPC(OPTIONAL, REPEATABLE)
 
 ############################
 

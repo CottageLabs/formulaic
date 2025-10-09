@@ -104,6 +104,12 @@ class Field:
     def duplicable(self) -> bool:
         return self._duplicability == DUPLICABLE
 
+    def has_allowed_range(self) -> bool:
+        return len(self.allowed_range) == 2
+
+    def has_allowed_values(self) -> bool:
+        return len(self.allowed_values) > 0
+
     @property
     def parent(self) -> Union[None, "Structure"]:
         return self._parent
@@ -149,7 +155,7 @@ class Field:
             upper = self.allowed_range[1]
             if lower > upper:
                 msg.append(f"The lower bound of the allowed_range should be less than the upper bound.")
-        if self.allowed_values and self.allowed_range:
+        if self.has_allowed_values() and self.has_allowed_range():
             msg.append(f"Cannot have both allowed_values and allowed_range set. Choose one or the other.")
 
         if len(msg) > 0:
@@ -455,6 +461,8 @@ class Structure:
     def _ref(self) -> StructRef:
         return self._ref_obj
 
+###########################################
+## Coercion and Validation
 
 class Coerce:
     def __init__(self, *args, **kwargs):
@@ -473,8 +481,11 @@ class Validator:
     def html_attrs(self, attrs):
         pass
 
+#########################################
+## Exceptions and Error Handling
+
 class DataError(Exception):
-    def __init__(self, field, original_value, code, **kwargs):
+    def __init__(self, field:Union[Field, Structure], original_value, code, **kwargs):
         super(Exception, self).__init__(field, original_value, code, kwargs)
         self.field = field
         self.original_value = original_value
@@ -524,3 +535,4 @@ class DataProcessingResult(Exception):
 
     def merge(self, other):
         self.errors.extend(other.errors)
+

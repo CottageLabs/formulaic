@@ -197,7 +197,7 @@ def set_single(reference: Union[Field, Structure, StructRef], value, data: dict,
     if isinstance(reference, Field):
         if value is None and reference.ignore_none:
             return None
-        value = apply_field_constraints(reference, value)
+        value = apply_field_constraints(reference, value, data)
 
     elif isinstance(reference, StructRef):
         value = apply_structure(reference.struct, value, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
@@ -238,7 +238,7 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
                 # if we are dealing with a StructRef, we need to apply the structure to the value
                 v = apply_structure(reference.struct, v, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
             else:
-                v = apply_field_constraints(reference, v)
+                v = apply_field_constraints(reference, v, data)
         except DataProcessingResult as dpr:
             # if we get a DataProcessingResult, we need to add the errors to the validation result
             validation_result.merge(dpr)
@@ -367,7 +367,7 @@ def delete_from_list(reference: Union[Field, Structure, StructRef], data: dict, 
 ###################################################
 ## Sturcture wide capabilities
 
-def apply_field_constraints(reference: Field, value):
+def apply_field_constraints(reference: Field, value, data):
     if value is None and not reference.allow_none:
         e = ValidationError(reference, None, NoneNotAllowed())
         raise DataProcessingResult(errors=[e])
@@ -376,7 +376,7 @@ def apply_field_constraints(reference: Field, value):
     if isinstance(value, CoerceError):
         raise DataProcessingResult(errors=[value])
 
-    valid = _do_validate(value, reference)
+    valid = _do_validate(value, reference, data)
     if isinstance(valid, ValidationError):
         raise DataProcessingResult(errors=[valid])
 
@@ -398,13 +398,20 @@ def check_required(structure: Structure, data: dict):
         keyset = data.keys()
         required = structure._ref.all_required
         for r in required:
-            if r._name not in keyset:
-                dpr.add_error(ValidationError(r, None, Required(), field=unity.path(r)))
+            if unity.name(r) not in keyset:
+                dpr.add_error(ValidationError(r, None, Required(), path=unity.path(r)))
 
         for s in structure._ref.structures:
             nd = data.get(s._name, None)
             if nd is not None:
-                return recurse(s, data.get(s._name, {}), dpr)
+                if s._ref.repeatable:
+                    entries = data.get(s._name, [])
+                    if not isinstance(entries, list):
+                        entries = [entries]
+                    for e in entries:
+                        recurse(s, e, dpr)
+                else:
+                    recurse(s, data.get(s._name, {}), dpr)
 
     recurse(structure, data, dpr)
 
@@ -430,7 +437,7 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
         if not allow_other_fields and not silent_prune:
             for k in keyset:
                 if k not in known:
-                    dpr.add_error(ValidationError(structure, None, FieldNotInAllowedList(), field=k))
+                    dpr.add_error(ValidationError(structure, None, FieldNotInAllowedList(), subfield=k))
 
         # prepare to construct the new object
         constructed = {}
@@ -448,12 +455,12 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
                     val = [val]
                 nvals = []
                 for v in val:
-                    v = apply_field_constraints(field, v)
+                    v = apply_field_constraints(field, v, data)
                     nvals.append(v)
                 data[field.name] = nvals  # update the data dict with the coerced values
             else:
-                val = apply_field_constraints(field, val)
-                data[field.name] = val  # update the data dict with the coerced value
+                val = apply_field_constraints(field, val, data)
+                constructed[field.name] = val  # update the data dict with the coerced value
 
         for struct in structure._ref.structures:
             if struct._name not in data:
@@ -493,14 +500,15 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
 
     dpr = DataProcessingResult()
 
+    ready = recurse(structure, data, dpr)
+
     # if we are checking required fields, then check them
     if required_check:
         try:
-            check_required(structure, data)
+            check_required(structure, ready)
         except DataProcessingResult as sdpr:
             dpr.merge(sdpr)
 
-    ready = recurse(structure, data, dpr)
     return ready
 
 # def validate(reference: Union[Field, Structure, StructRef], data: dict):
@@ -586,7 +594,7 @@ def _do_coerce(value, reference: Field):
     return value
 
 
-def _do_validate(value, reference: Field):
+def _do_validate(value, reference: Field, data: dict):
     validators = reference.validators
     if validators is None or len(validators) == 0:
         return True
@@ -595,13 +603,13 @@ def _do_validate(value, reference: Field):
         if value not in reference.allowed_values:
             return ValidationError(reference, value, ValueNotInAllowedList(), allowed_values=reference.allowed_values)
 
-    if reference.allowed_range is not None:
+    if reference.has_allowed_range():
         lower, upper = reference.allowed_range
         if (lower is not None and value < lower) or (upper is not None and value > upper):
             return ValidationError(reference, value, ValueNotInAllowedList(), allowed_range=reference.allowed_range)
 
     for validator in validators:
-        result = validator.validate(value, reference)
+        result = validator.validate(value, reference, data)
         if isinstance(result, ValidationError):
             return result
 

@@ -119,10 +119,10 @@ JOURNAL_SOURCE = {
     },
     "bibjson": JOURNAL_LIKE_BIBJSON
 }
-
-from formulaic.test.example.structs import Journal
-
-struct = Journal()
-serialiser = JSONSerialiser()
-out = serialiser.serialise(JOURNAL_SOURCE, struct)
-print(out)
+#
+# from formulaic.test.example.structs import Journal
+#
+# struct = Journal()
+# serialiser = JSONSerialiser()
+# out = serialiser.serialise(JOURNAL_SOURCE, struct)
+# print(out)

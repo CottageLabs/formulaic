@@ -48,13 +48,13 @@ class ISSNCoerce(UpperCaseUnicode):
 # Custom base fields
 
 class ISSN(Field):
-    coerce = [ISSNCoerce]
+    coerce = [ISSNCoerce()]
     allow_coerce_failure = True
 
 class URL(Field):
     name = "url"
-    coerce = [Unicode]
-    validators = [IsURL]
+    coerce = [Unicode()]
+    validators = [IsURL()]
 
 class ES7xKeywordField(ES7xStorableField):
     es_keyword_field = True
@@ -100,7 +100,7 @@ class Name(BasicUnicode, ES7xKeywordField):
 
 class Country(ES7xKeywordField, Field):
     name = "country"
-    coerce = [CountryCode]
+    coerce = [CountryCode()]
     allow_coerce_failure = True
 
 class ESType(BasicUnicode, ES7xKeywordField):
@@ -139,11 +139,11 @@ class IsReplacedBy(ISSN, ES7xKeywordField):
 
 class Keywords(ES7xKeywordField, Field):
     name = "keywords"
-    corece = [Unicode, LowerCase],
+    corece = [Unicode(), LowerCase()],
 
 class Language(ES7xKeywordField, Field):
     name = "language"
-    coerce = [ISOLang2LetterLax]
+    coerce = [ISOLang2LetterLax()]
 
 class Replaces(ISSN, ES7xKeywordField):
     name = "replaces"
@@ -158,11 +158,11 @@ class HasAPC(BasicBoolean, ES7xBoolean):
 
 class Currency(ES7xKeywordField, Field):
     name = "currency"
-    coerce = [CurrencyCodeLax]
+    coerce = [CurrencyCodeLax()]
 
 class Price(ES7xInteger, Field):
     name = "price"
-    coerce = [Integer]
+    coerce = [Integer()]
 
 class LicenceDisplayExampleURL(URL, ES7xKeywordField):
     name = "license_display_example_url"
