@@ -94,3 +94,23 @@ class SetValue(Transformer):
                         fo:Optional[FormulaicObject]=None,
                         full_data:Optional[dict]=None):
         return self.value
+
+class BooleanString(Transformer):
+    """
+    A transformer that converts boolean values to "Y" or "N" strings.
+    """
+    def __init__(self, true="y", false="n"):
+        self._true = true
+        self._false = false
+
+    def transform(self, source:Optional[Structure],
+                        value:Optional[Any],
+                        mixin:Optional[FormulaicMixin]=None,
+                        fo:Optional[FormulaicObject]=None,
+                        full_data:Optional[dict]=None):
+        if value is True:
+            return self._true
+        elif value is False:
+            return self._false
+        else:
+            return None

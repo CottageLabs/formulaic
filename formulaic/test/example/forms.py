@@ -51,7 +51,7 @@ def currency_list():
 
 class BOAI(DOAJFormField):
     name = "boai"
-    coerce = [Boolean]
+    coerce = [Unicode()]
     allow_none = False
     validate = [RequiredValueDOAJ("y")]
 
@@ -83,8 +83,8 @@ class AssEdBOAI(BOAI):
 
 class OAStatementURL(DOAJFormField):
     name = "oa_statement_url"
-    coerce = [Unicode]
-    validate = [IsURL]
+    coerce = [Unicode()]
+    validate = [IsURL()]
 
     label = "The journal website must display its open access statement. Where can we find this information?"
     control = TextInput
@@ -113,7 +113,7 @@ class OAStatementURL(DOAJFormField):
 
 class APC(FormField):
     name = "apc"
-    coerce = [Boolean]
+    coerce = [Unicode()]
     allow_none = False
 
     label = "Does the journal charge fees for publishing an article (APCs)?"
@@ -132,7 +132,7 @@ class APC(FormField):
 
 class APCCurrency(DOAJFormField):
     name = "apc_currency"
-    coerce = [Unicode]
+    coerce = [Unicode()]
     validate = [RequiredIf("apc", "y")], #CurrentISOCurrency
 
     label = "What is the currency of the APC?"
@@ -147,7 +147,7 @@ class APCCurrency(DOAJFormField):
 
 class APCMax(DOAJFormField):
     name = "apc_max"
-    coerce = [Integer]
+    coerce = [Integer()]
     validate = [RequiredIf("apc", "y")]
 
     label = "What is the maximum APC charged by this journal?"
@@ -195,10 +195,16 @@ class PublicApplicationForm(FormGroup):
 
     _name = "public_application_form"
 
+    ###################################
+    ## Individual Fields
+
     boai = BOAI(REQUIRED, SINGLE, fieldset=BasicCompliance, fs_pos=1)
     oa_statement_url = OAStatementURL(REQUIRED, SINGLE, fieldset=BasicCompliance, fs_pos=2)
-
     apc = APC(REQUIRED, SINGLE, fieldset=APCFieldset, fs_pos=1)
+
+    ###################################
+    ## Field Groups
+
     apc_charges = APCCharges(OPTIONAL, REPEATABLE, fieldset=APCFieldset, fs_pos=2)
 
 class PublicApplicationFormContext(FormContext):
@@ -211,5 +217,5 @@ class PublicApplicationFormContext(FormContext):
         APCFieldset
     ]
 
-pafc = PublicApplicationFormContext()
-print(pafc.draw())
+# pafc = PublicApplicationFormContext()
+# print(pafc.draw())
