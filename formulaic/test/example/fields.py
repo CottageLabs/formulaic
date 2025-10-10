@@ -10,15 +10,15 @@ from formulaic.test.example.validate import IsISSN
 
 class ISOLang2LetterLax(Coerce):
     def coerce(self, val, field):
-        pass
+        return val
 
 class CurrencyCodeLax(Coerce):
     def coerce(self, val, field):
-        pass
+        return val
 
 class CountryCode(Coerce):
     def coerce(self, val, field):
-        pass
+        return val
 
 class ISSNCoerce(UpperCaseUnicode):
     def coerce(self, val, field):

@@ -218,7 +218,10 @@ class JournalAdmin(SharedAdmin):
     # repeated structures
     related_applications = RelatedApplications(OPTIONAL, REPEATABLE)
 
-class Journal(JournalLike):
+##############################################
+## Full top-level structures
+
+class JournalStructure(JournalLike):
     _name = "journal"
 
     admin = JournalAdmin(OPTIONAL, SINGLE)

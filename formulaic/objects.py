@@ -70,3 +70,15 @@ class FormulaicObject:
                                   required_check=required_check,
                                   silent_prune=silent_prune,
                                   allow_other_fields=allow_other_fields)
+
+class FormulaicMixin:
+    @property
+    def fo(self) -> FormulaicObject:
+        return self._data
+        # raise NotImplementedError("Subclasses must implement the 'fo' property returning a FormulaicObject instance.")
+
+    @fo.setter
+    def fo(self, value: FormulaicObject):
+        if not isinstance(value, FormulaicObject):
+            raise ValueError("Value must be an instance of FormulaicObject.")
+        self._data = value

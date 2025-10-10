@@ -1,11 +1,13 @@
 from formulaic.transform import Transform
 
-from formulaic.test.example.structs import Journal
-from formulaic.test.example.api import OutgoingJournalStruct
+from formulaic.test.example.structs import JournalStructure
+from formulaic.test.example.api import OutgoingJournalStruct, OutgoingJournal
+
 
 class Journal2OutgoingJournal(Transform):
-    source = Journal()
+    source = JournalStructure()
     target = OutgoingJournalStruct()
+    target_class = OutgoingJournal
 
     mapping = [
         # map all the basic properties directly

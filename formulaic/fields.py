@@ -3,20 +3,20 @@ from formulaic.coerce import Unicode, BigEndDate, Boolean, UTCDateTime, Integer
 
 
 class BasicUnicode(Field):
-    coerce = [Unicode]
+    coerce = [Unicode()]
 
 
 class BasicBoolean(Field):
-    coerce = [Boolean]
+    coerce = [Boolean()]
 
 
 class DateField(Field):
-    coerce = [BigEndDate]
+    coerce = [BigEndDate()]
 
 
 class UTCDateTimeField(Field):
-    coerce = [UTCDateTime]
+    coerce = [UTCDateTime()]
 
 
 class IntegerField(Field):
-    coerce = [Integer]
+    coerce = [Integer()]

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Union
 
-
 def is_required(f: Union["Field", "Structure"]) -> bool:
     from formulaic.core import Field, Structure
 
@@ -49,3 +48,24 @@ def get_prop(f: Union["Field", "Structure"], prop: str) -> Union[str, bool]:
         return getattr(f._ref, prop)
     else:
         raise TypeError("Expected Field or Structure instance.")
+
+def expand(data:Union[dict, "FormulaicObject", "FormulaicMixin"], struct:"Structure"=None):
+    from formulaic.objects import FormulaicObject, FormulaicMixin
+
+    mixin = None
+    fo = None
+    d = data
+    s = struct
+
+    if isinstance(data, FormulaicObject):
+        fo = data
+        d = data.data
+        s = fo.struct
+
+    elif isinstance(data, FormulaicMixin):
+        mixin = data
+        fo = data.fo
+        d = fo.data
+        s = fo.struct
+
+    return mixin, fo, s, d

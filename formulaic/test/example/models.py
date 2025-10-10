@@ -1,12 +1,15 @@
 from formulaic.lib import dates
-from formulaic.objects import FormulaicObject
-from formulaic.test.example.structs import Journal as JournalStruct, BibJSON as JournalBibJSONStruct
+from formulaic.objects import FormulaicObject, FormulaicMixin
+from formulaic.test.example.structs import JournalStructure, BibJSON as JournalBibJSONStruct
 import uuid
 
-class JournalData(FormulaicObject):
-    struct = JournalStruct()
+###################################
+## Formulaic objects
 
-class JournalBibJSONData(FormulaicObject):
+class JournalFO(FormulaicObject):
+    struct = JournalStructure()
+
+class JournalBibJSONFO(FormulaicObject):
     struct = JournalBibJSONStruct()
     silent_prune = False
     allow_other_fields = False
@@ -15,11 +18,13 @@ class JournalBibJSONData(FormulaicObject):
     check_required_on_set = True
     by_reference = True
 
+###################################
+## Pure Business/Model objects
 
-class Journal:
+class Journal(FormulaicMixin):
     def __init__(self, raw=None):
-        self._data = JournalData(raw)
-        self._struct:JournalStruct = self._data.struct
+        self._data = JournalFO(raw)
+        self._struct:JournalStructure = self._data.struct
 
     @property
     def data(self):
@@ -79,6 +84,13 @@ class Journal:
         """Remove all notes from the journal."""
         self._data.delete(self._struct.admin.notes)
 
+    @property
+    def toc_id(self):
+        id_ = self.bibjson().get_preferred_issn()
+        if not id_:
+            id_ = self.id
+        return id_
+
     def bibjson(self):
         """Return the bibjson structure of the journal."""
         bj = self._data.get(self._struct.bibjson)
@@ -90,7 +102,7 @@ class Journal:
 class JournalBibJSON:
 
     def __init__(self, raw=None):
-        self._data = JournalBibJSONData(raw)
+        self._data = JournalBibJSONFO(raw)
         self._struct:JournalBibJSONStruct = self._data.struct
 
     @property
@@ -100,3 +112,33 @@ class JournalBibJSON:
     @property
     def alternative_title(self):
         return self._data.get(self._struct.alternative_title)
+
+    @property
+    def eissn(self):
+        return self._data.get(self._struct.eissn)
+
+    @eissn.setter
+    def eissn(self, val):
+        self._data.set(self._struct.eissn, val)
+
+    @eissn.deleter
+    def eissn(self):
+        self._data.delete(self._struct.eissn)
+
+    @property
+    def pissn(self):
+        return self._data.get(self._struct.pissn)
+
+    @pissn.setter
+    def pissn(self, val):
+        self._data.set(self._struct.pissn, val)
+
+    @pissn.deleter
+    def pissn(self):
+        self._data.delete(self._struct.pissn)
+
+    def get_preferred_issn(self):
+        if self.eissn:
+            return self.eissn
+        if self.pissn:
+            return self.pissn

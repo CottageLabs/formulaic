@@ -80,8 +80,7 @@ def get_list(reference: Union[Field, Structure, StructRef], data: dict, default=
     # if there is no value and we want to do by reference, then create it, bind it and return it
     if values is None and by_reference:
         mylist = default
-        set_single(reference, mylist, data)
-        return mylist
+        return set_list(reference, mylist, data, force_accept_empty=True)
 
     # otherwise, default is an empty list
     elif values is None and not by_reference:
@@ -205,7 +204,7 @@ def set_single(reference: Union[Field, Structure, StructRef], value, data: dict,
     return _set_path(reference, value, data)
 
 
-def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, required_check=True, silent_prune=True, allow_other_fields=False):
+def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, required_check=True, silent_prune=True, allow_other_fields=False, force_accept_empty=False):
     """
     Set the given value in the data dictionary at the path specified by the reference.  If the value is not a list, it
     will be converted into a single element list.
@@ -250,7 +249,7 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
         raise validation_result
 
     # check that the cleaned array isn't empty
-    if len(coerced) == 0:
+    if len(coerced) == 0 and not force_accept_empty:
         # this is equivalent to a None, so we need to decide what to do
         if reference.ignore_none:
             # if we are ignoring nones, just do nothing
@@ -286,7 +285,7 @@ def add_to_list(reference: Union[Field, Structure, StructRef], value, data: dict
         # if we are dealing with a StructRef, we need to apply the structure to the value
         value = apply_structure(reference.struct, value, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
     else:
-        value = apply_field_constraints(reference, value)
+        value = apply_field_constraints(reference, value, data)
 
     current = get_list(reference, data, by_reference=True)
 
@@ -457,7 +456,7 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
                 for v in val:
                     v = apply_field_constraints(field, v, data)
                     nvals.append(v)
-                data[field.name] = nvals  # update the data dict with the coerced values
+                constructed[field.name] = nvals  # update the data dict with the coerced values
             else:
                 val = apply_field_constraints(field, val, data)
                 constructed[field.name] = val  # update the data dict with the coerced value

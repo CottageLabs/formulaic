@@ -46,6 +46,9 @@ class Field:
     validators:list["Validator"] = []
     """List of validator classes to apply to the field value in order.  If any validator fails, an error will be raised."""
 
+    serialiser:Callable = None
+    """A function that can take the value of the field and produce a primitive value suitable for serialisation, e.g. to JSON or XML."""
+
     def __init__(self, need:str=OPTIONAL,
                  multiplicity:str=SINGLE,
                  duplicability:str=UNIQUE,
@@ -60,6 +63,13 @@ class Field:
         :param parent: The containing Structure.  May be left as None, and will be populated when the structure is initialized.
         :param check_coherence: Should the properties of the field be checked for coherence? If True, then the field will check that the properties are coherent with each other.  Useful for testing, not recommended for general usage.
         """
+        if need not in [REQUIRED, OPTIONAL]:
+            raise ValueError(f"Invalid need value: {need}. Must be '{REQUIRED}' or '{OPTIONAL}'")
+        if multiplicity not in [SINGLE, REPEATABLE]:
+            raise ValueError(f"Invalid multiplicity value: {multiplicity}. Must be '{SINGLE}' or '{REPEATABLE}'")
+        if duplicability not in [UNIQUE, DUPLICABLE]:
+            raise ValueError(f"Invalid duplicability value: {duplicability}. Must be '{UNIQUE}' or '{DUPLICABLE}'")
+
         self._need = need
         self._multiplicity = multiplicity
         self._duplicability = duplicability

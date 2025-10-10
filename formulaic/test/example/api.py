@@ -1,5 +1,5 @@
 from formulaic.core import Structure, REQUIRED, OPTIONAL, REPEATABLE, SINGLE, StructRef
-from formulaic.objects import FormulaicObject
+from formulaic.objects import FormulaicObject, FormulaicMixin
 
 from formulaic.test.example import fields
 from formulaic.test.example import structs
@@ -27,14 +27,14 @@ class OutgoingJournalStruct(Structure):
 
 ###########################################
 
-class OutgoingJournalData(FormulaicObject):
+class OutgoingJournalFO(FormulaicObject):
     struct = OutgoingJournalStruct()
     silent_prune = True
 
 
-class OutgoingJournal:
+class OutgoingJournal(FormulaicMixin):
     def __init__(self, raw=None):
-        self._data = OutgoingJournalData(raw)
+        self._data = OutgoingJournalFO(raw)
         self._struct:OutgoingJournalStruct = self._data.struct
 
     @property
