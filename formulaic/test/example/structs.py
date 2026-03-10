@@ -8,13 +8,13 @@ from formulaic.test.example import fields
 ## APC ####################
 
 class MaxAPC(Structure):
-    _name = "max"
+    name_ = "max"
 
     price = fields.Price(REQUIRED, SINGLE)
     currency = fields.Currency(OPTIONAL, SINGLE)
 
 class APC(Structure):
-    _name = "apc"
+    name_ = "apc"
 
     has_apc = fields.HasAPC(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
@@ -23,19 +23,19 @@ class APC(Structure):
 ############################
 
 class Article(Structure):
-    _name = "article"
+    name_ = "article"
 
     license_display = fields.LicenceDisplay(OPTIONAL, SINGLE)
     license_display_example_url = fields.LicenceDisplayExampleURL(OPTIONAL, SINGLE)
 
 class Copyright(Structure):
-    _name = "copyright"
+    name_ = "copyright"
 
     author_retains_copyright = fields.AuthorRetainsCopyright(OPTIONAL, SINGLE)
     url = fields.URL(REQUIRED, SINGLE)
 
 class DepositPolicy(Structure):
-    _name = "deposit_policy"
+    name_ = "deposit_policy"
 
     has_policy = fields.HasPolicy(OPTIONAL, SINGLE)
     is_registered = fields.IsRegistered(OPTIONAL, SINGLE)
@@ -43,20 +43,20 @@ class DepositPolicy(Structure):
     service = fields.DepositPolicyService(OPTIONAL, REPEATABLE)
 
 class Editorial(Structure):
-    _name = "editorial"
+    name_ = "editorial"
 
     review_url = fields.URL(OPTIONAL, SINGLE)
     board_url = fields.URL(OPTIONAL, SINGLE)
     review_process = fields.ReviewProcess(OPTIONAL, REPEATABLE)
 
 class Institution(Structure):
-    _name = "institution"
+    name_ = "institution"
 
     name = fields.Name(OPTIONAL, SINGLE)
     country = fields.Country(OPTIONAL, SINGLE)
 
 class License(Structure):
-    _name = "license"
+    name_ = "license"
 
     type = fields.Type(OPTIONAL, SINGLE)
     by = fields.BY(OPTIONAL, SINGLE)
@@ -66,25 +66,25 @@ class License(Structure):
     url = fields.URL(OPTIONAL, SINGLE)
 
 class OtherCharges(Structure):
-    _name = "other_charges"
+    name_ = "other_charges"
 
     has_other_charges = fields.HasOtherCharges(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
 
 class PIDScheme(Structure):
-    _name = "pid_scheme"
+    name_ = "pid_scheme"
 
     has_pid_scheme = fields.HasPIDScheme(OPTIONAL, SINGLE)
     scheme = fields.Scheme(OPTIONAL, REPEATABLE)
 
 class Plagiarism(Structure):
-    _name = "plagiarism"
+    name_ = "plagiarism"
 
     detection = fields.PlagiarismDetection(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
 
 class Preseravation(Structure):
-    _name = "preservation"
+    name_ = "preservation"
 
     has_preservation = fields.HasPreservation(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
@@ -92,13 +92,13 @@ class Preseravation(Structure):
     service = fields.PreservationService(OPTIONAL, REPEATABLE)
 
 class Publisher(Structure):
-    _name = "publisher"
+    name_ = "publisher"
 
     name = fields.Name(OPTIONAL, SINGLE)
     country = fields.Country(OPTIONAL, SINGLE)
 
 class Ref(Structure):
-    _name = "ref"
+    name_ = "ref"
 
     oa_statement = fields.OAStatement(OPTIONAL, SINGLE)
     journal = fields.Journal(OPTIONAL, SINGLE)
@@ -107,14 +107,14 @@ class Ref(Structure):
     license_terms = fields.LicenseTerms(OPTIONAL, SINGLE)
 
 class Subject(Structure):
-    _name = "subject"
+    name_ = "subject"
 
     code = fields.Code(OPTIONAL, SINGLE)
     scheme = fields.Scheme(OPTIONAL, SINGLE)
     term = fields.Term(OPTIONAL, SINGLE)
 
 class Waiver(Structure):
-    _name = "waiver"
+    name_ = "waiver"
 
     has_waiver = fields.HasWaiver(OPTIONAL, SINGLE)
     url = fields.URL(OPTIONAL, SINGLE)
@@ -122,7 +122,7 @@ class Waiver(Structure):
 ###############################################
 
 class BibJSON(Structure):
-    _name = "bibjson"
+    name_ = "bibjson"
 
     # single fields
     alternative_title = fields.AlternativeTitle(OPTIONAL, SINGLE)
@@ -165,14 +165,14 @@ class BibJSON(Structure):
 ## Admin structures
 
 class RelatedApplications(Structure):
-    _name = "related_applications"
+    name_ = "related_applications"
 
     application_id = fields.ApplicationID(OPTIONAL, SINGLE)
     date_accepted = fields.DateAccepted(OPTIONAL, SINGLE)
     status = fields.ApplicationStatus(OPTIONAL, SINGLE)
 
 class Notes(Structure):
-    _name = "notes"
+    name_ = "notes"
 
     id = fields.ID(OPTIONAL, SINGLE)
     note = fields.Note(OPTIONAL, SINGLE)
@@ -180,7 +180,7 @@ class Notes(Structure):
     author_id = fields.AuthorID(OPTIONAL, SINGLE)
 
 class SharedAdmin(Structure):
-    _name = "shared_admin"
+    name_ = "shared_admin"
 
     # single fields
     owner = fields.Owner(OPTIONAL, SINGLE)
@@ -194,7 +194,7 @@ class SharedAdmin(Structure):
 ## Journal Structures
 
 class JournalLike(Structure):
-    _name = "journal_like"
+    name_ = "journal_like"
 
     # single fields
     id = fields.ID(OPTIONAL, SINGLE)
@@ -208,7 +208,7 @@ class JournalLike(Structure):
     bibjson = BibJSON(OPTIONAL, SINGLE)
 
 class JournalAdmin(SharedAdmin):
-    _name = "admin"
+    name_ = "admin"
 
     # single fields
     in_doaj = fields.InDOAJ(OPTIONAL, SINGLE)
@@ -222,6 +222,6 @@ class JournalAdmin(SharedAdmin):
 ## Full top-level structures
 
 class JournalStructure(JournalLike):
-    _name = "journal"
+    name_ = "journal"
 
     admin = JournalAdmin(OPTIONAL, SINGLE)

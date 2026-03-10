@@ -4,7 +4,7 @@ from typing import Union
 def is_required(f: Union["Field", "Structure"]) -> bool:
     from formulaic.core import Field, Structure
 
-    return (isinstance(f, Field) and f.required) or (isinstance(f, Structure) and f._ref.required)
+    return (isinstance(f, Field) and f.required) or (isinstance(f, Structure) and f.ref_.required)
 
 
 def path(f: Union["Field", "Structure"]) -> str:
@@ -13,7 +13,7 @@ def path(f: Union["Field", "Structure"]) -> str:
     if isinstance(f, Field):
         return f.path
     elif isinstance(f, Structure):
-        return f._ref.path
+        return f.ref_.path
     else:
         raise TypeError("Expected Field or Structure instance.")
 
@@ -24,7 +24,7 @@ def name(f: Union["Field", "Structure"]) -> str:
     if isinstance(f, Field):
         return f.name
     elif isinstance(f, Structure):
-        return f._name
+        return f.name_
     else:
         raise TypeError("Expected Field or Structure instance.")
 
@@ -35,7 +35,7 @@ def clone(f: Union["Field", "Structure"]) -> Union["Field", "Structure"]:
     if isinstance(f, Field):
         return f.clone()
     elif isinstance(f, Structure):
-        return f._ref.clone()
+        return f.ref_.clone()
     else:
         raise TypeError("Expected Field or Structure instance.")
 
@@ -45,7 +45,7 @@ def get_prop(f: Union["Field", "Structure"], prop: str) -> Union[str, bool]:
     if isinstance(f, Field):
         return getattr(f, prop)
     elif isinstance(f, Structure):
-        return getattr(f._ref, prop)
+        return getattr(f.ref_, prop)
     else:
         raise TypeError("Expected Field or Structure instance.")
 

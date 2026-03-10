@@ -19,7 +19,7 @@ class DCStructRef(XMLStructRef):
     xml_schema_location = "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"
 
 class DCStructure(XMLStructure):
-    _ref_class = DCStructRef
+    ref_class_ = DCStructRef
 
 
 class DCTitle(BasicUnicode, DCField):
@@ -66,14 +66,14 @@ class DCSubjectTerm(BasicUnicode, DCField):
     name = "term"
 
 class DCSubject(DCStructure):
-    _name = "subject"
+    name_ = "subject"
 
     type = DCSubjectType(OPTIONAL, SINGLE)
     term = DCSubjectTerm(OPTIONAL, SINGLE)
 
 
 class DublinCoreStructure(DCStructure):
-    _name = "dc"
+    name_ = "dc"
 
     title = DCTitle(OPTIONAL, REPEATABLE)
     identifier = DCIdentifier(OPTIONAL, REPEATABLE)

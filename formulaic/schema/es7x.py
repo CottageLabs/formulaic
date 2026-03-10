@@ -43,7 +43,7 @@ class ES7xMappingGenerator(Schematiser):
         if self.config.additional_mappings is not None:
             self._additional_mappings(mappings)
         settings = self.config.index_settings
-        result = {struct._name: {"mappings": mappings, "settings": settings}}
+        result = {struct.name_: {"mappings": mappings, "settings": settings}}
         return ES7xMapping(result)
 
     def parse(self, stream):
@@ -52,13 +52,13 @@ class ES7xMappingGenerator(Schematiser):
     def _mappings(self, struct: Structure):
         properties = {}
 
-        for entry in struct._ref.all:
+        for entry in struct.ref_.all:
             if isinstance(entry, ES7xStorableField):
                 properties[entry.name] = entry.es_mapping()
             elif isinstance(entry, Structure):
                 subs = self._mappings(entry)
                 if subs is not None:
-                    properties[entry._name] = subs
+                    properties[entry.name_] = subs
 
         if len(properties) == 0:
             return None

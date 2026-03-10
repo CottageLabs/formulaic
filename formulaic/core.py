@@ -136,7 +136,7 @@ class Field:
         if self.parent is None:
             return self
         else:
-            return self.parent._ref.root
+            return self.parent.ref_.root
 
     @property
     def path(self) -> list[str]:
@@ -146,7 +146,7 @@ class Field:
         """
         parts = [self.name]
         if self.parent is not None:
-            parent_path = self.parent._ref.path
+            parent_path = self.parent.ref_.path
             parts = parent_path + parts
         return parts
 
@@ -188,7 +188,7 @@ class StructRef:
     class as clean as possible, and to separate out the properties of the structure from the structure itself.
 
     When you want to call functional methods on the Structure, you should do this via this class, which can be
-    accessed via the `_ref` property on the Structure.  The methods in this class behave as if they were methods on
+    accessed via the `ref_` property on the Structure.  The methods in this class behave as if they were methods on
     the Structure itself.  It provides you with the same set of methods and properties as you may find on the Field class.
     In addition, it provides interrogative functions, such as listing all fields, structures, required fields, etc.
     """
@@ -231,7 +231,7 @@ class StructRef:
 
     @property
     def name(self) -> str:
-        return self.struct._name
+        return self.struct.name_
 
     @property
     def struct(self) -> "Structure":
@@ -291,7 +291,7 @@ class StructRef:
         if self.parent is None:
             return self.struct
         else:
-            return self.parent._ref.root
+            return self.parent.ref_.root
 
     @property
     def path(self) -> list[str]:
@@ -305,10 +305,10 @@ class StructRef:
 
         :return:
         """
-        if self.parent is None or not hasattr(self.parent, '_ref'):
+        if self.parent is None or not hasattr(self.parent, 'ref_'):
             return []
-        parent_path = self.parent._ref.path
-        parts = parent_path + [self.struct._name]
+        parent_path = self.parent.ref_.path
+        parts = parent_path + [self.struct.name_]
         return parts
 
     @property
@@ -361,7 +361,7 @@ class StructRef:
         if len(options) == 1:
             return options[0]
         elif len(options) > 1:
-            raise ValueError(f"Multiple fields found with name '{name}' in structure '{self.struct._name}'")
+            raise ValueError(f"Multiple fields found with name '{name}' in structure '{self.struct.name_}'")
         return None
 
     def get_path(self, ref_str:Union[str, list[str]]) -> Union[Field, "Structure", None]:
@@ -381,7 +381,7 @@ class StructRef:
         for part in path:
             if isinstance(ctx, Field):
                 raise KeyError(f"Field '{ctx.name}' does not have subfields.")
-            ctx = ctx._ref.by_name(part)
+            ctx = ctx.ref_.by_name(part)
             if ctx is None:
                 return None
         return ctx
@@ -391,11 +391,15 @@ class Structure:
     """
     Core structure class.
 
-    This class uses 3 "private" attributes:
+    This class uses 3 "semi-private" attributes.  These are top-level, non-private attributes of the class,
+    that are intended to avoid name clashes with the fields and structures that are defined within the structure.  They
+    are all suffixed with an underscore, and represent the 3 reserved attributes of the Structure object.
 
-    * _name: the name of the structure.  This is equivalent to the `name` property of a `Field`.
-    * _ref_class: the class to use for the `_ref` property.  Defaults to `StructRef`.
-    * _ref: an instance of the `_ref_class`, providing all the properties and methods for the structure.
+    They are:
+
+    * name_: the name of the structure.  This is equivalent to the `name` property of a `Field`.
+    * ref_class_: the class to use for the `ref_` property.  Defaults to `StructRef`.
+    * ref_: an instance of the `ref_class_`, providing all the properties and methods for the structure.
 
     Use of these allows the remaining properties of the class to be the nested fields and structures, and provides
     a clean way to navigate the structure.
@@ -404,7 +408,7 @@ class Structure:
 
     ```
     class MyStructure:
-        _name = "my_structure"
+        name_ = "my_structure"
         field_a = FieldA(REQUIRED, SINGLE)
         field_b = FieldA(OPTIONAL, REPEATABLE)
         nested_structure = NestedStructure(REQUIRED, SINGLE)
@@ -419,14 +423,14 @@ class Structure:
     mine.nested_structure
     ```
 
-    The `_ref` property provides all the methods and properties you need
+    The `ref_` property provides all the methods and properties you need
     to interrogate the structure using a similar API to that as you would have for a Field.  In order to use it
-    you must access the "private" `_ref` property, like this:
+    you must access the `ref_` property, like this:
 
     ```
-    mine._ref.all_required
-    mine._ref.structures
-    mine._ref.all_names
+    mine.ref_.all_required
+    mine.ref_.structures
+    mine.ref_.all_names
     ```
 
     and so on.
@@ -436,10 +440,10 @@ class Structure:
     easily reused in different contexts within the same codebase and execution thread.
 
     """
-    _name:str = "_structure"
+    name_:str = "_structure"
     """Name of the structure.  Subclasses should override this to provide a meaningful name."""
 
-    _ref_class:StructRef = StructRef
+    ref_class_:StructRef = StructRef
     """The class to use for the structure reference.  Subclasses may override this to provide a custom reference class."""
 
     def __init__(self, need:str=OPTIONAL,
@@ -449,7 +453,7 @@ class Structure:
                  **kwargs):
         # separate the properties out into a reference object to keep this
         # class as clean as possible
-        self._ref_obj = self._ref_class(self, need, multiplicity, duplicability, parent, **kwargs)
+        self._ref_obj = self.ref_class_(self, need, multiplicity, duplicability, parent, **kwargs)
 
         # now clone all the fields and structures, and set their parent to this structure
         rebound = {}
@@ -460,7 +464,7 @@ class Structure:
                 rebound[attr_name] = clone
             elif isinstance(attr_value, Structure):
                 clone = unity.clone(attr_value)
-                clone._ref.parent = self
+                clone.ref_.parent = self
                 rebound[attr_name] = clone
 
         # set all the cloned fields and structures onto this instance
@@ -468,7 +472,7 @@ class Structure:
             setattr(self, k, v)
 
     @property
-    def _ref(self) -> StructRef:
+    def ref_(self) -> StructRef:
         return self._ref_obj
 
 ###########################################

@@ -147,7 +147,7 @@ class FormGroupStructRef(StructRef):
     @property
     def fieldsets(self):
         known_fieldsets: Set[Fieldset] = set()
-        subs = self.struct._ref.all
+        subs = self.struct.ref_.all
         for sub in subs:
             fs = unity.get_prop(sub, "fieldset")
             known_fieldsets.add(fs)
@@ -165,7 +165,7 @@ class FormGroupStructRef(StructRef):
         return ordered
 
     def get_fieldset_fields(self, fieldset: "Fieldset"):
-        subs = self.struct._ref.all
+        subs = self.struct.ref_.all
         fields = []
         for sub in subs:
             fs = unity.get_prop(sub, "fieldset")
@@ -200,8 +200,8 @@ class FormGroupStructRef(StructRef):
 
 class FormGroup(Structure):
     _form_group_info:"FormGroupInfo" = None
-    _ref_class:FormGroupStructRef = FormGroupStructRef
-    _ref:FormGroupStructRef
+    ref_class_:FormGroupStructRef = FormGroupStructRef
+    # ref_:FormGroupStructRef
 
     def __init__(self, need=OPTIONAL,
                  multiplicity=SINGLE,
@@ -251,7 +251,7 @@ class FormStructRef(StructRef):
     @property
     def fieldsets(self):
         known_fieldsets: Set[Fieldset] = set()
-        subs = self.struct._ref.all
+        subs = self.struct.ref_.all
         for sub in subs:
             fs = unity.get_prop(sub, "fieldset")
             known_fieldsets.add(fs)
@@ -269,7 +269,7 @@ class FormStructRef(StructRef):
         return ordered
 
     def get_fieldset_fields(self, fieldset:"Fieldset"):
-        subs = self.struct._ref.all
+        subs = self.struct.ref_.all
         fields = []
         for sub in subs:
             fs = unity.get_prop(sub, "fieldset")
@@ -282,8 +282,8 @@ class FormStructRef(StructRef):
 
 class Form(Structure):
     _form_info: "FormInfo" = None
-    _ref_class: FormStructRef = FormStructRef
-    _ref: FormStructRef
+    ref_class_: FormStructRef = FormStructRef
+    # ref_: FormStructRef
 
     def __init__(self, need=OPTIONAL,
                  multiplicity=SINGLE,
@@ -336,7 +336,7 @@ class ContextualForm(FormulaicObject):
         return r.draw()
 
     def get_renderer(self):
-        klazz = self.struct._ref.get_renderer(self)
+        klazz = self.struct.ref_.get_renderer(self)
         if klazz is not None:
             return klazz(self)
         else:
@@ -365,7 +365,7 @@ class ContextualForm(FormulaicObject):
 #     @property
 #     def fieldsets(self):
 #         known_fieldsets: Set[Fieldset] = set()
-#         subs = self.form_structure._ref.all
+#         subs = self.form_structure.ref_.all
 #         for sub in subs:
 #             fs = unity.get_prop(sub, "fieldset")
 #             known_fieldsets.add(fs)
@@ -383,7 +383,7 @@ class ContextualForm(FormulaicObject):
 #         return ordered
 #
 #     def get_fieldset_fields(self, fieldset:Fieldset):
-#         subs = self.form_structure._ref.all
+#         subs = self.form_structure.ref_.all
 #         fields = []
 #         for sub in subs:
 #             fs = unity.get_prop(sub, "fieldset")

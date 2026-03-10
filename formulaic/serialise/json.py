@@ -10,7 +10,7 @@ from formulaic.serialise.core import Serialiser
 class JSONSerialiser(Serialiser):
     def _add_value(self, parent, entry, value):
         if isinstance(entry, Structure):
-            entry = entry._ref
+            entry = entry.ref_
 
         if entry.repeatable:
             for item in value:
@@ -28,25 +28,25 @@ class JSONSerialiser(Serialiser):
         root = {}
 
         def recurse(data: dict, struct: Structure, parent):
-            for entry in struct._ref.all:
+            for entry in struct.ref_.all:
                 if isinstance(entry, Field):
                     value = data.get(entry.name)
                     if value is not None:
                         self._add_value(parent, entry, value)
 
                 elif isinstance(entry, Structure):
-                    value = data.get(entry._name)
+                    value = data.get(entry.name_)
                     if value is not None:
                         if isinstance(value, list):
-                            parent[entry._name] = []
+                            parent[entry.name_] = []
                             for item in value:
                                 sub = {}
                                 recurse(item, entry, sub)
-                                parent[entry._name].append(sub)
+                                parent[entry.name_].append(sub)
                         elif isinstance(value, dict):
                             sub = {}
                             recurse(value, entry, sub)
-                            parent[entry._name] = sub
+                            parent[entry.name_] = sub
 
         recurse(data, struct, root)
         return root

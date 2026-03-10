@@ -17,11 +17,11 @@ class FieldB(Field):
 class FieldC(Field): name = "field_c"
 
 class NestedStructure(Structure):
-    _name = "nested_structure"
+    name_ = "nested_structure"
     field_b = FieldB(OPTIONAL, REPEATABLE)
 
 class TopStructure(Structure):
-    _name = "top_structure"
+    name_ = "top_structure"
     nested_structure = NestedStructure(REQUIRED, SINGLE)
     field_a = FieldA(OPTIONAL, SINGLE)
     field_c = FieldC(REQUIRED, SINGLE)
@@ -60,7 +60,7 @@ class TestStructure(TestCase):
     def test_multiple_instances(self):
         s1 = TopStructure()
         s2 = TopStructure()
-        assert s1.nested_structure._ref.parent != s2.nested_structure._ref.parent
+        assert s1.nested_structure.ref_.parent != s2.nested_structure.ref_.parent
 
         s1 = TopStructure()
         s2 = NestedStructure()
@@ -70,9 +70,9 @@ class TestStructure(TestCase):
 
     def test_ref_api(self):
         ts = TopStructure()
-        tr = ts._ref
+        tr = ts.ref_
 
-        assert ts._name == "top_structure"
+        assert ts.name_ == "top_structure"
         assert tr.name == "top_structure"
         assert tr.struct == ts
         assert tr.parent is None
@@ -86,7 +86,7 @@ class TestStructure(TestCase):
 
         structs = tr.structures
         assert len(structs) == 1
-        assert structs[0]._name == "nested_structure"
+        assert structs[0].name_ == "nested_structure"
 
         names = tr.all_names
         assert len(names) == 3
@@ -106,7 +106,7 @@ class TestStructure(TestCase):
         assert "field_c" in [unity.name(e) for e in all]
 
         assert tr.by_name("field_a").name == "field_a"
-        assert tr.by_name("nested_structure")._name == "nested_structure"
+        assert tr.by_name("nested_structure").name_ == "nested_structure"
         assert tr.by_name("field_c").name == "field_c"
         assert tr.by_name("non_existent") is None
 
@@ -117,7 +117,7 @@ class TestStructure(TestCase):
         assert field.name == "field_b"
 
         ns = ts.nested_structure
-        nr = ns._ref
+        nr = ns.ref_
 
         assert nr.name == "nested_structure"
         assert nr.struct == ns

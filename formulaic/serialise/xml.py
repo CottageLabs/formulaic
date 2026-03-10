@@ -62,8 +62,8 @@ class XMLStructRef(StructRef):
 
 class XMLStructure(Structure):
     _form = None
-    _ref_class:XMLStructRef = XMLStructRef
-    _ref: XMLStructRef  # For type annotation only
+    ref_class_:XMLStructRef = XMLStructRef
+    # ref_: XMLStructRef  # For type annotation only
 
     def __init__(self, need=OPTIONAL,
                  multiplicity=SINGLE,
@@ -81,7 +81,7 @@ class XMLStructure(Structure):
 class XMLSerialiser(Serialiser):
     def _namespace(self, reference:Union[XMLField, XMLStructure]):
         if isinstance(reference, XMLStructure):
-            reference = reference._ref
+            reference = reference.ref_
 
 
         ident = reference.xml_namespace
@@ -96,7 +96,7 @@ class XMLSerialiser(Serialiser):
 
     def _add_value(self, parent, entry, value, ns_name, ns_ident, ns_prefix):
         if isinstance(entry, XMLStructure):
-            entry = entry._ref
+            entry = entry.ref_
 
         ET.register_namespace(ns_name, ns_ident)
         if entry.repeatable:
@@ -124,15 +124,15 @@ class XMLSerialiser(Serialiser):
         ET.register_namespace(name, ns)
 
         attrib = {}
-        sl = struct._ref.xml_schema_location
+        sl = struct.ref_.xml_schema_location
         if sl is not None:
             attrib[XSI + "schemaLocation"] = sl
             ET.register_namespace("xsi", XSI_NAMESPACE)
 
-        root = ET.Element(prefix + struct._name, attrib=attrib)
+        root = ET.Element(prefix + struct.name_, attrib=attrib)
 
         def recurse(data:dict, struct:XMLStructure, parent):
-            for entry in struct._ref.all:
+            for entry in struct.ref_.all:
                 if isinstance(entry, XMLField):
                     name, ns, prefix = self._namespace(entry)
                     value = data.get(entry.name)
@@ -141,14 +141,14 @@ class XMLSerialiser(Serialiser):
 
                 elif isinstance(entry, XMLStructure):
                     name, ns, prefix = self._namespace(entry)
-                    value = data.get(entry._name)
+                    value = data.get(entry.name_)
                     if value is not None:
                         if isinstance(value, list):
                             for item in value:
-                                sub_el = ET.SubElement(parent, prefix + entry._name)
+                                sub_el = ET.SubElement(parent, prefix + entry.name_)
                                 recurse(item, entry, sub_el)
                         elif isinstance(value, dict):
-                            sub_el = ET.SubElement(parent, prefix + entry._name)
+                            sub_el = ET.SubElement(parent, prefix + entry.name_)
                             recurse(value, entry, sub_el)
 
         recurse(data, struct, root)

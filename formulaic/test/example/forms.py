@@ -171,7 +171,7 @@ class APCCharges(FormGroup):
         ]
         js = ["multiple_field"]
 
-    _name = "apc_charges"
+    name_ = "apc_charges"
     _form_group_info = APCChargesFormInfo
 
     apc_currency = APCCurrency(OPTIONAL, SINGLE, fs_pos=1)
@@ -201,7 +201,7 @@ class PublicApplicationForm(Form):
             APCFieldset
         ]
 
-    _name = "public_application_form"
+    name_ = "public_application_form"
     _form_info = PublicApplicationFormInfo()
 
     ###################################

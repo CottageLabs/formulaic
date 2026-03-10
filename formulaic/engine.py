@@ -21,7 +21,7 @@ def get_data(reference: Union[Field, Structure, StructRef], data: dict, default=
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if not reference.repeatable:
         return get_single(reference, data, default=default, by_reference=by_reference)
@@ -44,7 +44,7 @@ def get_single(reference: Union[Field, Structure, StructRef], data: dict, defaul
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     val = _get_path(reference, data, default=default)
 
@@ -67,7 +67,7 @@ def get_list(reference: Union[Field, Structure, StructRef], data: dict, default=
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if default is None:
         default = []
@@ -115,7 +115,7 @@ def exists_in_list(reference: Union[Field, Structure, StructRef], data: dict, va
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if value is not None and matchsub is not None:
         raise ValueError("Cannot check existence in list with both `value` and `matchsub` provided. Use one or the other.")
@@ -165,7 +165,7 @@ def set_data(reference: Union[Field, Structure, StructRef], value, data: dict, r
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if not reference.repeatable:
         return set_single(reference, value, data, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
@@ -188,7 +188,7 @@ def set_single(reference: Union[Field, Structure, StructRef], value, data: dict,
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if reference.repeatable:
         raise ValueError("Cannot set a single value on a repeatable reference. Use set_list instead.")
@@ -220,7 +220,7 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if not isinstance(value, list):
         value = [value]
@@ -276,7 +276,7 @@ def add_to_list(reference: Union[Field, Structure, StructRef], value, data: dict
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     if value is None and reference.ignore_none:
         return None
@@ -302,7 +302,7 @@ def add_to_list(reference: Union[Field, Structure, StructRef], value, data: dict
 
 def delete_data(reference: Union[Field, Structure, StructRef], data: dict, prune=True):
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     parts = reference.path
     context = data
@@ -333,7 +333,7 @@ def delete_from_list(reference: Union[Field, Structure, StructRef], data: dict, 
     :return:
     """
     if isinstance(reference, Structure):
-        reference = reference._ref
+        reference = reference.ref_
 
     l = get_list(reference, data, by_reference=True)
 
@@ -395,22 +395,22 @@ def check_required(structure: Structure, data: dict):
             return
 
         keyset = data.keys()
-        required = structure._ref.all_required
+        required = structure.ref_.all_required
         for r in required:
             if unity.name(r) not in keyset:
                 dpr.add_error(ValidationError(r, None, Required(), path=unity.path(r)))
 
-        for s in structure._ref.structures:
-            nd = data.get(s._name, None)
+        for s in structure.ref_.structures:
+            nd = data.get(s.name_, None)
             if nd is not None:
-                if s._ref.repeatable:
-                    entries = data.get(s._name, [])
+                if s.ref_.repeatable:
+                    entries = data.get(s.name_, [])
                     if not isinstance(entries, list):
                         entries = [entries]
                     for e in entries:
                         recurse(s, e, dpr)
                 else:
-                    recurse(s, data.get(s._name, {}), dpr)
+                    recurse(s, data.get(s.name_, {}), dpr)
 
     recurse(structure, data, dpr)
 
@@ -428,7 +428,7 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
         #     raise SeamlessException("Expected a dict at '{c}' but found something else instead".format(c=context))
 
         keyset = data.keys()
-        known = structure._ref.all_names
+        known = structure.ref_.all_names
 
         # check that there are no fields that are not allowed
         # Note that since the construction mechanism copies fields explicitly, silent_prune just turns off this
@@ -441,7 +441,7 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
         # prepare to construct the new object
         constructed = {}
 
-        for field in structure._ref.fields:
+        for field in structure.ref_.fields:
             if field.name not in data:
                 continue
 
@@ -461,33 +461,33 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
                 val = apply_field_constraints(field, val, data)
                 constructed[field.name] = val  # update the data dict with the coerced value
 
-        for struct in structure._ref.structures:
-            if struct._name not in data:
+        for struct in structure.ref_.structures:
+            if struct.name_ not in data:
                 continue
 
-            val = data.get(struct._name, None)
+            val = data.get(struct.name_, None)
 
-            if struct._ref.repeatable:
+            if struct.ref_.repeatable:
                 if not isinstance(val, list):
                     val = [val]
 
                 nvals = []
                 for v in val:
                     if type(val) != dict:
-                        # raise SeamlessException("Expected dict at '{x}' but found '{y}'".format(x=struct._name, y=type(val)))
+                        # raise SeamlessException("Expected dict at '{x}' but found '{y}'".format(x=struct.name_, y=type(val)))
                         pass
 
                     v = recurse(struct, v, dpr=dpr)
                     nvals.append(v)
 
-                constructed[struct._name] = nvals
+                constructed[struct.name_] = nvals
 
             else:
                 if type(val) != dict:
-                    # raise SeamlessException("Expected dict at '{x}' but found '{y}'".format(x=struct._name, y=type(val)))
+                    # raise SeamlessException("Expected dict at '{x}' but found '{y}'".format(x=struct.name_, y=type(val)))
                     pass
 
-                constructed[struct._name] = recurse(struct, val, dpr=dpr)
+                constructed[struct.name_] = recurse(struct, val, dpr=dpr)
 
         # finally, if we allow other fields, make sure that they come across too
         if allow_other_fields:

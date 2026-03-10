@@ -27,7 +27,7 @@ class Transform:
             source = run[0]
             target = run[1]
             if isinstance(target, Structure):
-                target = target._ref
+                target = target.ref_
 
             transformer = run[2] if len(run) > 2 else default
 

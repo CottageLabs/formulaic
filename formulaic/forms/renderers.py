@@ -38,11 +38,11 @@ class FormSerialiser(Serialiser):
                         fsrepr["fields"].append(fieldrepr)
 
                     elif isinstance(field, FormGroup):
-                        recurse(field._ref, fsrepr["fields"])
+                        recurse(field.ref_, fsrepr["fields"])
 
                 container.append(fsrepr)
 
-        sr = struct._ref
+        sr = struct.ref_
         recurse(sr, repr["fieldsets"])
         return repr
 
@@ -141,7 +141,7 @@ class FormControlRenderer(HTMLGenerator):
 
 class DefaultFormRenderer(FormRenderer):
     def draw(self):
-        ctx = self._context.struct._ref
+        ctx = self._context.struct.ref_
         data = self._context.data
 
         fieldsets = ctx.fieldsets
@@ -174,7 +174,7 @@ class DefaultFieldsetRenderer(FieldsetRenderer):
             if isinstance(field, FormField):
                 r = field.get_field_renderer(self._context)
             elif isinstance(field, FormGroup):
-                r = field._ref.get_renderer(self._context)
+                r = field.ref_.get_renderer(self._context)
             if r is not None:
                 field_frags.append(r.draw())
 
@@ -191,14 +191,14 @@ class DefaultFieldsetRenderer(FieldsetRenderer):
 
 class DefaultGroupRenderer(GroupRenderer):
     def draw(self):
-        fields = self._group._ref.all
+        fields = self._group.ref_.all
         frag = []
         for field in fields:
             if isinstance(field, FormField):
                 r = field.get_field_renderer(self._context)
                 frag.append(r.draw())
             elif isinstance(field, FormGroup):
-                r = field._ref.get_renderer(self._context)
+                r = field.ref_.get_renderer(self._context)
                 frag.append(r.draw())
         group_frag = "\n".join(frag)
         return group_frag

@@ -6,14 +6,14 @@ from formulaic.test.example import structs
 
 
 class OutgoingJournalAdminStruct(Structure):
-    _name = "admin"
+    name_ = "admin"
 
     in_doaj = fields.InDOAJ(OPTIONAL, SINGLE)
     ticked = fields.Ticked(OPTIONAL, SINGLE)
 
 
 class OutgoingJournalStruct(Structure):
-    _name = "outgoing_journal"
+    name_ = "outgoing_journal"
 
     id = fields.ID(OPTIONAL, SINGLE)
     created_date = fields.CreatedDate(OPTIONAL, SINGLE)
