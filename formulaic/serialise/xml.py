@@ -1,4 +1,3 @@
-import base64, sys, re
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 
@@ -8,7 +7,6 @@ from formulaic.core import Field, Structure, StructRef, OPTIONAL, SINGLE, DUPLIC
 from formulaic.lib import unity
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.serialise.core import Serialiser
-from formulaic import engine
 
 ELEMENT = "element"
 ATTRIBUTE = "attribute"

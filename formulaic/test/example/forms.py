@@ -1,6 +1,9 @@
-from formulaic.form import Fieldset, FormField, Radio, TextInput, FormGroupInfo, FormGroup, Select, NumberInput, \
-    FormContext
+import json
+
+from formulaic.forms.core import Fieldset, FormField, FormGroupInfo, FormGroup, ContextualForm, Form, FormInfo
+from formulaic.forms.controls import Radio, TextInput,  Select, NumberInput
 from formulaic.coerce import Boolean, Unicode, Integer
+from formulaic.forms.renderers import FormSerialiser
 from formulaic.validate import RequiredValue, IsURL, RequiredIf
 from formulaic.core import Structure, REQUIRED, OPTIONAL, SINGLE, REPEATABLE
 # from portality.forms.validate import CurrentISOCurrency
@@ -56,7 +59,7 @@ class BOAI(DOAJFormField):
     validate = [RequiredValueDOAJ("y")]
 
     label = "Does the journal have a BOAI-compliant open access policy?"
-    control = Radio
+    control_class = Radio
     options = [
         {"value": "y", "label": "Yes"},
         {"value": "n", "label": "No"},
@@ -87,7 +90,7 @@ class OAStatementURL(DOAJFormField):
     validate = [IsURL()]
 
     label = "The journal website must display its open access statement. Where can we find this information?"
-    control = TextInput
+    control_class = TextInput
     placeholder = "https://www.my-journal.com/open-access"
     js = [
         "trim_whitespace",
@@ -117,7 +120,7 @@ class APC(FormField):
     allow_none = False
 
     label = "Does the journal charge fees for publishing an article (APCs)?"
-    control = Radio
+    control_class = Radio
     options = [
         {"value": "y", "label": "Yes"},
         {"value": "n", "label": "No"}
@@ -136,7 +139,7 @@ class APCCurrency(DOAJFormField):
     validate = [RequiredIf("apc", "y")], #CurrentISOCurrency
 
     label = "What is the currency of the APC?"
-    control = Select
+    control_class = Select
     options = lambda x: currency_list()
     placeholder = "Currency"
     default = ""
@@ -151,7 +154,7 @@ class APCMax(DOAJFormField):
     validate = [RequiredIf("apc", "y")]
 
     label = "What is the maximum APC charged by this journal?"
-    control = NumberInput
+    control_class = NumberInput
     attributes = {
         "min": "1"
     }
@@ -169,10 +172,10 @@ class APCCharges(FormGroup):
         js = ["multiple_field"]
 
     _name = "apc_charges"
-    _form = APCChargesFormInfo
+    _form_group_info = APCChargesFormInfo
 
-    apc_currency = APCCurrency(OPTIONAL, SINGLE)
-    apc_max = APCMax(OPTIONAL, SINGLE)
+    apc_currency = APCCurrency(OPTIONAL, SINGLE, fs_pos=1)
+    apc_max = APCMax(OPTIONAL, SINGLE, fs_pos=2)
 
 
 ########################################
@@ -189,11 +192,17 @@ class APCFieldset(Fieldset):
 #########################################
 ## Full form definitions
 
-class PublicApplicationForm(FormGroup):
-    class PublicApplicationFormInfo(FormGroupInfo):
-        label = "Public Application Form"
+class PublicApplicationForm(Form):
+    class PublicApplicationFormInfo(FormInfo):
+        action = "/application"
+        method = "POST"
+        fieldset_ordering = [
+            BasicCompliance,
+            APCFieldset
+        ]
 
     _name = "public_application_form"
+    _form_info = PublicApplicationFormInfo()
 
     ###################################
     ## Individual Fields
@@ -207,15 +216,13 @@ class PublicApplicationForm(FormGroup):
 
     apc_charges = APCCharges(OPTIONAL, REPEATABLE, fieldset=APCFieldset, fs_pos=2)
 
-class PublicApplicationFormContext(FormContext):
-    name = "public_application_form_context"
-    form = PublicApplicationForm()
-    action = "/application"
-    method = "POST"
-    fieldset_ordering = [
-        BasicCompliance,
-        APCFieldset
-    ]
+class PublicApplicationFormContext(ContextualForm):
+    struct = PublicApplicationForm()
 
-# pafc = PublicApplicationFormContext()
+pafc = PublicApplicationFormContext()
+fs = FormSerialiser()
+repr = fs.to_representation(pafc)
+print(repr)
+# with open("out.html", "w") as f:
+#     f.write(pafc.draw())
 # print(pafc.draw())
