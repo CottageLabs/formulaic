@@ -1,10 +1,10 @@
-from formulaic.transform import Transform
+from formulaic.crosswalk.core import Crosswalk
 
 from formulaic.test.example.structs import JournalStructure
 from formulaic.test.example.api import OutgoingJournalStruct, OutgoingJournal
 
 
-class Journal2OutgoingJournal(Transform):
+class Journal2OutgoingJournal(Crosswalk):
     source = JournalStructure()
     target = OutgoingJournalStruct()
     target_class = OutgoingJournal

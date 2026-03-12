@@ -8,9 +8,9 @@ from formulaic.objects import FormulaicObject, FormulaicMixin
 
 
 ###################################################
-## Transformers/Crosswalks
+## Crosswalks
 
-class Transform:
+class Crosswalk:
     source:Structure = None
     target:Structure = None
     target_class:Optional[Type[Union[FormulaicObject, FormulaicMixin]]] = None
@@ -57,7 +57,7 @@ class Transform:
         pass
 
 
-class Transformer:
+class CrosswalkRule:
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[FormulaicMixin]=None,
@@ -68,7 +68,7 @@ class Transformer:
 #####################################################
 ## Transformer implementations
 
-class Copy(Transformer):
+class Copy(CrosswalkRule):
     """
     A transformer that copies data from source to target without any changes.
 
@@ -84,7 +84,7 @@ class Copy(Transformer):
         return deepcopy(value)
 
 
-class SetValue(Transformer):
+class SetValue(CrosswalkRule):
     def __init__(self, value):
         self.value = value
 
@@ -95,7 +95,7 @@ class SetValue(Transformer):
                         full_data:Optional[dict]=None):
         return self.value
 
-class BooleanString(Transformer):
+class BooleanString(CrosswalkRule):
     """
     A transformer that converts boolean values to "Y" or "N" strings.
     """

@@ -1,11 +1,11 @@
-from typing import Union, Optional, Any
+from typing import Optional, Any
 
-from formulaic.core import Field, Structure, SINGLE, OPTIONAL, REPEATABLE, StructRef
+from formulaic.core import Field, Structure, SINGLE, OPTIONAL, REPEATABLE
 from formulaic.fields import BasicUnicode, UTCDateTimeField
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.test.example.models import Journal
 from formulaic.test.example.structs import JournalStructure
-from formulaic.transform import Transform, Transformer, SetValue
+from formulaic.crosswalk.core import Crosswalk, CrosswalkRule, SetValue
 from formulaic.serialise.xml.xml import XMLSerialiser, ATTRIBUTE, TEXT, XMLFieldCapability, XMLStructureCapability, \
     ELEMENT
 
@@ -112,7 +112,7 @@ class DublinCoreFO(FormulaicObject):
 #############################################
 ## Transformers
 
-class ToCID(Transformer):
+class ToCID(CrosswalkRule):
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[Journal]=None,
@@ -123,7 +123,7 @@ class ToCID(Transformer):
             return url
         return None
 
-class SubjectTerm(Transformer):
+class SubjectTerm(CrosswalkRule):
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[FormulaicMixin]=None,
@@ -139,7 +139,7 @@ class SubjectTerm(Transformer):
             result.append({"term": v})
         return result
 
-class SubjectSchemeAndTerm(Transformer):
+class SubjectSchemeAndTerm(CrosswalkRule):
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[FormulaicMixin]=None,
@@ -179,7 +179,7 @@ class SubjectSchemeAndTerm(Transformer):
 
             return result
 
-class RightsTransformer(Transformer):
+class RightsCrosswalkRule(CrosswalkRule):
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[FormulaicMixin]=None,
@@ -198,7 +198,7 @@ class RightsTransformer(Transformer):
                 result.append(t)
         return result
 
-class Journal2DC(Transform):
+class Journal2DC(Crosswalk):
     source:JournalStructure = JournalStructure()
     target:DublinCoreStructure = DublinCoreStructure()
     target_class:DublinCoreFO = DublinCoreFO
@@ -209,7 +209,7 @@ class Journal2DC(Transform):
         (source.bibjson.eissn, target.identifier),
         (None, target.identifier, ToCID()),
         (source.bibjson.language, target.language),
-        (source.bibjson.license, target.rights, RightsTransformer()),
+        (source.bibjson.license, target.rights, RightsCrosswalkRule()),
         (source.bibjson.publisher.name, target.publisher),
         (source.bibjson.ref.journal, target.relation),
         (source.bibjson.ref.aims_scope, target.relation),

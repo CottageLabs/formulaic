@@ -2,14 +2,14 @@ from typing import Optional, Any
 
 from formulaic.core import Structure
 from formulaic.objects import FormulaicMixin, FormulaicObject
-from formulaic.transform import Transform, Transformer
-from formulaic.transform import BooleanString
+from formulaic.crosswalk.core import Crosswalk, CrosswalkRule
+from formulaic.crosswalk.core import BooleanString
 
 from formulaic.test.example.structs import JournalStructure
 from formulaic.test.example.forms import PublicApplicationForm
 
 
-class APCChargesTransformer(Transformer):
+class APCChargesCrosswalkRule(CrosswalkRule):
     def transform(self, source:Optional[Structure],
                         value:Optional[Any],
                         mixin:Optional[FormulaicMixin]=None,
@@ -31,7 +31,7 @@ class APCChargesTransformer(Transformer):
         return result if len(result) > 0 else None
 
 
-class Journal2Form(Transform):
+class Journal2Form(Crosswalk):
     source = JournalStructure()
     target = PublicApplicationForm()
 
@@ -39,5 +39,5 @@ class Journal2Form(Transform):
         (source.bibjson.boai, target.boai, BooleanString(true="y", false="n")),
         (source.bibjson.ref.oa_statement, target.oa_statement_url),
         (source.bibjson.apc.has_apc, target.apc, BooleanString(true="y", false="n")),
-        (source.bibjson.apc.max, target.apc_charges, APCChargesTransformer())
+        (source.bibjson.apc.max, target.apc_charges, APCChargesCrosswalkRule())
     ]

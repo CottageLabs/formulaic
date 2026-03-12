@@ -1,5 +1,5 @@
 from formulaic.core import Field
-from formulaic.coerce import Unicode, BigEndDate, Boolean, UTCDateTime, Integer
+from formulaic.coerce.coerce import Unicode, BigEndDate, Boolean, UTCDateTime, Integer
 
 
 class BasicUnicode(Field):

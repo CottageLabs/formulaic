@@ -1,9 +1,8 @@
-from formulaic.core import Field, Coerce
-from formulaic.coerce import Unicode, Integer, LowerCase, UpperCaseUnicode
+from formulaic.core import Field, Coerce, FieldCapability
+from formulaic.coerce.coerce import Unicode, Integer, LowerCase, UpperCaseUnicode
 from formulaic.fields import BasicUnicode, BasicBoolean, DateField, UTCDateTimeField, IntegerField
-from formulaic.schema.es7x import ES7xStorableField
-from formulaic.validate import IsURL
-from formulaic.test.example.validate import IsISSN
+from formulaic.schema.es7x.es7x import ES7xCapability
+from formulaic.validate.validate import IsURL
 
 ############################################
 # Custom coerce functions
@@ -56,26 +55,51 @@ class URL(Field):
     coerce = [Unicode()]
     validators = [IsURL()]
 
-class ES7xKeywordField(ES7xStorableField):
-    es_keyword_field = True
-    es_keyword_ignore_above = 0 # no limit
 
-class ES7xDateOptionalTime(ES7xStorableField):
+class ES7xKeywordCapability(ES7xCapability):
+    keyword_field = True
+    keyword_ignore_above = 0 # no limit
+
+class ES7xKeywordField(Field):
+    capabilities = (ES7xKeywordCapability(),)
+
+
+class ES7xDateOptionalTimeCapability(ES7xCapability):
     es_type = "date"
-    es_format = "date_optional_time"
+    format = "date_optional_time"
 
-class ES7xBoolean(ES7xStorableField):
+class ES7xDateOptionalTime(Field):
+    capabilities = (ES7xDateOptionalTimeCapability(),)
+
+
+class ES7xBooleanCapability(ES7xCapability):
     es_type = "boolean"
 
-class ES7xInteger(ES7xStorableField):
-    es_type="long"
+class ES7xBoolean(Field):
+    capabilities = (ES7xBooleanCapability(),)
 
-class ES7xYear(ES7xStorableField):
+
+class ES7xIntegerCapability(ES7xCapability):
+    es_type = "long"
+
+class ES7xInteger(Field):
+    capabilities = (ES7xIntegerCapability(),)
+
+
+class ES7xYearCapability(ES7xCapability):
     es_type = "date"
-    es_format = "year"
+    format = "year"
 
-class ES7xNotIndexed(ES7xStorableField):
-    es_index = False
+class ES7xYear(Field):
+    capabilities = (ES7xYearCapability(),)
+
+
+class ES7xNotIndexedCapability(ES7xCapability):
+    index = False
+
+class ES7xNotIndexed(Field):
+    capabilities = (ES7xNotIndexedCapability(),)
+
 
 #############################################
 ## Common reusable fields
