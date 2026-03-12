@@ -1,78 +1,93 @@
 from typing import Union, Optional, Any
 
-from formulaic.core import Field, Structure, SINGLE, OPTIONAL, REPEATABLE
+from formulaic.core import Field, Structure, SINGLE, OPTIONAL, REPEATABLE, StructRef
 from formulaic.fields import BasicUnicode, UTCDateTimeField
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.test.example.models import Journal
 from formulaic.test.example.structs import JournalStructure
 from formulaic.transform import Transform, Transformer, SetValue
-from formulaic.serialise.xml import XMLSerialiser, XMLStructure, XMLField, XMLStructRef, ATTRIBUTE, TEXT
+from formulaic.serialise.xml.xml import XMLSerialiser, ATTRIBUTE, TEXT, XMLFieldCapability, XMLStructureCapability, \
+    ELEMENT
 
 
-class DCField(XMLField):
-    xml_namespace = "http://purl.org/dc/elements/1.1/"
-    xml_namespace_prefix = "dc"
+################################################
+## XML Serialisation configuration for DC
 
-class DCStructRef(XMLStructRef):
-    xml_namespace = "http://purl.org/dc/elements/1.1/"
-    xml_namespace_prefix = "dc"
-    xml_schema_location = "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"
+# Capability classes
 
-class DCStructure(XMLStructure):
-    ref_class_ = DCStructRef
+class DCElementXMLFieldCapability(XMLFieldCapability):
+    namespace = "http://purl.org/dc/elements/1.1/"
+    namespace_prefix = "dc"
+    entity_type = ELEMENT
+
+class DCXSIAttributeCapability(XMLFieldCapability):
+    entity_type = ATTRIBUTE
+    namespace = "http://www.w3.org/2001/XMLSchema-instance"
+    namespace_prefix = "xsi"
+
+class DCXMLTextCapability(DCElementXMLFieldCapability):
+    entity_type = TEXT
+
+class DCXMLStructureCapability(XMLStructureCapability):
+    namespace = "http://purl.org/dc/elements/1.1/"
+    namespace_prefix = "dc"
+    schema_location = "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"
+
+# Binding capabilities to all fields and structures
+# (Note for the regularly used fields, this could also be done by setting the capability classes as the defaults on
+# the serialiser itself)
+
+class DCXMLElementField(Field):
+    capabilities = (DCElementXMLFieldCapability(),)
+
+class DCXSIAttributeField(Field):
+    capabilities = (DCXSIAttributeCapability(),)
+
+class DCXMLTextField(Field):
+    capabilities = (DCXMLTextCapability(),)
+
+class DCXMLStructure(Structure):
+    capabilities_ = (DCXMLStructureCapability(),)
 
 
-class DCTitle(BasicUnicode, DCField):
-    name = "title"
+##########################################
+## DC Fields
 
-class DCIdentifier(BasicUnicode, DCField):
-    name = "identifier"
+# Simple element fields
+class DCTitle(BasicUnicode, DCXMLElementField): name = "title"
 
-class DCDate(UTCDateTimeField, DCField):
-    name = "date"
+class DCIdentifier(BasicUnicode, DCXMLElementField): name = "identifier"
 
-class DCRelation(BasicUnicode, DCField):
-    name = "relation"
+class DCDate(UTCDateTimeField, DCXMLElementField): name = "date"
 
-class DCDescription(BasicUnicode, DCField):
-    name = "description"
+class DCRelation(BasicUnicode, DCXMLElementField): name = "relation"
 
-class DCType(BasicUnicode, DCField):
-    name = "type"
+class DCDescription(BasicUnicode, DCXMLElementField): name = "description"
 
-class DCCreator(BasicUnicode, DCField):
-    name = "creator"
+class DCType(BasicUnicode, DCXMLElementField): name = "type"
 
-class DCPublisher(BasicUnicode, DCField):
-    name = "publisher"
+class DCCreator(BasicUnicode, DCXMLElementField): name = "creator"
 
-class DCLanguage(BasicUnicode, DCField):
-    name = "language"
+class DCPublisher(BasicUnicode, DCXMLElementField): name = "publisher"
 
-class DCSource(BasicUnicode, DCField):
-    name = "source"
+class DCLanguage(BasicUnicode, DCXMLElementField): name = "language"
 
-class DCRights(BasicUnicode, DCField):
-    name = "rights"
+class DCSource(BasicUnicode, DCXMLElementField): name = "source"
 
-class DCSubjectType(BasicUnicode, DCField):
-    xml_entity_type = ATTRIBUTE
-    xml_namespace = "http://www.w3.org/2001/XMLSchema-instance"
-    xml_namespace_prefix = "xsi"
-    name = "type"
+class DCRights(BasicUnicode, DCXMLElementField): name = "rights"
 
-class DCSubjectTerm(BasicUnicode, DCField):
-    xml_entity_type = TEXT
-    name = "term"
+# Subject classification fields and their container structure
+class DCSubjectType(BasicUnicode, DCXSIAttributeField): name = "type"
 
-class DCSubject(DCStructure):
+class DCSubjectTerm(BasicUnicode, DCXMLTextField): name = "term"
+
+class DCSubject(DCXMLStructure):
     name_ = "subject"
-
     type = DCSubjectType(OPTIONAL, SINGLE)
     term = DCSubjectTerm(OPTIONAL, SINGLE)
 
-
-class DublinCoreStructure(DCStructure):
+# The overall Structure
+class DublinCoreStructure(DCXMLStructure):
     name_ = "dc"
 
     title = DCTitle(OPTIONAL, REPEATABLE)
@@ -88,9 +103,14 @@ class DublinCoreStructure(DCStructure):
     subject = DCSubject(OPTIONAL, REPEATABLE)
     rights = DCRights(OPTIONAL, REPEATABLE)
 
+#############################################
+## Formulaic Object to hold the DC data
+
 class DublinCoreFO(FormulaicObject):
     struct = DublinCoreStructure()
 
+#############################################
+## Transformers
 
 class ToCID(Transformer):
     def transform(self, source:Optional[Structure],
@@ -99,7 +119,7 @@ class ToCID(Transformer):
                         obj:Optional[FormulaicObject]=None,
                         full_data:Optional[dict]=None):
         if mixin is not None:
-            url = f"/toc/${mixin.toc_id}"
+            url = f"/toc/{mixin.toc_id}"
             return url
         return None
 
@@ -150,11 +170,11 @@ class SubjectSchemeAndTerm(Transformer):
             else:
                 if term:
                     result.append({
-                        "term": f"${scheme}:${term}",
+                        "term": f"{scheme}:{term}",
                     })
                 if code:
                     result.append({
-                        "term": f"${scheme}:${code}",
+                        "term": f"{scheme}:{code}",
                     })
 
             return result
@@ -201,6 +221,9 @@ class Journal2DC(Transform):
         (source.bibjson.subject, target.subject, SubjectSchemeAndTerm()),
     ]
 
+##########################################
+
+
 from formulaic.test.example.data import JOURNAL_SOURCE
 import json
 
@@ -211,5 +234,5 @@ dc = xwalk.transform(journal)
 print(json.dumps(dc.data, indent=4, sort_keys=True))
 
 serialiser = XMLSerialiser()
-out = serialiser.to_string(dc, DublinCoreStructure(), pretty=True)
+out = serialiser.data_to_string(dc, DublinCoreStructure(), pretty=True)
 print(out)

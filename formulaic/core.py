@@ -78,7 +78,7 @@ class Field:
         self._duplicability = duplicability
         self._parent = parent
 
-        self._capabilities = {}
+        self._capabilities = []
         for cap in self._collect_class_capabilities():
             self.add_capability(cap)
 
@@ -194,19 +194,23 @@ class Field:
         """
         new = self.__class__(need=self.need, multiplicity=self.multiplicity,
                               duplicability=self.duplicability, parent=self.parent)
-        new._capabilities = {}
-        for cap in self._capabilities.values():
+        new._capabilities = []
+        for cap in self._capabilities:
             new.add_capability(cap.clone())
         return new
 
     def get_capability(self, capability_class:"FieldCapability.__class__"):
         """
         Get the extension of the field for the given extension class, or None if not found.
+        If there are multiple matches, it gets the first one.
 
         :param capability_class: The class of the extension to get.
         :return: The extension instance, or None if not found.
         """
-        return self._capabilities.get(capability_class)
+        for cap in self._capabilities:
+            if isinstance(cap, capability_class):
+                return cap
+        return None
 
     def add_capability(self, capability:"FieldCapability"):
         """
@@ -214,18 +218,23 @@ class Field:
 
         :param capability: The extension instance to add.
         """
-        self._capabilities[capability.__class__] = capability
+        self._capabilities.append(capability)
         capability.bind(self)
         return self
 
     def remove_capability(self, capability_class:"FieldCapability.__class__"):
         """
-        Remove an extension from the field by its class.
+        Remove an extension from the field by its class.  Removes all capabilities which match the
+        given class
 
         :param capability_class: The class of the extension to remove.
         """
-        self._capabilities.pop(capability_class, None)
-
+        removes = []
+        for i, cap in enumerate(self._capabilities):
+            if isinstance(cap, capability_class):
+                removes.append(i)
+        for i in reversed(removes):
+            del self._capabilities[i]
 
 class FieldCapability:
     def __init__(self):
@@ -238,9 +247,6 @@ class FieldCapability:
         return deepcopy(self)
 
 class StructRef:
-
-
-
     """
     This class sits alongside a Structure and provides all its properties and methods.  This is to keep the Structure
     class as clean as possible, and to separate out the properties of the structure from the structure itself.
@@ -276,7 +282,7 @@ class StructRef:
         self._multiplicity = multiplicity
         self._duplicability = duplicability
         self._parent = parent
-        self._capabilities = {}
+        self._capabilities = []
 
         for base in reversed(self._struct.__class__.__mro__):
             for cap in getattr(base, "capabilities_", ()):
@@ -292,8 +298,8 @@ class StructRef:
         new = self._struct.__class__(need=self.need, multiplicity=self.multiplicity,
                          duplicability=self.duplicability, parent=self.parent)
         new_ref = new.ref_
-        new_ref._capabilities = {}
-        for cap in self._capabilities.values():
+        new_ref._capabilities = []
+        for cap in self._capabilities:
             new_ref.add_capability(cap.clone())
         return new
 
@@ -457,11 +463,15 @@ class StructRef:
     def get_capability(self, capability_class: "StructureCapability.__class__"):
         """
         Get the extension of the field for the given extension class, or None if not found.
+        If there are multiple matches, it gets the first one.
 
         :param capability_class: The class of the extension to get.
         :return: The extension instance, or None if not found.
         """
-        return self._capabilities.get(capability_class)
+        for cap in self._capabilities:
+            if isinstance(cap, capability_class):
+                return cap
+        return None
 
     def add_capability(self, capability: "StructureCapability"):
         """
@@ -469,17 +479,23 @@ class StructRef:
 
         :param capability: The extension instance to add.
         """
-        self._capabilities[capability.__class__] = capability
+        self._capabilities.append(capability)
         capability.bind(self)
         return self
 
     def remove_capability(self, capability_class: "StructureCapability.__class__"):
         """
-        Remove an extension from the field by its class.
+        Remove an extension from the field by its class.  Removes all capabilities which match the
+        given class
 
         :param capability_class: The class of the extension to remove.
         """
-        self._capabilities.pop(capability_class, None)
+        removes = []
+        for i, cap in enumerate(self._capabilities):
+            if isinstance(cap, capability_class):
+                removes.append(i)
+        for i in reversed(removes):
+            del self._capabilities[i]
 
 
 class StructureCapability:

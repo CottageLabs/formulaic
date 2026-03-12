@@ -17,9 +17,19 @@ XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 XSI = "{%s}" % XSI_NAMESPACE
 
 ###################################################
-## Extension objects for Fields and StructRefs to support XML-specific metadata
+## Extension objects for Fields and Structuresto support XML-specific metadata
 
 class XMLFieldCapability(FieldCapability):
+    """
+    Capability class for XML serialisation of fields.
+
+    Add this class to your Field's capability list like
+
+    ```
+    class MyField(Field):
+        capabilities = (XMLFieldCapability(),)
+    ```
+    """
     namespace = None
     namespace_prefix = None
     entity_type = ELEMENT
@@ -34,6 +44,16 @@ class XMLFieldCapability(FieldCapability):
         return self.entity_type == TEXT
 
 class XMLStructureCapability(StructureCapability):
+    """
+    Capability class for XML serialisation of structures.
+
+    Add this class to your Structure's capability list like
+
+    ```
+    class MyStruct(Structure):
+        capabilities_ = (XMLStructureCapability(),)
+    ```
+    """
     namespace = None
     namespace_prefix = None
     schema_location = None
@@ -52,22 +72,48 @@ class XMLStructureCapability(StructureCapability):
 ## The XML Serialiser
 
 class XMLSerialiser(Serialiser):
+    """
+    Serialiser for XML format. Converts formulaic data to an XML ElementTree Element, which can then be serialised to a string.
+
+    Fields must either have an XMLFieldCapability subclass in their capabilities, or be able to use the default Capability provided
+    by XMLFieldCapability. Structures must either have an XMLStructureCapability subclass in their capabilities, or be able to use the default
+    Capability provided by XMLStructureCapability.
+    """
     def __init__(self,
                  field_capability_class=None,
                  structure_capability_class=None,
                  field_capability_default=None,
                  struct_capability_default=None
                  ):
+        """
+        Construct an XMLSerialiser.  You may provide custom capability classes and default classes for Fields and Structures.
+
+        :param field_capability_class: The class to use as the base class for all Field Capabilities. Must be a subclass of XMLFieldCapability. If not provided, XMLFieldCapability will be used.
+        :param structure_capability_class: The class to use as the base class for all Structure Capabilities. Must be a subclass of XMLStructureCapability. If not provided, XMLStructureCapability will be used.
+        :param field_capability_default: An instance of an XMLFieldCapability subclass to use as the default capability for Fields that do not have a specific capability. If not provided, an instance of XMLFieldCapability will be used.
+        :param struct_capability_default: An instance of an XMLStructureCapability subclass to use as the default capability for Structures that do not have a specific capability. If not provided, an instance of XMLStructureCapability will be used.
+        """
+
         self._field_capability_class = field_capability_class or XMLFieldCapability
         self._structure_capability_class = structure_capability_class or XMLStructureCapability
-        self._field_capability_default = field_capability_default or XMLFieldCapability
-        self._struct_capability_default = struct_capability_default or XMLStructureCapability
+        self._field_capability_default = field_capability_default or XMLFieldCapability()
+        self._struct_capability_default = struct_capability_default or XMLStructureCapability()
         super().__init__()
 
     def get_capability(self, reference:Union[Field, Structure, StructRef]) -> Union[XMLFieldCapability, XMLStructureCapability]:
+        """
+        Obtain the XMLFieldCapability or XMLStructureCapability for a given Field, Structure, or StructRef. If the
+        reference does not have a specific capability, the default capability will be returned based on whether the reference is a Field or a Structure.
+
+        :param reference:
+        :return:
+        """
         cap = unity.get_capability(reference, (self._field_capability_class, self._structure_capability_class))
         if cap is None:
-            pass
+            if isinstance(reference, Field):
+                cap = self._field_capability_default
+            elif isinstance(reference, (Structure, StructRef)):
+                cap = self._struct_capability_default
         return cap
 
     def _namespace(self, reference:Union[Field, Structure]):
@@ -110,7 +156,15 @@ class XMLSerialiser(Serialiser):
                 el = ET.SubElement(parent, ns_prefix + entry.name)
                 el.text = str(value)
 
-    def to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+        """
+        Convert the data from the internal formulaic format to an XML ElementTree Element.
+
+        :param data:
+        :param struct:
+        :param kwargs:
+        :return:
+        """
         mixin, fo, struct, data = unity.expand(data, struct)
 
         name, ns, prefix = self._namespace(struct)
@@ -148,11 +202,19 @@ class XMLSerialiser(Serialiser):
         recurse(data, struct, root)
         return root
 
-    def serialise(self, representation, pretty:bool=False, xml_declaration:bool=True, **kwargs):
+    def representation_to_string(self, representation, pretty:bool=False, xml_declaration:bool=True, **kwargs):
+        """
+        Convert the intermediate representation (an XML ElementTree Element) to a string. By default, the
+        output will include an XML declaration and will not be pretty-printed. You can change this with the
+        pretty and xml_declaration parameters.
+
+        :param representation:
+        :param pretty:
+        :param xml_declaration:
+        :param kwargs:
+        :return:
+        """
         xml_str = ET.tostring(representation, encoding="unicode", xml_declaration=xml_declaration)
         if pretty:
             xml_str = xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
         return xml_str
-
-    def parse(self, stream, struct:Structure):
-        pass

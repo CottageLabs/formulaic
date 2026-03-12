@@ -221,7 +221,7 @@ class PublicApplicationFormContext(ContextualForm):
 
 pafc = PublicApplicationFormContext()
 fs = FormSerialiser()
-repr = fs.to_representation(pafc)
+repr = fs.data_to_representation(pafc)
 print(repr)
 # with open("out.html", "w") as f:
 #     f.write(pafc.draw())

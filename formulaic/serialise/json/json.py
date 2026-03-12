@@ -22,7 +22,16 @@ class JSONSerialiser(Serialiser):
                 value = entry.serialiser(value)
             parent[entry.name] = value
 
-    def to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+        """
+        Converts the data from the internal formulaic format to a JSON-compatible representation, which is
+        serialisable as-is to JSON
+
+        :param data:
+        :param struct:
+        :param kwargs:
+        :return:
+        """
         mixin, fo, struct, data = unity.expand(data, struct)
 
         root = {}
@@ -51,14 +60,35 @@ class JSONSerialiser(Serialiser):
         recurse(data, struct, root)
         return root
 
-    def serialise(self, representation:dict, **kwargs):
+    def representation_to_string(self, representation:dict, **kwargs):
+        """
+            Convert the intermediate representation to a JSON string
+
+        :param representation:
+        :param kwargs:
+        :return:
+        """
         return json.dumps(representation, **kwargs)
 
-    def from_representation(self, representation, struct:Structure, **kwargs) -> dict:
+    def representation_to_data(self, representation, struct:Structure, **kwargs) -> dict:
+        """
+        Read the intermediate representation from a JSON-compatible format back to the internal formulaic format.
+
+        :param representation:
+        :param struct:
+        :param kwargs:
+        :return:
+        """
+        # FIXME: this should probably use the engine to construct the data from the structure, rather than just returning the dict
         return json.loads(representation)
 
-    def from_string(self, string:str, struct:Structure, **kwargs) -> dict:
-        return json.loads(string)
+    def string_to_representation(self, string:str, struct:Structure, **kwargs) -> dict:
+        """
+        Read the JSON string and convert it to the intermediate representation (which in this case is just a dict)
 
-    def parse(self, stream, struct:Structure):
-        return json.loads(stream)
+        :param string:
+        :param struct:
+        :param kwargs:
+        :return:
+        """
+        return json.loads(string)

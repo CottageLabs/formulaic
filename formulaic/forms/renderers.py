@@ -11,7 +11,7 @@ class FormRepresentation(Structure):
     pass
 
 class FormSerialiser(Serialiser):
-    def to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
         mixin, fo, struct, data = unity.expand(data, struct)
         form_info:FormInfo = struct._form_info
 
@@ -46,17 +46,17 @@ class FormSerialiser(Serialiser):
         recurse(sr, repr["fieldsets"])
         return repr
 
-    def to_string(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct: Structure=None, **kwargs):
-        repr = self.to_representation(data, struct, **kwargs)
-        return self.serialise(repr, **kwargs)
+    def data_to_string(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct: Structure=None, **kwargs):
+        repr = self.data_to_representation(data, struct, **kwargs)
+        return self.representation_to_string(repr, **kwargs)
 
-    def serialise(self, representation, **kwargs):
+    def representation_to_string(self, representation, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def from_representation(self, representation, struct:Structure, **kwargs) -> dict:
+    def representation_to_data(self, representation, struct:Structure, **kwargs) -> dict:
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def from_string(self, string:str, struct:Structure, **kwargs) -> dict:
+    def string_to_representation(self, string:str, struct:Structure, **kwargs) -> dict:
         raise NotImplementedError("Subclasses must implement this method.")
 
 ####################################################
