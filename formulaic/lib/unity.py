@@ -69,3 +69,15 @@ def expand(data:Union[dict, "FormulaicObject", "FormulaicMixin"], struct:"Struct
         s = fo.struct
 
     return mixin, fo, s, d
+
+def get_capability(f: Union["Field", "Structure", "StructRef"], capability: tuple[type, type]) -> Union["FieldCapability", "StructureCapability"]:
+    from formulaic.core import Field, Structure, StructRef
+
+    if isinstance(f, Field):
+        return f.get_capability(capability[0])
+    elif isinstance(f, Structure):
+        return f.ref_.get_capability(capability[1])
+    elif isinstance(f, StructRef):
+        return f.get_capability(capability[1])
+    else:
+        raise TypeError("Expected Field or Structure instance.")

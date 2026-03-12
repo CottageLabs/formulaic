@@ -7,6 +7,7 @@ from formulaic.core import Field, Structure, StructRef, OPTIONAL, SINGLE, DUPLIC
 from formulaic.lib import unity
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.serialise.core import Serialiser
+from formulaic.serialise.xml2 import XMLFieldCapability
 
 ELEMENT = "element"
 ATTRIBUTE = "attribute"
@@ -14,6 +15,37 @@ TEXT = "text"
 
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 XSI = "{%s}" % XSI_NAMESPACE
+
+###################################################
+## Extension approach
+
+class XMLFieldExtension(object):
+    xml_namespace = None
+    xml_namespace_prefix = None
+    xml_entity_type = ELEMENT
+
+    def xml_is_attribute(self):
+        return self.xml_entity_type == ATTRIBUTE
+
+    def xml_is_element(self):
+        return self.xml_entity_type == ELEMENT
+
+    def xml_is_text(self):
+        return self.xml_entity_type == TEXT
+
+class XMLStructRefExtension(object):
+    xml_namespace = None
+    xml_namespace_prefix = None
+    xml_schema_location = None
+
+    def xml_is_attribute(self):
+        return False
+
+    def xml_is_element(self):
+        return True
+
+    def xml_is_text(self):
+        return False
 
 ###################################################
 ## Extensions on the Field/Structure/StructRef classes to support XML-specific metadata
@@ -61,7 +93,6 @@ class XMLStructRef(StructRef):
 
 
 class XMLStructure(Structure):
-    _form = None
     ref_class_:XMLStructRef = XMLStructRef
     # ref_: XMLStructRef  # For type annotation only
 
@@ -79,6 +110,10 @@ class XMLStructure(Structure):
 ## The XML Serialiser
 
 class XMLSerialiser(Serialiser):
+    def __init__(self, field_capability_class=None, struct_capability_class=None):
+        self._field_capability_class = field_capability_class or XMLFieldCapability
+        self._struct_capability_class = struct_capability_class or XMLStructureExtension
+
     def _namespace(self, reference:Union[XMLField, XMLStructure]):
         if isinstance(reference, XMLStructure):
             reference = reference.ref_

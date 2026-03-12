@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Union, Callable, Tuple, Any
 
 from formulaic.lib import unity, introspection
@@ -49,6 +50,8 @@ class Field:
     serialiser:Callable = None
     """A function that can take the value of the field and produce a primitive value suitable for serialisation, e.g. to JSON or XML."""
 
+    capabilities:tuple["FieldCapability"] = ()
+
     def __init__(self, need:str=OPTIONAL,
                  multiplicity:str=SINGLE,
                  duplicability:str=UNIQUE,
@@ -75,8 +78,19 @@ class Field:
         self._duplicability = duplicability
         self._parent = parent
 
+        self._capabilities = {}
+        for cap in self._collect_class_capabilities():
+            self.add_capability(cap)
+
         if check_coherence:
             self._check_coherence()
+
+    @classmethod
+    def _collect_class_capabilities(cls):
+        result = []
+        for base in reversed(cls.__mro__):
+            result.extend(getattr(base, "capabilities", ()))
+        return result
 
     @property
     def need(self) -> str:
@@ -178,11 +192,55 @@ class Field:
         Subclasses of Field that add features will need to override this method to ensure the
         clones are suitable
         """
-        return self.__class__(need=self.need, multiplicity=self.multiplicity,
+        new = self.__class__(need=self.need, multiplicity=self.multiplicity,
                               duplicability=self.duplicability, parent=self.parent)
+        new._capabilities = {}
+        for cap in self._capabilities.values():
+            new.add_capability(cap.clone())
+        return new
 
+    def get_capability(self, capability_class:"FieldCapability.__class__"):
+        """
+        Get the extension of the field for the given extension class, or None if not found.
+
+        :param capability_class: The class of the extension to get.
+        :return: The extension instance, or None if not found.
+        """
+        return self._capabilities.get(capability_class)
+
+    def add_capability(self, capability:"FieldCapability"):
+        """
+        Add an extension to the field.
+
+        :param capability: The extension instance to add.
+        """
+        self._capabilities[capability.__class__] = capability
+        capability.bind(self)
+        return self
+
+    def remove_capability(self, capability_class:"FieldCapability.__class__"):
+        """
+        Remove an extension from the field by its class.
+
+        :param capability_class: The class of the extension to remove.
+        """
+        self._capabilities.pop(capability_class, None)
+
+
+class FieldCapability:
+    def __init__(self):
+        self.field = None
+
+    def bind(self, field: Field):
+        self.field = field
+
+    def clone(self):
+        return deepcopy(self)
 
 class StructRef:
+
+
+
     """
     This class sits alongside a Structure and provides all its properties and methods.  This is to keep the Structure
     class as clean as possible, and to separate out the properties of the structure from the structure itself.
@@ -218,6 +276,11 @@ class StructRef:
         self._multiplicity = multiplicity
         self._duplicability = duplicability
         self._parent = parent
+        self._capabilities = {}
+
+        for base in reversed(self._struct.__class__.__mro__):
+            for cap in getattr(base, "capabilities_", ()):
+                self.add_capability(cap.clone())
 
     def clone(self):
         """
@@ -226,8 +289,13 @@ class StructRef:
         Subclasses of StructRef that add features will need to override this method to ensure the
         clones are suitable
         """
-        return self.struct.__class__(need=self.need, multiplicity=self.multiplicity,
+        new = self._struct.__class__(need=self.need, multiplicity=self.multiplicity,
                          duplicability=self.duplicability, parent=self.parent)
+        new_ref = new.ref_
+        new_ref._capabilities = {}
+        for cap in self._capabilities.values():
+            new_ref.add_capability(cap.clone())
+        return new
 
     @property
     def name(self) -> str:
@@ -386,6 +454,43 @@ class StructRef:
                 return None
         return ctx
 
+    def get_capability(self, capability_class: "StructureCapability.__class__"):
+        """
+        Get the extension of the field for the given extension class, or None if not found.
+
+        :param capability_class: The class of the extension to get.
+        :return: The extension instance, or None if not found.
+        """
+        return self._capabilities.get(capability_class)
+
+    def add_capability(self, capability: "StructureCapability"):
+        """
+        Add an extension to the field.
+
+        :param capability: The extension instance to add.
+        """
+        self._capabilities[capability.__class__] = capability
+        capability.bind(self)
+        return self
+
+    def remove_capability(self, capability_class: "StructureCapability.__class__"):
+        """
+        Remove an extension from the field by its class.
+
+        :param capability_class: The class of the extension to remove.
+        """
+        self._capabilities.pop(capability_class, None)
+
+
+class StructureCapability:
+    def __init__(self):
+        self.struct_ref = None
+
+    def bind(self, struct_ref: StructRef):
+        self.struct_ref = struct_ref
+
+    def clone(self):
+        return deepcopy(self)
 
 class Structure:
     """
@@ -445,6 +550,8 @@ class Structure:
 
     ref_class_:StructRef = StructRef
     """The class to use for the structure reference.  Subclasses may override this to provide a custom reference class."""
+
+    capabilities_ = ()
 
     def __init__(self, need:str=OPTIONAL,
                  multiplicity:str=SINGLE,
