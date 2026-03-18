@@ -164,6 +164,18 @@ class Field:
             parts = parent_path + parts
         return parts
 
+    @property
+    def stack(self) -> list[Union["Field", "Structure"]]:
+        """
+        Returns the stack of fields and structures from the root structure to this field as a list of objects.
+        :return:
+        """
+        parts = [self]
+        if self.parent is not None:
+            parent_stack = self.parent.ref_.stack
+            parts = parent_stack + parts
+        return parts
+
     def _check_coherence(self):
         """
         Check the coherence of the field properties.  Raises a ValueError if any incoherence is found.
@@ -194,6 +206,14 @@ class Field:
         """
         new = self.__class__(need=self.need, multiplicity=self.multiplicity,
                               duplicability=self.duplicability, parent=self.parent)
+        new._capabilities = []
+        for cap in self._capabilities:
+            new.add_capability(cap.clone())
+        return new
+
+    def detach(self):
+        new = self.__class__(need=self.need, multiplicity=self.multiplicity,
+                             duplicability=self.duplicability, parent=None)
         new._capabilities = []
         for cap in self._capabilities:
             new.add_capability(cap.clone())
@@ -236,12 +256,26 @@ class Field:
         for i in reversed(removes):
             del self._capabilities[i]
 
+    def has_capability(self, capability_class:"FieldCapability.__class__") -> bool:
+        """
+        Check if the field has an extension of the given class.
+
+        :param capability_class: The class of the extension to check for.
+        :return: True if the field has an extension of the given class, False otherwise.
+        """
+        return self.get_capability(capability_class) is not None
+
+
 class FieldCapability:
     def __init__(self):
-        self.field = None
+        self._field = None
+
+    @property
+    def field(self) -> Field:
+        return self._field
 
     def bind(self, field: Field):
-        self.field = field
+        self._field = field
 
     def clone(self):
         return deepcopy(self)
@@ -297,6 +331,15 @@ class StructRef:
         """
         new = self._struct.__class__(need=self.need, multiplicity=self.multiplicity,
                          duplicability=self.duplicability, parent=self.parent)
+        new_ref = new.ref_
+        new_ref._capabilities = []
+        for cap in self._capabilities:
+            new_ref.add_capability(cap.clone())
+        return new
+
+    def detach(self):
+        new = self._struct.__class__(need=self.need, multiplicity=self.multiplicity,
+                                     duplicability=self.duplicability, parent=None)
         new_ref = new.ref_
         new_ref._capabilities = []
         for cap in self._capabilities:
@@ -383,6 +426,18 @@ class StructRef:
             return []
         parent_path = self.parent.ref_.path
         parts = parent_path + [self.struct.name_]
+        return parts
+
+    @property
+    def stack(self) -> list["Structure"]:
+        """
+        Returns the stack of structures from the root structure to this structure as a list of objects.
+        :return:
+        """
+        if self.parent is None or not hasattr(self.parent, 'ref_'):
+            return [self.struct]
+        parent_stack = self.parent.ref_.stack
+        parts = parent_stack + [self.struct]
         return parts
 
     @property
@@ -497,13 +552,25 @@ class StructRef:
         for i in reversed(removes):
             del self._capabilities[i]
 
+    def has_capability(self, capability_class:"StructureCapability.__class__") -> bool:
+        """
+        Check if the field has an extension of the given class.
+
+        :param capability_class: The class of the extension to check for.
+        :return: True if the field has an extension of the given class, False otherwise.
+        """
+        return self.get_capability(capability_class) is not None
 
 class StructureCapability:
     def __init__(self):
-        self.struct_ref = None
+        self._struct_ref = None
 
     def bind(self, struct_ref: StructRef):
-        self.struct_ref = struct_ref
+        self._struct_ref = struct_ref
+
+    @property
+    def struct_ref(self) -> StructRef:
+        return self._struct_ref
 
     def clone(self):
         return deepcopy(self)

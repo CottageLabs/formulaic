@@ -50,6 +50,26 @@ def get_prop(f: Union["Field", "Structure"], prop: str) -> Union[str, bool]:
         raise TypeError("Expected Field or Structure instance.")
 
 def expand(data:Union[dict, "FormulaicObject", "FormulaicMixin"], struct:"Structure"=None):
+    """
+    Takes one of the possible options for the `data` object, and returns
+    the "highest" order object, and all its lower order objects unpacked.
+
+    This is useful if you have a function which takes one of those, and you
+    want to get at, say, the data, and you don't want to have to do all the
+    tests this function does yourself.
+
+    You can do:
+
+    mixin, fo, struct, data = unity.expand(data, struct)
+
+    and be sure that at the very least `data` contains the data
+
+    The rest can be checked for NoneType.
+
+    :param data:
+    :param struct:
+    :return:
+    """
     from formulaic.objects import FormulaicObject, FormulaicMixin
 
     mixin = None

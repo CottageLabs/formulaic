@@ -118,6 +118,22 @@ JOURNAL_SOURCE = {
     "bibjson": JOURNAL_LIKE_BIBJSON
 }
 
+JOURNAL_FORM = {
+    "basic_compliance": {
+        "boai": "y",
+        "oa_statement_url": "https://cottagelabs.com/"
+    },
+    "apc": {
+        "apc": "y",
+        "apc_charges": [
+            {
+                "apc_currency": "GBP",
+                "apc_max": 1000
+            }
+        ]
+    }
+}
+
 if __name__ == "__main__":
     from formulaic.test.example.structs import JournalStructure
     from formulaic.serialise.json.json import JSONSerialiser
