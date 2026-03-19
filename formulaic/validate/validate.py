@@ -3,6 +3,16 @@ from urllib.parse import urlparse
 from formulaic import engine
 from formulaic.core import Validator
 
+# FIXME: not sure if we need this yet
+class Required(Validator):
+    def validate(self, val, field, data):
+        if val is None or val == "":
+            raise ValueError("This field is required and cannot be empty.")
+
+    def html_attrs(self, attrs):
+        pass
+
+
 class IsURL(Validator):
     HTTP_URL = (
         r'^(?:https?)://'  # Scheme: http(s) or ftp
@@ -86,3 +96,8 @@ class RequiredIf(Validator):
             raise ValueError("Field is required because other field matches the required value.")
 
         return True
+
+class NoScriptTag(Validator):
+    def validate(self, val, field, data):
+        if val is not None and "<script>" in val:
+            raise ValueError(self.message)

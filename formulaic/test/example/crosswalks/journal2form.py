@@ -6,7 +6,7 @@ from formulaic.crosswalk.core import Crosswalk, CrosswalkRule
 from formulaic.crosswalk.core import BooleanString
 
 from formulaic.test.example.structs import JournalStructure
-from formulaic.test.example.forms import PublicApplicationForm
+from formulaic.test.example.forms_old import PublicApplicationForm
 
 
 class APCChargesCrosswalkRule(CrosswalkRule):

@@ -12,7 +12,7 @@ class FormControl:
         raise NotImplementedError("Subclasses must implement this method.")
 
     def _generic_attributes(self):
-        attrs = self._capability.attributes
+        attrs = deepcopy(self._capability.attributes)
         if attrs is None:
             attrs = {}
 
@@ -103,11 +103,12 @@ class Radio(FormControl):
 
         return tags
 
+class BasicInput(FormControl):
+    type = "text"
 
-class TextInput(FormControl):
     def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
         attrs = self._generic_attributes()
-        attrs["type"] = "text"
+        attrs["type"] = self.type
         attrs["name"] = id_prefix
         attrs["id"] = id_prefix
 
@@ -133,6 +134,13 @@ class TextInput(FormControl):
         }]
 
         return tags
+
+class TextInput(BasicInput):
+    pass
+
+class URLInput(BasicInput):
+    type = "url"
+
 
 class Select(FormControl):
     def inputs_and_labels(self, id_prefix, val, *args, **kwargs):

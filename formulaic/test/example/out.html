@@ -1,48 +1,331 @@
-<form id="public_application_form_context_form" action="/application" method="POST">
-<fieldset id="basic_compliance_fieldset">
-<div>
-<div>
-<label for="boai_y">Yes</label>
-<input name="boai" type="radio" id="boai_y" value="y" />
-<label for="boai_n">No</label>
-<input name="boai" type="radio" id="boai_n" value="n" />
-<label for="boai_u">Unknown</label>
-<input name="boai" type="radio" id="boai_u" value="u" />
-</div>
-</div>
-<div>
-<div>
-<label for="oa_statement_url_input">The journal website must display its open access statement. Where can we find this information?</label>
-<input type="text" name="oa_statement_url" placeholder="https://www.my-journal.com/open-access" id="oa_statement_url_input" />
-</div>
-</div>
-</fieldset>
-<fieldset id="apc_fieldset">
-<div>
-<div>
-<label for="apc_y">Yes</label>
-<input name="apc" type="radio" id="apc_y" value="y" />
-<label for="apc_n">No</label>
-<input name="apc" type="radio" id="apc_n" value="n" />
-</div>
-</div>
-<div>
-<div>
-<label for="apc_currency_select">What is the currency of the APC?</label>
-<select class="input-xlarge" name="apc_currency" id="apc_currency_select">
-<option value="">Currency</option>
-<option value="USD">US Dollar</option>
-<option value="EUR">Euro</option>
-<option value="GBP">British Pound</option>
-<option value="JPY">Japanese Yen</option>
-</select>
-</div>
-</div>
-<div>
-<div>
-<label for="apc_max_input">What is the maximum APC charged by this journal?</label>
-<input min="1" name="apc_max" type="number" id="apc_max_input" />
-</div>
-</div>
-</fieldset>
+<html>
+<form id="public_application_form" action="/application" method="POST">
+    <fieldset id="basic_compliance">
+        <legend>Open access compliance</legend>
+        <fieldset>
+            <legend>Does the journal have a BOAI-compliant open access policy?</legend>
+
+            <label for="boai-0">Yes</label>
+            <input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
+            <label for="boai-1">No</label>
+            <input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-1" value="n" />
+
+        </fieldset>
+
+        <label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information?</label>
+        <input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
+
+    </fieldset>
+    <fieldset id="about_the_journal">
+        <legend>About the journal</legend>
+
+        <label for="title">Journal title</label>
+        <input type="text" name="title" id="title" placeholder="Journal title" />
+
+    </fieldset>
+    <fieldset id="apc">
+        <legend>Publication fees</legend>
+        <fieldset>
+            <legend>Does the journal charge fees for publishing an article (APCs)?</legend>
+
+            <label for="apc-0">Yes</label>
+            <input type="radio" name="apc" id="apc-0" value="y" checked="checked" />
+            <label for="apc-1">No</label>
+            <input type="radio" name="apc" id="apc-1" value="n" />
+
+        </fieldset>
+        <fieldset id="apc_charges">
+
+            <label for="apc_charges-0-apc_currency">What is the currency of the APC?</label>
+            <select class="input-xlarge" name="apc_charges-0-apc_currency" id="apc_charges-0-apc_currency"><option value="">Currency</option>
+                <option value="USD">US Dollar</option>
+                <option value="EUR">Euro</option>
+                <option value="GBP" selected="selected">British Pound</option>
+                <option value="JPY">Japanese Yen</option></select>
+
+
+            <label for="apc_charges-0-apc_max">What is the maximum APC charged by this journal?</label>
+            <input min="1" name="apc_charges-0-apc_max" id="apc_charges-0-apc_max" type="number" value="1000" />
+
+        </fieldset>
+    </fieldset>
 </form>
+
+<pre>
+{
+  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x785a950d9c30>",
+  "prefix": "",
+  "elements": [
+    {
+      "type": "fieldset",
+      "prefix": "",
+      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x785a950d88e0>",
+      "elements": [
+        {
+          "type": "field",
+          "ref": "<__main__.BOAIFormCapability object at 0x785a950d8b20>",
+          "prefix": "boai",
+          "control": [
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "boai-0"
+                },
+                "close": true,
+                "content": "Yes"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "data-parsley-requiredvalue": "y",
+                  "type": "radio",
+                  "name": "boai",
+                  "id": "boai-0",
+                  "value": "y",
+                  "checked": "checked"
+                },
+                "close": false
+              }
+            },
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "boai-1"
+                },
+                "close": true,
+                "content": "No"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "data-parsley-requiredvalue": "y",
+                  "type": "radio",
+                  "name": "boai",
+                  "id": "boai-1",
+                  "value": "n"
+                },
+                "close": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.OAStatementURLFormCapability object at 0x785a950d89a0>",
+          "prefix": "oa_statement_url",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "url",
+                  "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
+                  "name": "oa_statement_url",
+                  "id": "oa_statement_url",
+                  "placeholder": "https://www.my-journal.com/open-access",
+                  "value": "https://cottagelabs.com/"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "oa_statement_url"
+                },
+                "content": "The journal website must display its open access statement. Where can we find this information?"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "prefix": "",
+      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x785a950d98d0>",
+      "elements": [
+        {
+          "type": "field",
+          "ref": "<__main__.TitleCapability object at 0x785a950d9990>",
+          "prefix": "title",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "title",
+                  "id": "title",
+                  "placeholder": "Journal title"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "title"
+                },
+                "content": "Journal title"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "prefix": "",
+      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x785a950d95a0>",
+      "elements": [
+        {
+          "type": "field",
+          "ref": "<__main__.APC.APCFormCapability object at 0x785a950d9600>",
+          "prefix": "apc",
+          "control": [
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "apc-0"
+                },
+                "close": true,
+                "content": "Yes"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "radio",
+                  "name": "apc",
+                  "id": "apc-0",
+                  "value": "y",
+                  "checked": "checked"
+                },
+                "close": false
+              }
+            },
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "apc-1"
+                },
+                "close": true,
+                "content": "No"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "radio",
+                  "name": "apc",
+                  "id": "apc-1",
+                  "value": "n"
+                },
+                "close": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "compound",
+          "prefix": "apc_charges-",
+          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x785a950d9210>",
+          "elements": [
+            {
+              "type": "field",
+              "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x785a950d8430>",
+              "prefix": "apc_charges-0-apc_currency",
+              "control": [
+                {
+                  "control": {
+                    "tag": "select",
+                    "attrs": {
+                      "class": "input-xlarge",
+                      "name": "apc_charges-0-apc_currency",
+                      "id": "apc_charges-0-apc_currency"
+                    },
+                    "content": [
+                      {
+                        "tag": "option",
+                        "attrs": {
+                          "value": ""
+                        },
+                        "content": "Currency"
+                      },
+                      {
+                        "tag": "option",
+                        "attrs": {
+                          "value": "USD"
+                        },
+                        "content": "US Dollar"
+                      },
+                      {
+                        "tag": "option",
+                        "attrs": {
+                          "value": "EUR"
+                        },
+                        "content": "Euro"
+                      },
+                      {
+                        "tag": "option",
+                        "attrs": {
+                          "value": "GBP",
+                          "selected": "selected"
+                        },
+                        "content": "British Pound"
+                      },
+                      {
+                        "tag": "option",
+                        "attrs": {
+                          "value": "JPY"
+                        },
+                        "content": "Japanese Yen"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "tag": "label",
+                    "attrs": {
+                      "for": "apc_charges-0-apc_currency"
+                    },
+                    "content": "What is the currency of the APC?"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "field",
+              "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x785a950d8250>",
+              "prefix": "apc_charges-0-apc_max",
+              "control": [
+                {
+                  "control": {
+                    "tag": "input",
+                    "attrs": {
+                      "min": "1",
+                      "name": "apc_charges-0-apc_max",
+                      "id": "apc_charges-0-apc_max",
+                      "type": "number",
+                      "value": 1000
+                    },
+                    "close": false
+                  },
+                  "label": {
+                    "tag": "label",
+                    "attrs": {
+                      "for": "apc_charges-0-apc_max"
+                    },
+                    "content": "What is the maximum APC charged by this journal?"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</pre>
+</html>
