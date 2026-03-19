@@ -3,7 +3,8 @@ from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATA
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
     FormCapability, FormSerialiser, data_to_kv
 from formulaic.validate.validate import RequiredValue, IsURL
-from formulaic.serialise.form.controls import Radio
+from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput
+
 
 ####################################
 ## DOAJ-specific form field capabilities
@@ -80,7 +81,7 @@ class BOAIAssEd(BOAI):
 
 class OAStatementURLFormCapability(DOAJFormFieldCapability):
     label = "The journal website must display its open access statement. Where can we find this information?"
-    control_class = None #TextInput
+    control_class = TextInput
     placeholder = "https://www.my-journal.com/open-access"
     js = [
         "trim_whitespace",
@@ -123,7 +124,7 @@ class APC(Field):
 
     class APCFormCapability(DOAJFormFieldCapability):
         label = "Does the journal charge fees for publishing an article (APCs)?"
-        control_class = None #Radio
+        control_class = Radio
         options = [
             {"value": "y", "label": "Yes"},
             {"value": "n", "label": "No"}
@@ -141,8 +142,8 @@ class APC(Field):
 class APCCurrency(Field):
     class APCCurrencyFormCapability(DOAJFormFieldCapability):
         label = "What is the currency of the APC?"
-        control_class = None #Select
-        options = [] # lambda x: currency_list()
+        control_class = Select
+        options = lambda x: currency_list()
         placeholder = "Currency"
         default = ""
         js = ["select"]
@@ -159,7 +160,7 @@ class APCCurrency(Field):
 class APCMax(Field):
     class APCMaxFormCapability(DOAJFormFieldCapability):
         label = "What is the maximum APC charged by this journal?"
-        control_class = None #NumberInput
+        control_class = NumberInput
         attributes = {
             "min": "1"
         }
@@ -206,7 +207,7 @@ class BasicCompliance(Structure):
     capabilities_ = (BasicComplianceCapability(),)
 
     boai = BOAI(REQUIRED, SINGLE)
-    # oa_statement_url = OAStatementURL(REQUIRED, SINGLE)
+    oa_statement_url = OAStatementURL(REQUIRED, SINGLE)
 
 
 class APCFieldset(Structure):
@@ -234,7 +235,25 @@ class PublicApplicationForm(Structure):
     capabilities_ = (PublicApplicationFormCapability(),)
 
     basic_compliance = BasicCompliance(OPTIONAL, SINGLE)
-    # apcs = APCFieldset(OPTIONAL, SINGLE)
+    apcs = APCFieldset(OPTIONAL, SINGLE)
+
+
+######################################
+## Supporting functions
+
+def currency_list():
+    """
+    Returns a list of dictionaries containing currency codes and their names.
+    This is a placeholder function; in a real application, this would likely
+    query a database or an external service to get the current list of currencies.
+    """
+    return [
+        {"value": "USD", "label": "US Dollar"},
+        {"value": "EUR", "label": "Euro"},
+        {"value": "GBP", "label": "British Pound"},
+        {"value": "JPY", "label": "Japanese Yen"},
+        # Add more currencies as needed
+    ]
 
 if __name__ == "__main__":
     from formulaic.test.example.data import JOURNAL_FORM
@@ -243,6 +262,9 @@ if __name__ == "__main__":
     serialiser = FormSerialiser()
     representation = serialiser.data_to_representation(JOURNAL_FORM, PublicApplicationForm())
     print(json.dumps(representation, indent=2, default=repr))
+
+    html = serialiser.representation_to_string(representation)
+    print(html)
 
     # kvs = data_to_kv(JOURNAL_FORM, PublicApplicationForm())
     # print(kvs)
