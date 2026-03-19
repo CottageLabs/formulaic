@@ -192,6 +192,9 @@ class NumberInput(FormControl):
         attrs["id"] = id_prefix
         attrs["type"] = "number"
 
+        if val is not None:
+            attrs["value"] = val
+
         input = {
             "tag": "input",
             "attrs": attrs,
