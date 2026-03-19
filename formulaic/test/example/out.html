@@ -1,69 +1,109 @@
 <html>
-<form id="public_application_form" action="/application" method="POST">
-    <fieldset id="basic_compliance">
-        <legend>Open access compliance</legend>
-        <fieldset>
-            <legend>Does the journal have a BOAI-compliant open access policy?</legend>
+<ul style="color: #888888"><li>Capability: <__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x78b850efc7c0></li>
+<li>Prefix: ''</li></ul><form id="public_application_form" action="/application" method="POST">
+<fieldset id="basic_compliance">
+<legend>Open access compliance</legend>
+<ul style="color: #888888"><li>Capability: <__main__.BOAIFormCapability object at 0x78b850efad70></li>
+<li>Prefix: 'boai'</li></ul><div>
+<fieldset>
+<legend>Does the journal have a BOAI-compliant open access policy?</legend>
 
-            <label for="boai-0">Yes</label>
-            <input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
-            <label for="boai-1">No</label>
-            <input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-1" value="n" />
+<label for="boai-0">Yes</label>
+<input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
+<label for="boai-1">No</label>
+<input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-1" value="n" />
 
-        </fieldset>
+</fieldset>
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.OAStatementURLFormCapability object at 0x78b850efbeb0></li>
+<li>Prefix: 'oa_statement_url'</li></ul><div>
 
-        <label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information?</label>
-        <input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
+<label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information?</label>
+<input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
 
-    </fieldset>
-    <fieldset id="about_the_journal">
-        <legend>About the journal</legend>
+</div>
+</fieldset>
+<fieldset id="about_the_journal">
+<legend>About the journal</legend>
+<ul style="color: #888888"><li>Capability: <__main__.TitleCapability object at 0x78b850efc250></li>
+<li>Prefix: 'title'</li></ul><div>
 
-        <label for="title">Journal title</label>
-        <input type="text" name="title" id="title" placeholder="Journal title" />
+<label for="title">Journal title</label>
+<input type="text" name="title" id="title" placeholder="Journal title" />
 
-    </fieldset>
-    <fieldset id="apc">
-        <legend>Publication fees</legend>
-        <fieldset>
-            <legend>Does the journal charge fees for publishing an article (APCs)?</legend>
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.AlternativeTitleCapability object at 0x78b850efc520></li>
+<li>Prefix: 'alternative_title'</li></ul><div>
 
-            <label for="apc-0">Yes</label>
-            <input type="radio" name="apc" id="apc-0" value="y" checked="checked" />
-            <label for="apc-1">No</label>
-            <input type="radio" name="apc" id="apc-1" value="n" />
+<label for="alternative_title">Alternative title (including translation of the title)</label>
+<input type="text" name="alternative_title" id="alternative_title" placeholder="Ma revue" />
 
-        </fieldset>
-        <fieldset id="apc_charges">
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.JournalURLCapability object at 0x78b850efc430></li>
+<li>Prefix: 'journal_url'</li></ul><div>
 
-            <label for="apc_charges-0-apc_currency">What is the currency of the APC?</label>
-            <select class="input-xlarge" name="apc_charges-0-apc_currency" id="apc_charges-0-apc_currency"><option value="">Currency</option>
-                <option value="USD">US Dollar</option>
-                <option value="EUR">Euro</option>
-                <option value="GBP" selected="selected">British Pound</option>
-                <option value="JPY">Japanese Yen</option></select>
+<label for="journal_url">Link to the journal’s homepage</label>
+<input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="journal_url" id="journal_url" placeholder="https://www.my-journal.com" />
 
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.PISSNCapability object at 0x78b850efc340></li>
+<li>Prefix: 'pissn'</li></ul><div>
 
-            <label for="apc_charges-0-apc_max">What is the maximum APC charged by this journal?</label>
-            <input min="1" name="apc_charges-0-apc_max" id="apc_charges-0-apc_max" type="number" value="1000" />
+<label for="pissn">ISSN (print)</label>
+<input type="text" name="pissn" id="pissn" placeholder="" />
 
-        </fieldset>
-    </fieldset>
+</div>
+</fieldset>
+<fieldset id="apc">
+<legend>Publication fees</legend>
+<ul style="color: #888888"><li>Capability: <__main__.APC.APCFormCapability object at 0x78b850ef89d0></li>
+<li>Prefix: 'apc'</li></ul><div>
+<fieldset>
+<legend>Does the journal charge fees for publishing an article (APCs)?</legend>
+
+<label for="apc-0">Yes</label>
+<input type="radio" name="apc" id="apc-0" value="y" checked="checked" />
+<label for="apc-1">No</label>
+<input type="radio" name="apc" id="apc-1" value="n" />
+
+</fieldset>
+</div>
+<fieldset id="apc_charges">
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x78b850efb820></li>
+<li>Prefix: 'apc_charges-0-apc_currency'</li></ul><div>
+
+<label for="apc_charges-0-apc_currency">What is the currency of the APC?</label>
+<select class="input-xlarge" name="apc_charges-0-apc_currency" id="apc_charges-0-apc_currency"><option value="">Currency</option>
+<option value="USD">US Dollar</option>
+<option value="EUR">Euro</option>
+<option value="GBP" selected="selected">British Pound</option>
+<option value="JPY">Japanese Yen</option></select>
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x78b850efb640></li>
+<li>Prefix: 'apc_charges-0-apc_max'</li></ul><div>
+
+<label for="apc_charges-0-apc_max">What is the maximum APC charged by this journal?</label>
+<input min="1" name="apc_charges-0-apc_max" id="apc_charges-0-apc_max" type="number" value="1000" />
+
+</div>
+</fieldset>
+</fieldset>
 </form>
 
 <pre>
 {
-  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x785a950d9c30>",
+  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x78b850efc7c0>",
   "prefix": "",
   "elements": [
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x785a950d88e0>",
+      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x78b850efbdf0>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.BOAIFormCapability object at 0x785a950d8b20>",
+          "ref": "<__main__.BOAIFormCapability object at 0x78b850efad70>",
           "prefix": "boai",
           "control": [
             {
@@ -113,7 +153,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.OAStatementURLFormCapability object at 0x785a950d89a0>",
+          "ref": "<__main__.OAStatementURLFormCapability object at 0x78b850efbeb0>",
           "prefix": "oa_statement_url",
           "control": [
             {
@@ -144,11 +184,11 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x785a950d98d0>",
+      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x78b850efc190>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.TitleCapability object at 0x785a950d9990>",
+          "ref": "<__main__.TitleCapability object at 0x78b850efc250>",
           "prefix": "title",
           "control": [
             {
@@ -171,17 +211,96 @@
               }
             }
           ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.AlternativeTitleCapability object at 0x78b850efc520>",
+          "prefix": "alternative_title",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "alternative_title",
+                  "id": "alternative_title",
+                  "placeholder": "Ma revue"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "alternative_title"
+                },
+                "content": "Alternative title (including translation of the title)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.JournalURLCapability object at 0x78b850efc430>",
+          "prefix": "journal_url",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "url",
+                  "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
+                  "name": "journal_url",
+                  "id": "journal_url",
+                  "placeholder": "https://www.my-journal.com"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "journal_url"
+                },
+                "content": "Link to the journal\u2019s homepage"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.PISSNCapability object at 0x78b850efc340>",
+          "prefix": "pissn",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "pissn",
+                  "id": "pissn",
+                  "placeholder": ""
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "pissn"
+                },
+                "content": "ISSN (print)"
+              }
+            }
+          ]
         }
       ]
     },
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x785a950d95a0>",
+      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x78b850ef8a90>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.APC.APCFormCapability object at 0x785a950d9600>",
+          "ref": "<__main__.APC.APCFormCapability object at 0x78b850ef89d0>",
           "prefix": "apc",
           "control": [
             {
@@ -230,11 +349,11 @@
         {
           "type": "compound",
           "prefix": "apc_charges-",
-          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x785a950d9210>",
+          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x78b850efa680>",
           "elements": [
             {
               "type": "field",
-              "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x785a950d8430>",
+              "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x78b850efb820>",
               "prefix": "apc_charges-0-apc_currency",
               "control": [
                 {
@@ -296,7 +415,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x785a950d8250>",
+              "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x78b850efb640>",
               "prefix": "apc_charges-0-apc_max",
               "control": [
                 {

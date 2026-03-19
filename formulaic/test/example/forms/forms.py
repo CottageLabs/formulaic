@@ -2,8 +2,10 @@ from formulaic.coerce.coerce import Unicode
 from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATABLE
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
     FormCapability, FormSerialiser
-from formulaic.test.example.forms.validate import RequiredValueDOAJ
-from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag
+from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML
+from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLInPublicDOAJ, ISSNInPublicDOAJ
+from formulaic.test.example.validate import IsISSN
+from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo
 from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput, URLInput
 
 
@@ -16,13 +18,48 @@ class DOAJFormFieldCapability(FormFieldCapability):
     doaj_criteria = None
     hint = None
     diff_table_context = None
-
+    render_class = DebugFieldHTML
 
 #######################################
 #### FIELD DEFINITIONS
 #######################################
 
 # Presented in alphabetical order
+
+#############################
+## Alternative Title
+
+class AlternativeTitleCapability(DOAJFormFieldCapability):
+    label = "Alternative title (including translation of the title)"
+    placeholder = "Ma revue"
+    control_class = TextInput
+
+    js = [
+        "trim_whitespace",
+        {"full_contents": {"empty_disabled": "[The journal has no alternative title]"}}
+    ]
+
+class AlternativeTitle(Field):
+    name = "alternative_title"
+    coerce = [Unicode()]
+    validators = [NoScriptTag()]
+    capabilities = (AlternativeTitleCapability(),)
+
+# Context variations
+
+class AlternativeTitleEditorial(AlternativeTitle):
+    class AlternativeTitleEditorialCapability(AlternativeTitleCapability):
+        js = [
+            "trim_whitespace",
+            "click_to_copy"
+        ]
+
+class AlternativeTitleUpdateRequest(AlternativeTitle):
+    class AlternativeTitleUpdateRequestCapability(AlternativeTitleCapability):
+        disabled = True
+
+## / Alternative Title
+#############################
 
 #################################
 ## APC Compound Field
@@ -158,6 +195,32 @@ class BOAIAssEd(BOAI):
 #############################
 
 #############################
+## Journal URL
+
+class JournalURLCapability(DOAJFormFieldCapability):
+    label = "Link to the journal’s homepage"
+    placeholder = "https://www.my-journal.com"
+
+    control_class = URLInput
+
+    js = [
+        "trim_whitespace",
+        "clickable_url"
+    ]
+
+class JournalURL(Field):
+    name = "journal_url"
+    coerce = [Unicode()]
+    validators = [IsURL()]
+    capabilities = (JournalURLCapability(),)
+
+class JournalURLPublic(JournalURL):
+    validators = [IsURL(), JournalURLInPublicDOAJ()]
+
+## / Journal URL
+#############################
+
+#############################
 ## OA Statement URL
 
 class OAStatementURLFormCapability(DOAJFormFieldCapability):
@@ -189,6 +252,64 @@ class OAStatementURL(Field):
     capabilities = (OAStatementURLFormCapability(),)
 
 ## / OA Statement URL
+#############################
+
+#############################
+## PISSN
+
+class PISSNCapability(DOAJFormFieldCapability):
+    label = "ISSN (print)"
+    long_help = ["Must be a valid ISSN, fully registered and confirmed at the "
+                  "<a href='https://portal.issn.org/' target='_blank' rel='noopener'> ISSN Portal</a>.",
+                  "Use the link under the ISSN you provided to check it.",
+                  "The ISSN must match what is given on the journal website."]
+    short_help = "For example, 2049-3630"
+    doaj_criteria = "ISSN must be provided"
+
+    control_class = TextInput
+
+    js = [
+        "trim_whitespace",
+        "full_contents",
+        "issn_link"
+    ]
+
+class PISSN(Field):
+    name = "pissn"
+    coerce = [Unicode()]
+    validators = [OptionalIf("eissn"), IsISSN(), DifferentTo("eissn")]
+    capabilities = (PISSNCapability(),)
+
+class PISSNPublic(PISSN):
+    validators = [OptionalIf("eissn"), IsISSN(), DifferentTo("eissn"), ISSNInPublicDOAJ()]
+
+class PISSNUpdateRequest(PISSN):
+    class PISSNUpdateRequestCapability(PISSNCapability):
+        disabled = True
+    capabilities = (PISSNUpdateRequestCapability(),)
+
+class PISSNEditorialCapability(PISSNCapability):
+    long_help = ["Must be a valid ISSN, fully registered and confirmed at the "
+                  "<a href='https://portal.issn.org/' target='_blank' rel='noopener'> ISSN Portal</a>.",
+                  "The ISSN must match what is given on the journal website."]
+    placeholder = ""
+    doaj_criteria = "ISSN must be provided"
+
+    disabled = True
+
+class PISSNEditorial(PISSN):
+    capabilities = (PISSNEditorialCapability(),)
+
+class PISSNAdmin(PISSN):
+    class PISSNAdminCapability(PISSNEditorialCapability):
+        disabled = False
+        js = [
+            "trim_whitespace",
+            "autocheck",
+            "issn_link"
+        ]
+
+## / PISSN
 #############################
 
 #############################
@@ -244,12 +365,20 @@ class TitleUpdateRequest(Title):
 class AboutTheJournal(Structure):
     class AboutTheJournalCapability(FieldsetCapability):
         label = "About the journal"
-        order = ["title"]
+        order = [
+            "title",
+            "alt_title",
+            "journal_url",
+            "pissn"
+        ]
 
     name_ = "about_the_journal"
     capabilities_ = (AboutTheJournalCapability(),)
 
     title = Title(REQUIRED, SINGLE)
+    alt_title = AlternativeTitle(OPTIONAL, SINGLE)
+    journal_url = JournalURL(REQUIRED, SINGLE)
+    pissn = PISSN(OPTIONAL, SINGLE)
 
 class APCFieldset(Structure):
     class APCFieldsetCapability(FieldsetCapability):
@@ -286,6 +415,8 @@ class PublicApplicationForm(Structure):
             "about_the_journal",
             "apcs"
         ]
+
+        render_class = DebugFormHTML
 
     name_ = "public_application_form"
     capabilities_ = (PublicApplicationFormCapability(),)
@@ -328,6 +459,3 @@ if __name__ == "__main__":
         f.write(html)
         f.write("\n\n<pre>\n" + json.dumps(representation, indent=2, default=repr) + "\n</pre>")
         f.write("\n</html>")
-
-    # kvs = data_to_kv(JOURNAL_FORM, PublicApplicationForm())
-    # print(kvs)

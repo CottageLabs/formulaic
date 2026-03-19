@@ -195,6 +195,7 @@ class DefaultFieldHTML(FieldHTML):
         if len(ctrl) > 1:
             legend = self._make_tag("legend", content=ctx.label)
             html = self._make_tag("fieldset", content="\n" + legend + "\n" + html + "\n")
+        html = self._make_tag("div", content="\n" + html + "\n")
         return html
 
 class DefaultControlHTML(ControlHTML):
@@ -233,4 +234,52 @@ class DefaultControlHTML(ControlHTML):
             inl_frags.append(f"{label_html}\n{input_html}")
 
         html = "\n" + "\n".join(inl_frags) + "\n"
+        return html
+
+###########################################
+## Debug implementations
+
+class DebugFormHTML(DefaultFormHTML):
+    def draw(self, representation):
+        html = super().draw(representation)
+
+        ref = representation.get("ref")
+        prefix = representation.get("prefix")
+
+        debug_info = []
+        debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
+        debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
+        ul = self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(debug_info))
+        html = ul + html
+
+        return html
+
+class DebugFieldHTML(DefaultFieldHTML):
+    def draw(self, representation):
+        html = super().draw(representation)
+
+        ref = representation.get("ref")
+        prefix = representation.get("prefix")
+
+        debug_info = []
+        debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
+        debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
+        ul = self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(debug_info))
+        html = ul + html
+
+        return html
+
+class DebugControlHTML(DefaultControlHTML):
+    def draw(self, representation):
+        html = super().draw(representation)
+
+        for control in representation:
+            ctrl = control.get("control")
+            
+        # debug_info = []
+        # debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
+        # debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
+        # ul = self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(debug_info))
+        # html = ul + html
+
         return html

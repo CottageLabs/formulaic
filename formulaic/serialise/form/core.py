@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from copy import deepcopy
 from typing import Optional, Union, Any
 
 from formulaic import engine
@@ -34,6 +35,7 @@ class GenericFormStructureCapability(StructureCapability):
                     else:
                         yield entry
             # if it doesn't match a form capability, we skip over it
+
 
 class FormCapability(GenericFormStructureCapability):
     action: Optional[str] = None

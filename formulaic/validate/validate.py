@@ -101,3 +101,78 @@ class NoScriptTag(Validator):
     def validate(self, val, field, data):
         if val is not None and "<script>" in val:
             raise ValueError(self.message)
+
+class OptionalIf(Validator):
+    # A validator which makes a field optional if another field is set
+    # and has a truthy value.
+    # ~~OptionalIf:FormValidator~~
+
+    def __init__(self, other_field_name, message=None, optvals=None, *args, **kwargs):
+        self.other_field_name = other_field_name
+        if not message:
+            message = "This field is required in the current circumstances"
+        self.message = message
+        self.optvals = optvals if optvals is not None else []
+        super(OptionalIf, self).__init__(*args, **kwargs)
+
+    def validate(self, val, field, data):
+        return True
+        # TODO
+    #     other_field = self.get_other_field(self.other_field_name, form)
+    #
+    #     # if no values (for other_field) which make this field optional
+    #     # are specified...
+    #     if not self.optvals:
+    #         # ... just make this field optional if the other is truthy
+    #         if bool(other_field.data):
+    #             super(OptionalIf, self).__call__(form, field)
+    #         else:
+    #             # otherwise it is required
+    #             dr = validators.DataRequired(self.message)
+    #             dr(form, field)
+    #     else:
+    #         # if such values are specified, check for them
+    #         no_optval_matched = True
+    #         for v in self.optvals:
+    #             if isinstance(other_field.data, list):
+    #                 if v in other_field.data and len(other_field.data) == 1:
+    #                     # must be the only option submitted - OK for
+    #                     # radios and for checkboxes where a single
+    #                     # checkbox, but no more, is required to make the
+    #                     # field optional
+    #                     no_optval_matched = False
+    #                     self.__make_optional(form, field)
+    #                     break
+    #             if other_field.data == v:
+    #                 no_optval_matched = False
+    #                 self.__make_optional(form, field)
+    #                 break
+    #
+    #         if no_optval_matched:
+    #             if not field.data:
+    #                 raise validators.StopValidation('This field is required')
+    #
+    # def __make_optional(self, form, field):
+    #     super(OptionalIf, self).__call__(form, field)
+    #     raise validators.StopValidation()
+
+class DifferentTo(Validator):
+    """
+    ~~DifferentTo:FormValidator~~
+    """
+    def __init__(self, other_field_name, ignore_empty=True, message=None):
+        super(DifferentTo, self).__init__()
+        self.ignore_empty = ignore_empty
+        # if not message:
+        #     message = "This field must contain a different value to the field '{x}'".format(x=self.other_field_name)
+        self.message = message
+
+    def validate(self, val, field, data):
+        return True
+        # TODO
+        # other_field = self.get_other_field(self.other_field_name, form)
+        #
+        # if other_field.data == field.data:
+        #     if self.ignore_empty and (not other_field.data or not field.data):
+        #         return
+        #     raise validators.ValidationError(self.message)
