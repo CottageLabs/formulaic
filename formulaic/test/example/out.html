@@ -1,13 +1,23 @@
 <html>
-<ul style="color: #888888"><li>Capability: <__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x78b850efc7c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x740a8aaa03d0></li>
 <li>Prefix: ''</li></ul><form id="public_application_form" action="/application" method="POST">
 <fieldset id="basic_compliance">
 <legend>Open access compliance</legend>
-<ul style="color: #888888"><li>Capability: <__main__.BOAIFormCapability object at 0x78b850efad70></li>
+<ul style="color: #888888"><li>Capability: <__main__.BOAIFormCapability object at 0x740a8a20f340></li>
 <li>Prefix: 'boai'</li></ul><div>
 <fieldset>
 <legend>Does the journal have a BOAI-compliant open access policy?</legend>
-
+<ul style="color: #888888"><li>data-parsley-requiredvalue: y</li>
+<li>type: radio</li>
+<li>name: boai</li>
+<li>id: boai-0</li>
+<li>value: y</li>
+<li>checked: checked</li></ul>
+<ul style="color: #888888"><li>data-parsley-requiredvalue: y</li>
+<li>type: radio</li>
+<li>name: boai</li>
+<li>id: boai-1</li>
+<li>value: n</li></ul>
 <label for="boai-0">Yes</label>
 <input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
 <label for="boai-1">No</label>
@@ -15,9 +25,14 @@
 
 </fieldset>
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.OAStatementURLFormCapability object at 0x78b850efbeb0></li>
+<ul style="color: #888888"><li>Capability: <__main__.OAStatementURLFormCapability object at 0x740a8a20f1c0></li>
 <li>Prefix: 'oa_statement_url'</li></ul><div>
-
+<ul style="color: #888888"><li>type: url</li>
+<li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
+<li>name: oa_statement_url</li>
+<li>id: oa_statement_url</li>
+<li>placeholder: https://www.my-journal.com/open-access</li>
+<li>value: https://cottagelabs.com/</li></ul>
 <label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information?</label>
 <input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
 
@@ -25,42 +40,138 @@
 </fieldset>
 <fieldset id="about_the_journal">
 <legend>About the journal</legend>
-<ul style="color: #888888"><li>Capability: <__main__.TitleCapability object at 0x78b850efc250></li>
+<ul style="color: #888888"><li>Capability: <__main__.TitleCapability object at 0x740a8a20c9a0></li>
 <li>Prefix: 'title'</li></ul><div>
-
+<ul style="color: #888888"><li>type: text</li>
+<li>name: title</li>
+<li>id: title</li>
+<li>placeholder: Journal title</li></ul>
 <label for="title">Journal title</label>
 <input type="text" name="title" id="title" placeholder="Journal title" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.AlternativeTitleCapability object at 0x78b850efc520></li>
+<ul style="color: #888888"><li>Capability: <__main__.AlternativeTitleCapability object at 0x740a8a20c310></li>
 <li>Prefix: 'alternative_title'</li></ul><div>
-
+<ul style="color: #888888"><li>type: text</li>
+<li>name: alternative_title</li>
+<li>id: alternative_title</li>
+<li>placeholder: Ma revue</li></ul>
 <label for="alternative_title">Alternative title (including translation of the title)</label>
 <input type="text" name="alternative_title" id="alternative_title" placeholder="Ma revue" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.JournalURLCapability object at 0x78b850efc430></li>
+<ul style="color: #888888"><li>Capability: <__main__.JournalURLCapability object at 0x740a8a20c4f0></li>
 <li>Prefix: 'journal_url'</li></ul><div>
-
+<ul style="color: #888888"><li>type: url</li>
+<li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
+<li>name: journal_url</li>
+<li>id: journal_url</li>
+<li>placeholder: https://www.my-journal.com</li></ul>
 <label for="journal_url">Link to the journal’s homepage</label>
 <input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="journal_url" id="journal_url" placeholder="https://www.my-journal.com" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.PISSNCapability object at 0x78b850efc340></li>
+<ul style="color: #888888"><li>Capability: <__main__.PISSNCapability object at 0x740a8a20c7c0></li>
 <li>Prefix: 'pissn'</li></ul><div>
-
+<ul style="color: #888888"><li>type: text</li>
+<li>name: pissn</li>
+<li>id: pissn</li>
+<li>placeholder: </li></ul>
 <label for="pissn">ISSN (print)</label>
 <input type="text" name="pissn" id="pissn" placeholder="" />
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.EISSNCapability object at 0x740a8a20c400></li>
+<li>Prefix: 'eissn'</li></ul><div>
+<ul style="color: #888888"><li>type: text</li>
+<li>name: eissn</li>
+<li>id: eissn</li>
+<li>placeholder: </li></ul>
+<label for="eissn">ISSN (online)</label>
+<input type="text" name="eissn" id="eissn" placeholder="" />
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Keywords.KeywordsCapability object at 0x740a8a20c5e0></li>
+<li>Prefix: 'keywords'</li></ul><div>
+<ul style="color: #888888"><li>type: text</li>
+<li>name: keywords</li>
+<li>id: keywords</li>
+<li>placeholder: </li></ul>
+<label for="keywords">Up to 6 subject keywords in English</label>
+<input type="text" name="keywords" id="keywords" placeholder="" />
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x740a8a20c6d0></li>
+<li>Prefix: 'language-0'</li></ul><div>
+<ul style="color: #888888"><li>name: language-0</li>
+<li>id: language-0</li></ul>
+<label for="language-0">Languages in which the journal accepts manuscripts</label>
+<select name="language-0" id="language-0"><option value="ENG">English</option>
+<option value="FRE" selected="selected">French</option>
+<option value="GER">German</option>
+<option value="ESP">Spanish</option></select>
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x740a8a20c6d0></li>
+<li>Prefix: 'language-1'</li></ul><div>
+<ul style="color: #888888"><li>name: language-1</li>
+<li>id: language-1</li></ul>
+<label for="language-1">Languages in which the journal accepts manuscripts</label>
+<select name="language-1" id="language-1"><option value="ENG">English</option>
+<option value="FRE">French</option>
+<option value="GER">German</option>
+<option value="ESP" selected="selected">Spanish</option></select>
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x740a8a20c6d0></li>
+<li>Prefix: 'language-'</li></ul><div>
+<ul style="color: #888888"><li>name: language-0</li>
+<li>id: language-0</li></ul>
+<label for="language-0">Languages in which the journal accepts manuscripts</label>
+<select name="language-0" id="language-0"><option value="ENG">English</option>
+<option value="FRE">French</option>
+<option value="GER">German</option>
+<option value="ESP">Spanish</option></select>
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x740a8a20c6d0></li>
+<li>Prefix: 'language-'</li></ul><div>
+<ul style="color: #888888"><li>name: language-1</li>
+<li>id: language-1</li></ul>
+<label for="language-1">Languages in which the journal accepts manuscripts</label>
+<select name="language-1" id="language-1"><option value="ENG">English</option>
+<option value="FRE">French</option>
+<option value="GER">German</option>
+<option value="ESP">Spanish</option></select>
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x740a8a20c6d0></li>
+<li>Prefix: 'language-'</li></ul><div>
+<ul style="color: #888888"><li>name: language-2</li>
+<li>id: language-2</li></ul>
+<label for="language-2">Languages in which the journal accepts manuscripts</label>
+<select name="language-2" id="language-2"><option value="ENG">English</option>
+<option value="FRE">French</option>
+<option value="GER">German</option>
+<option value="ESP">Spanish</option></select>
 
 </div>
 </fieldset>
 <fieldset id="apc">
 <legend>Publication fees</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APC.APCFormCapability object at 0x78b850ef89d0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APC.APCFormCapability object at 0x740a8a20fe20></li>
 <li>Prefix: 'apc'</li></ul><div>
 <fieldset>
 <legend>Does the journal charge fees for publishing an article (APCs)?</legend>
-
+<ul style="color: #888888"><li>type: radio</li>
+<li>name: apc</li>
+<li>id: apc-0</li>
+<li>value: y</li>
+<li>checked: checked</li></ul>
+<ul style="color: #888888"><li>type: radio</li>
+<li>name: apc</li>
+<li>id: apc-1</li>
+<li>value: n</li></ul>
 <label for="apc-0">Yes</label>
 <input type="radio" name="apc" id="apc-0" value="y" checked="checked" />
 <label for="apc-1">No</label>
@@ -69,9 +180,11 @@
 </fieldset>
 </div>
 <fieldset id="apc_charges">
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x78b850efb820></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x740a8a20ea10></li>
 <li>Prefix: 'apc_charges-0-apc_currency'</li></ul><div>
-
+<ul style="color: #888888"><li>class: input-xlarge</li>
+<li>name: apc_charges-0-apc_currency</li>
+<li>id: apc_charges-0-apc_currency</li></ul>
 <label for="apc_charges-0-apc_currency">What is the currency of the APC?</label>
 <select class="input-xlarge" name="apc_charges-0-apc_currency" id="apc_charges-0-apc_currency"><option value="">Currency</option>
 <option value="USD">US Dollar</option>
@@ -80,9 +193,13 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x78b850efb640></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x740a8a20e830></li>
 <li>Prefix: 'apc_charges-0-apc_max'</li></ul><div>
-
+<ul style="color: #888888"><li>min: 1</li>
+<li>name: apc_charges-0-apc_max</li>
+<li>id: apc_charges-0-apc_max</li>
+<li>type: number</li>
+<li>value: 1000</li></ul>
 <label for="apc_charges-0-apc_max">What is the maximum APC charged by this journal?</label>
 <input min="1" name="apc_charges-0-apc_max" id="apc_charges-0-apc_max" type="number" value="1000" />
 
@@ -93,17 +210,17 @@
 
 <pre>
 {
-  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x78b850efc7c0>",
+  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x740a8aaa03d0>",
   "prefix": "",
   "elements": [
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x78b850efbdf0>",
+      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x740a8a20f100>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.BOAIFormCapability object at 0x78b850efad70>",
+          "ref": "<__main__.BOAIFormCapability object at 0x740a8a20f340>",
           "prefix": "boai",
           "control": [
             {
@@ -153,7 +270,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.OAStatementURLFormCapability object at 0x78b850efbeb0>",
+          "ref": "<__main__.OAStatementURLFormCapability object at 0x740a8a20f1c0>",
           "prefix": "oa_statement_url",
           "control": [
             {
@@ -184,11 +301,11 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x78b850efc190>",
+      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x740a8a20ca90>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.TitleCapability object at 0x78b850efc250>",
+          "ref": "<__main__.TitleCapability object at 0x740a8a20c9a0>",
           "prefix": "title",
           "control": [
             {
@@ -214,7 +331,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.AlternativeTitleCapability object at 0x78b850efc520>",
+          "ref": "<__main__.AlternativeTitleCapability object at 0x740a8a20c310>",
           "prefix": "alternative_title",
           "control": [
             {
@@ -240,7 +357,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.JournalURLCapability object at 0x78b850efc430>",
+          "ref": "<__main__.JournalURLCapability object at 0x740a8a20c4f0>",
           "prefix": "journal_url",
           "control": [
             {
@@ -267,7 +384,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.PISSNCapability object at 0x78b850efc340>",
+          "ref": "<__main__.PISSNCapability object at 0x740a8a20c7c0>",
           "prefix": "pissn",
           "control": [
             {
@@ -290,17 +407,336 @@
               }
             }
           ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.EISSNCapability object at 0x740a8a20c400>",
+          "prefix": "eissn",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "eissn",
+                  "id": "eissn",
+                  "placeholder": ""
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "eissn"
+                },
+                "content": "ISSN (online)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Keywords.KeywordsCapability object at 0x740a8a20c5e0>",
+          "prefix": "keywords",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "keywords",
+                  "id": "keywords",
+                  "placeholder": ""
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "keywords"
+                },
+                "content": "Up to 6 subject keywords in English"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Language.LanguageCapability object at 0x740a8a20c6d0>",
+          "prefix": "language-0",
+          "control": [
+            {
+              "control": {
+                "tag": "select",
+                "attrs": {
+                  "name": "language-0",
+                  "id": "language-0"
+                },
+                "content": [
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ENG"
+                    },
+                    "content": "English"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "FRE",
+                      "selected": "selected"
+                    },
+                    "content": "French"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "GER"
+                    },
+                    "content": "German"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ESP"
+                    },
+                    "content": "Spanish"
+                  }
+                ]
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "language-0"
+                },
+                "content": "Languages in which the journal accepts manuscripts"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Language.LanguageCapability object at 0x740a8a20c6d0>",
+          "prefix": "language-1",
+          "control": [
+            {
+              "control": {
+                "tag": "select",
+                "attrs": {
+                  "name": "language-1",
+                  "id": "language-1"
+                },
+                "content": [
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ENG"
+                    },
+                    "content": "English"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "FRE"
+                    },
+                    "content": "French"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "GER"
+                    },
+                    "content": "German"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ESP",
+                      "selected": "selected"
+                    },
+                    "content": "Spanish"
+                  }
+                ]
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "language-1"
+                },
+                "content": "Languages in which the journal accepts manuscripts"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Language.LanguageCapability object at 0x740a8a20c6d0>",
+          "prefix": "language-",
+          "control": [
+            {
+              "control": {
+                "tag": "select",
+                "attrs": {
+                  "name": "language-0",
+                  "id": "language-0"
+                },
+                "content": [
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ENG"
+                    },
+                    "content": "English"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "FRE"
+                    },
+                    "content": "French"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "GER"
+                    },
+                    "content": "German"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ESP"
+                    },
+                    "content": "Spanish"
+                  }
+                ]
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "language-0"
+                },
+                "content": "Languages in which the journal accepts manuscripts"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Language.LanguageCapability object at 0x740a8a20c6d0>",
+          "prefix": "language-",
+          "control": [
+            {
+              "control": {
+                "tag": "select",
+                "attrs": {
+                  "name": "language-1",
+                  "id": "language-1"
+                },
+                "content": [
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ENG"
+                    },
+                    "content": "English"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "FRE"
+                    },
+                    "content": "French"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "GER"
+                    },
+                    "content": "German"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ESP"
+                    },
+                    "content": "Spanish"
+                  }
+                ]
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "language-1"
+                },
+                "content": "Languages in which the journal accepts manuscripts"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.Language.LanguageCapability object at 0x740a8a20c6d0>",
+          "prefix": "language-",
+          "control": [
+            {
+              "control": {
+                "tag": "select",
+                "attrs": {
+                  "name": "language-2",
+                  "id": "language-2"
+                },
+                "content": [
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ENG"
+                    },
+                    "content": "English"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "FRE"
+                    },
+                    "content": "French"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "GER"
+                    },
+                    "content": "German"
+                  },
+                  {
+                    "tag": "option",
+                    "attrs": {
+                      "value": "ESP"
+                    },
+                    "content": "Spanish"
+                  }
+                ]
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "language-2"
+                },
+                "content": "Languages in which the journal accepts manuscripts"
+              }
+            }
+          ]
         }
       ]
     },
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x78b850ef8a90>",
+      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x740a8a20fdc0>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.APC.APCFormCapability object at 0x78b850ef89d0>",
+          "ref": "<__main__.APC.APCFormCapability object at 0x740a8a20fe20>",
           "prefix": "apc",
           "control": [
             {
@@ -349,11 +785,11 @@
         {
           "type": "compound",
           "prefix": "apc_charges-",
-          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x78b850efa680>",
+          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x740a8a20fa30>",
           "elements": [
             {
               "type": "field",
-              "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x78b850efb820>",
+              "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x740a8a20ea10>",
               "prefix": "apc_charges-0-apc_currency",
               "control": [
                 {
@@ -415,7 +851,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x78b850efb640>",
+              "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x740a8a20e830>",
               "prefix": "apc_charges-0-apc_max",
               "control": [
                 {

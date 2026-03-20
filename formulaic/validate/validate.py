@@ -176,3 +176,39 @@ class DifferentTo(Validator):
         #     if self.ignore_empty and (not other_field.data or not field.data):
         #         return
         #     raise validators.ValidationError(self.message)
+
+class StopWords(Validator):
+    """
+    ~~StopWords:FormValidator~~
+    """
+    def __init__(self, stopwords, message=None):
+        super().__init__()
+        self.stopwords = stopwords
+        if not message:
+            message = "You may not enter '{stop_word}' in this field"
+        self.message = message
+
+    def validate(self, val, field, data):
+        for v in val:
+            if v.strip() in self.stopwords:
+                # raise validators.StopValidation(self.message.format(stop_word=v))
+                raise ValueError(self.message.format(stop_word=v))
+
+class MaxLen(Validator):
+    """
+    Maximum length validator. Works on anything which supports len(thing).
+
+    Use {max_len} in your custom message to insert the maximum length you've
+    specified into the message.
+
+    ~~MaxLen:FormValidator~~
+    """
+
+    def __init__(self, max_len, message='Maximum {max_len}.', *args, **kwargs):
+        self.max_len = max_len
+        self.message = message
+        super().__init__(*args, **kwargs)
+
+    def validate(self, val, field, data):
+        if len(field.data) > self.max_len:
+            raise ValueError(self.message.format(max_len=self.max_len))

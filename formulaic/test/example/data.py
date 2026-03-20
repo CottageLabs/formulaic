@@ -123,6 +123,9 @@ JOURNAL_FORM = {
         "boai": "y",
         "oa_statement_url": "https://cottagelabs.com/"
     },
+    "about_the_journal": {
+        "language": ["FRE", "ESP"]
+    },
     "apc": {
         "apc": "y",
         "apc_charges": [

@@ -2,10 +2,11 @@ from formulaic.coerce.coerce import Unicode
 from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATABLE
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
     FormCapability, FormSerialiser
-from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML
-from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLInPublicDOAJ, ISSNInPublicDOAJ
+from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML, DebugControlHTML
+from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLInPublicDOAJ, ISSNInPublicDOAJ, \
+    CurrentISOLanguage
 from formulaic.test.example.validate import IsISSN
-from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo
+from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo, StopWords, MaxLen
 from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput, URLInput
 
 
@@ -19,6 +20,7 @@ class DOAJFormFieldCapability(FormFieldCapability):
     hint = None
     diff_table_context = None
     render_class = DebugFieldHTML
+    control_render_class = DebugControlHTML
 
 #######################################
 #### FIELD DEFINITIONS
@@ -91,7 +93,7 @@ class APCCurrency(Field):
     class APCCurrencyFormCapability(DOAJFormFieldCapability):
         label = "What is the currency of the APC?"
         control_class = Select
-        options = lambda x: currency_list()
+        options = lambda x: currency_list(x)
         placeholder = "Currency"
         default = ""
         js = ["select"]
@@ -195,6 +197,61 @@ class BOAIAssEd(BOAI):
 #############################
 
 #############################
+## EISSN
+
+class EISSNCapability(DOAJFormFieldCapability):
+    label = "ISSN (online)"
+    long_help = ["Must be a valid ISSN, fully registered and confirmed at the "
+                  "<a href='https://portal.issn.org/' target='_blank' rel='noopener'> ISSN Portal</a>.",
+                  "Use the link under the ISSN you provided to check it.",
+                  "The ISSN must match what is given on the journal website."]
+    short_help = "For example, 0378-5955",
+    doaj_criteria = "ISSN must be provided"
+
+    control_class = TextInput
+
+    js = [
+        "trim_whitespace",
+        "full_contents",
+        "issn_link"
+    ]
+
+class EISSN(Field):
+    name = "eissn"
+    coerce = [Unicode()]
+    validators = [OptionalIf("pissn"), IsISSN(), DifferentTo("pissn")]
+    capabilities = (EISSNCapability(),)
+
+class EISSNPublic(EISSN):
+    validators = [OptionalIf("pissn"), IsISSN(), DifferentTo("pissn"), ISSNInPublicDOAJ()]
+
+class EISSNUpdateRequest(EISSN):
+    class EISSNUpdateRequestCapability(EISSNCapability):
+        disabled = True
+    capabilities = (EISSNUpdateRequestCapability(),)
+
+class EISSNEditorialCapability(EISSNCapability):
+    long_help = ["Must be a valid ISSN, fully registered and confirmed at the "
+                  "<a href='https://portal.issn.org/' target='_blank' rel='noopener'> ISSN Portal</a>.",
+                  "The ISSN must match what is given on the journal website."]
+    disabled = True
+
+class EISSNEditorial(EISSN):
+    capabilities = (EISSNEditorialCapability(),)
+
+class EISSNAdmin(EISSN):
+    class EISSNAdminCapability(EISSNEditorialCapability):
+        disabled = False
+        js = [
+            "trim_whitespace",
+            "autocheck",
+            "issn_link"
+        ]
+
+## / PISSN
+#############################
+
+#############################
 ## Journal URL
 
 class JournalURLCapability(DOAJFormFieldCapability):
@@ -218,6 +275,90 @@ class JournalURLPublic(JournalURL):
     validators = [IsURL(), JournalURLInPublicDOAJ()]
 
 ## / Journal URL
+#############################
+
+#############################
+## Keywords
+
+STOP_WORDS = [
+    "open access",
+    "high quality",
+    "peer-reviewed",
+    "peer-review",
+    "peer review",
+    "peer reviewed",
+    "quality",
+    "medical journal",
+    "multidisciplinary",
+    "multi-disciplinary",
+    "multi-disciplinary journal",
+    "interdisciplinary",
+    "inter disciplinary",
+    "inter disciplinary research",
+    "international journal",
+    "journal",
+    "scholarly journal",
+    "open science",
+    "impact factor",
+    "scholarly",
+    "research",
+    "research journal"
+]
+
+class Keywords(Field):
+    class KeywordsCapability(DOAJFormFieldCapability):
+        label = "Up to 6 subject keywords in English"
+        long_help = ["Choose up to 6 keywords that describe the journal's subject matter. "
+                          "Keywords must be in English.", "Use single words or short phrases (2 to 3 words) "
+                                                          "that describe the journal's main topic.",
+                          "Do not add acronyms, abbreviations or descriptive sentences.",
+                          "Note that the keywords may be edited by DOAJ editorial staff."]
+
+        control_class = TextInput
+
+        js = [
+            {
+                "taglist": {
+                    "maximumSelectionSize": 6,
+                    "stopWords": STOP_WORDS,
+                    "field": "bibjson.keywords"
+                }
+            }
+        ]
+
+    name = "keywords"
+    validators = [StopWords(STOP_WORDS), MaxLen(6)]
+    capabilities = (KeywordsCapability(),)
+
+## / Keywords
+#############################
+
+#############################
+## Language
+
+class Language(Field):
+    class LanguageCapability(DOAJFormFieldCapability):
+        label = "Languages in which the journal accepts manuscripts"
+        placeholer = "Type or select the language"
+
+        control_class = Select
+        default = ""
+        options = lambda x : iso_language_list(x)
+
+        repeatable_initial = 5
+        repeatable_minimum = 1
+
+        js = [
+            "select",
+            "multiple_field"
+        ]
+
+    name = "language"
+    coerce = [Unicode()]
+    validators = [CurrentISOLanguage()]
+    capabilities = (LanguageCapability(),)
+
+## / Language
 #############################
 
 #############################
@@ -369,7 +510,10 @@ class AboutTheJournal(Structure):
             "title",
             "alt_title",
             "journal_url",
-            "pissn"
+            "pissn",
+            "eissn",
+            "keywords",
+            "language"
         ]
 
     name_ = "about_the_journal"
@@ -378,7 +522,10 @@ class AboutTheJournal(Structure):
     title = Title(REQUIRED, SINGLE)
     alt_title = AlternativeTitle(OPTIONAL, SINGLE)
     journal_url = JournalURL(REQUIRED, SINGLE)
-    pissn = PISSN(OPTIONAL, SINGLE)
+    pissn = PISSNPublic(OPTIONAL, SINGLE)
+    eissn = EISSN(OPTIONAL, SINGLE)
+    keywords = Keywords(OPTIONAL, SINGLE)
+    language = Language(OPTIONAL, REPEATABLE)
 
 class APCFieldset(Structure):
     class APCFieldsetCapability(FieldsetCapability):
@@ -429,7 +576,7 @@ class PublicApplicationForm(Structure):
 ######################################
 ## Supporting functions
 
-def currency_list():
+def currency_list(capability):
     """
     Returns a list of dictionaries containing currency codes and their names.
     This is a placeholder function; in a real application, this would likely
@@ -442,6 +589,18 @@ def currency_list():
         {"value": "JPY", "label": "Japanese Yen"},
         # Add more currencies as needed
     ]
+
+def iso_language_list(capability):
+    return [
+        {"value": "ENG", "label": "English"},
+        {"value": "FRE", "label": "French"},
+        {"value": "GER", "label": "German"},
+        {"value": "ESP", "label": "Spanish"},
+    ]
+    cl = [{"display": " ", "value": ""}]
+    for v, d in language_options:
+        cl.append({"display": d, "value": v})
+    return cl
 
 if __name__ == "__main__":
     from formulaic.test.example.data import JOURNAL_FORM

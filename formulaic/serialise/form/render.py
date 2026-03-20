@@ -273,13 +273,13 @@ class DebugControlHTML(DefaultControlHTML):
     def draw(self, representation):
         html = super().draw(representation)
 
+        uls = []
         for control in representation:
-            ctrl = control.get("control")
-            
-        # debug_info = []
-        # debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
-        # debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
-        # ul = self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(debug_info))
-        # html = ul + html
+            attrs = control.get("control").get("attrs", {})
+            lis = []
+            for k,v in attrs.items():
+                lis.append(self._make_tag("li", content=f"{k}: {v}"))
+            uls.append(self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(lis)))
 
+        html = "\n".join(uls) + html
         return html

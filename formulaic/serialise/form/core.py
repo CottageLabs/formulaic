@@ -108,8 +108,9 @@ class FieldsetCapability(GenericFormStructureCapability):
 
 class FormFieldCapability(FieldCapability):
     label:str = "Field"
+    """The label associated with the field"""
 
-    options:Union[list[dict[str, str]], Callable] = []
+    options:Union[list[dict[str, str]], Callable] = None
     """
     A list of option objects with a `value` and a `label` field, such as
     
@@ -122,17 +123,38 @@ class FormFieldCapability(FieldCapability):
     """
 
     default:Any = None
+    """Default value for the field.  Controls may interpret this in whichever way makes the most sense for them"""
+
     placeholder:str = None
-    js:list[str] = []
+    """Placeholder value for the field.  Controls may interpret this in whichever way makes the most sense for them"""
+
     attributes:dict[str,str] = {}
+    """Attributes to attach to the main form control"""
+
     disabled:bool = False
-    multivalue:bool = False
-    repeatable = None
+    """Disable the form control"""
+
+    multiple:bool = False
+    """For fields which allow the selection of elements, do they allow for multi selections (e.g. multi-select box, or checkboxes)"""
+
+    repeatable_minimum = 1
+    repeatable_initial = 1
+    """Field which are bound to their structure with a REPEATABLE option can use these two properties to control how 
+        many instances of the field are rendered by default, and the minimum number of displayed fields"""
+
     conditional:bool = False
 
     control_class = None  # FormControl
+    """Class responsible for representing the form field"""
+
     render_class = None
+    """Class which will render this form field, including all its controls and labels"""
+
     control_render_class = None
+    """Class which will render the control itsef"""
+
+    js: list[str] = []
+    """List of strings or objects to be JSON serialised and passed to the front end JS"""
 
     def __init__(self, **kwargs):
         self._control_instance = None
@@ -150,6 +172,8 @@ class FormFieldCapability(FieldCapability):
         return self._control_instance
 
     def get_options(self):
+        if self.options is None:
+            return []
         if isinstance(self.options, list):
             return self.options
         elif self._options_from_fn is not None:
@@ -183,11 +207,6 @@ class FormFieldCapability(FieldCapability):
 class FormSerialiser(Serialiser):
     def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
         mixin, fo, struct, data = unity.expand(data, struct)
-
-        # First stage of serialising the form is to get the data itself into a pure
-        # k/v dictionary
-        # kvs = data_to_kv(data, struct)
-
         form_cap = struct.ref_.get_capability(FormCapability)
 
         repr = {
@@ -225,17 +244,33 @@ class FormSerialiser(Serialiser):
                                     "control": inl
                                 }
                                 container.append(erepr)
-                        else:
-                            new_prefix = new_prefix + "0"
-                            inl = control.inputs_and_labels(new_prefix, None)
 
-                            erepr = {
-                                "type": "field",
-                                "ref": cap,
-                                "prefix": new_prefix,
-                                "control": inl
-                            }
-                            container.append(erepr)
+                            remaining = cap.repeatable_initial - len(vals)
+                            if remaining > 0:
+                                for i in range(remaining):
+                                    index_prefix = new_prefix + str(i)
+                                    inl = control.inputs_and_labels(index_prefix, None)
+
+                                    erepr = {
+                                        "type": "field",
+                                        "ref": cap,
+                                        "prefix": new_prefix,
+                                        "control": inl
+                                    }
+                                    container.append(erepr)
+                        else:
+                            target = cap.repeatable_initial
+                            for i in range(target):
+                                index_prefix = new_prefix + str(i)
+                                inl = control.inputs_and_labels(index_prefix, None)
+
+                                erepr = {
+                                    "type": "field",
+                                    "ref": cap,
+                                    "prefix": new_prefix,
+                                    "control": inl
+                                }
+                                container.append(erepr)
                     else:
                         new_prefix = prefix + element.name
                         val = engine.get_single(element, data)
