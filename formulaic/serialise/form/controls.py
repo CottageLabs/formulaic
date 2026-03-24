@@ -154,7 +154,7 @@ class Select(FormControl):
         default = self._capability.default or ""
         if placeholder:
             placeholder_attrs = {"value": default}
-            if val == default:
+            if val == default or val is None:
                 placeholder_attrs["selected"] = "selected"
             placeholder_option = {
                 "tag": "option",

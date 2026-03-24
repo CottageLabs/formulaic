@@ -634,7 +634,11 @@ class Structure:
     ref_class_:StructRef = StructRef
     """The class to use for the structure reference.  Subclasses may override this to provide a custom reference class."""
 
+    validators_:list["Validator"] = []
+    """Validators that apply at the structural level"""
+
     capabilities_ = ()
+    """Capabilities that structure element has"""
 
     def __init__(self, need:str=OPTIONAL,
                  multiplicity:str=SINGLE,

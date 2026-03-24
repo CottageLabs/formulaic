@@ -11,8 +11,16 @@ from formulaic.serialise.core import Serialiser
 
 class GenericFormStructureCapability(StructureCapability):
     order: list[str] = []
+    list_render_class = None
+
+    def __init__(self):
+        super().__init__()
+        self._list_renderer = None
 
     def get_in_order(self, detach=False):
+        return [x for x in self.ordered_iterator(detach=detach)]
+
+    def ordered_iterator(self, detach=False):
         for name in self.order:
             entry = self.struct_ref.struct.__getattribute__(name)
             if entry is None:
@@ -35,6 +43,16 @@ class GenericFormStructureCapability(StructureCapability):
                     else:
                         yield entry
             # if it doesn't match a form capability, we skip over it
+
+    def get_list_renderer(self):
+        if self._list_renderer is not None:
+            return self._list_renderer
+        rc = self.list_render_class
+        if rc is None:
+            from formulaic.serialise.form.render import DefaultElementListHTML
+            rc = DefaultElementListHTML
+        self._list_renderer = rc()
+        return self._list_renderer
 
 
 class FormCapability(GenericFormStructureCapability):
@@ -65,7 +83,12 @@ class FormCapability(GenericFormStructureCapability):
 
 class CompoundFieldCapability(GenericFormStructureCapability):
     label = "Compound"
-    repeatable = None
+
+    repeatable_label = "Compounds"
+    repeatable_minimum = 1
+    repeatable_initial = 1
+    """Field which are bound to their structure with a REPEATABLE option can use these two properties to control how 
+        many instances of the field are rendered by default, and the minimum number of displayed fields"""
     conditional = False
     js = []
     attributes: dict[str, str] = {}
@@ -137,6 +160,7 @@ class FormFieldCapability(FieldCapability):
     multiple:bool = False
     """For fields which allow the selection of elements, do they allow for multi selections (e.g. multi-select box, or checkboxes)"""
 
+    repeatable_label = "Fields"
     repeatable_minimum = 1
     repeatable_initial = 1
     """Field which are bound to their structure with a REPEATABLE option can use these two properties to control how 
@@ -153,6 +177,8 @@ class FormFieldCapability(FieldCapability):
     control_render_class = None
     """Class which will render the control itsef"""
 
+    list_render_class = None
+
     js: list[str] = []
     """List of strings or objects to be JSON serialised and passed to the front end JS"""
 
@@ -161,6 +187,7 @@ class FormFieldCapability(FieldCapability):
         self._options_from_fn = None
         self._renderer = None
         self._control_renderer = None
+        self._list_renderer = None
         super().__init__()
 
     def get_control(self):
@@ -203,6 +230,16 @@ class FormFieldCapability(FieldCapability):
         self._control_renderer = rc()
         return self._control_renderer
 
+    def get_list_renderer(self):
+        if self._list_renderer is not None:
+            return self._list_renderer
+        rc = self.list_render_class
+        if rc is None:
+            from formulaic.serialise.form.render import DefaultElementListHTML
+            rc = DefaultElementListHTML
+        self._list_renderer = rc()
+        return self._list_renderer
+
 
 class FormSerialiser(Serialiser):
     def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
@@ -231,6 +268,14 @@ class FormSerialiser(Serialiser):
 
                     if element.repeatable:
                         new_prefix = prefix + element.name + form_cap.separator
+                        rrepr = {
+                            "type": "list",
+                            "ref": cap,
+                            "prefix": new_prefix,
+                            "elements": []
+                        }
+                        container.append(rrepr)
+
                         vals = engine.get_list(element, data)
                         if len(vals) > 0:
                             for i, val in enumerate(vals):
@@ -243,11 +288,11 @@ class FormSerialiser(Serialiser):
                                     "prefix": index_prefix,
                                     "control": inl
                                 }
-                                container.append(erepr)
+                                rrepr["elements"].append(erepr)
 
                             remaining = cap.repeatable_initial - len(vals)
                             if remaining > 0:
-                                for i in range(remaining):
+                                for i in range(len(vals), cap.repeatable_initial):
                                     index_prefix = new_prefix + str(i)
                                     inl = control.inputs_and_labels(index_prefix, None)
 
@@ -257,7 +302,7 @@ class FormSerialiser(Serialiser):
                                         "prefix": new_prefix,
                                         "control": inl
                                     }
-                                    container.append(erepr)
+                                    rrepr["elements"].append(erepr)
                         else:
                             target = cap.repeatable_initial
                             for i in range(target):
@@ -270,7 +315,7 @@ class FormSerialiser(Serialiser):
                                     "prefix": new_prefix,
                                     "control": inl
                                 }
-                                container.append(erepr)
+                                rrepr["elements"].append(erepr)
                     else:
                         new_prefix = prefix + element.name
                         val = engine.get_single(element, data)
@@ -311,24 +356,53 @@ class FormSerialiser(Serialiser):
                         new_prefix = prefix + element.name_ + form_cap.separator
 
                         if element.ref_.repeatable:
-                            erepr = {
-                                "type": "compound",
+                            rrepr = {
+                                "type": "list",
                                 "prefix": new_prefix,
                                 "ref": cap,
                                 "elements": []
                             }
-                            container.append(erepr)
+                            container.append(rrepr)
 
                             objs = engine.get_list(element, data)
                             if len(objs) > 0:
                                 next_ordered_elements = cap.get_in_order(detach=True)
                                 for i, obj in enumerate(objs):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
+                                    erepr = {
+                                        "type": "compound",
+                                        "prefix": index_prefix,
+                                        "ref": cap,
+                                        "elements": []
+                                    }
+                                    rrepr["elements"].append(erepr)
                                     recurse(index_prefix, obj, next_ordered_elements, erepr["elements"])
+
+                                remaining = cap.repeatable_initial - len(objs)
+                                if remaining > 0:
+                                    for i in range(len(objs), cap.repeatable_initial):
+                                        index_prefix = new_prefix + str(i) + form_cap.separator
+                                        erepr = {
+                                            "type": "compound",
+                                            "ref": cap,
+                                            "prefix": index_prefix,
+                                            "elements": []
+                                        }
+                                        rrepr["elements"].append(erepr)
+                                        recurse(index_prefix, {}, next_ordered_elements, erepr["elements"])
                             else:
                                 next_ordered_elements = cap.get_in_order()
-                                index_prefix = new_prefix + "0" + form_cap.separator
-                                recurse(index_prefix, data, next_ordered_elements, erepr["elements"])
+                                target = cap.repeatable_initial
+                                for i in range(target):
+                                    index_prefix = new_prefix + str(i) + form_cap.separator
+                                    erepr = {
+                                        "type": "compound",
+                                        "ref": cap,
+                                        "prefix": new_prefix,
+                                        "elements": []
+                                    }
+                                    rrepr["elements"].append(erepr)
+                                    recurse(index_prefix, data, next_ordered_elements, erepr["elements"])
                         else:
                             erepr = {
                                 "type": "compound",
@@ -351,46 +425,3 @@ class FormSerialiser(Serialiser):
         html = form_renderer.draw(representation)
         return html
 
-# def data_to_kv(data:dict, struct:Structure, use_form_in_name=False, use_fieldsets_in_name=False, separator="-"):
-#     kvs = {}
-#
-#     def recurse(prefix, data, struct):
-#         for field in struct.ref_.fields:
-#             if field.repeatable:
-#                 vals = engine.get_list(field, data)
-#                 if len(vals) > 0:
-#                     for i, val in enumerate(vals):
-#                         kvs[prefix + field.name + separator + str(i)] = val
-#                 else:
-#                     kvs[prefix + field.name + separator + "0"] = None
-#             else:
-#                 kvs[prefix + field.name] = engine.get_single(field, data)
-#
-#         for substruct in struct.ref_.structures:
-#             if substruct.ref_.has_capability(FieldsetCapability):
-#                 new_prefix = prefix
-#                 if use_fieldsets_in_name:
-#                     new_prefix = prefix + substruct.name_ + separator
-#                 recurse(new_prefix, data, substruct)
-#
-#             else:
-#                 new_prefix = prefix + substruct.name_ + separator
-#                 if substruct.ref_.repeatable:
-#                     objs = engine.get_list(substruct, data)
-#                     if len(objs) > 0:
-#                         for i, obj in enumerate(objs):
-#                             new_prefix = new_prefix + str(i) + separator
-#                             recurse(new_prefix, obj, substruct.ref_.detach())    # Make a detached substruct, which rebases the struct to the data
-#                     else:
-#                         new_prefix = new_prefix + "0" + separator
-#                         recurse(new_prefix, {}, substruct)
-#                 else:
-#                     obj = engine.get_single(substruct, data)
-#                     recurse(new_prefix, obj, substruct)
-#
-#     prefix = ""
-#     if use_form_in_name:
-#         prefix = struct.name_ + separator
-#
-#     recurse(prefix, data, struct)
-#     return kvs

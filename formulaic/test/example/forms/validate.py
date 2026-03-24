@@ -31,3 +31,19 @@ class CurrentISOLanguage(Validator):
         #     check = isolang.find(field.data)
         #     if check is None:
         #         raise validators.ValidationError(self.message)
+
+class CurrentISOCurrency(object):
+    """
+    ~~EmailAvailable:FormValidator~~
+    """
+    def __init__(self, message=None):
+        if not message:
+            message = "Currency is not in the currently supported ISO list"
+        self.message = message
+
+    def validate(self, val, field, data):
+        return True
+        # if field.data is not None and field.data != '':
+        #     check = get_currency_code(field.data, fail_if_not_found=True)
+        #     if check is None:
+        #         raise validators.ValidationError(self.message)

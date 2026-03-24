@@ -2,11 +2,12 @@ from formulaic.coerce.coerce import Unicode
 from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATABLE
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
     FormCapability, FormSerialiser
-from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML, DebugControlHTML
+from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML, DebugControlHTML, DebugListHTML
 from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLInPublicDOAJ, ISSNInPublicDOAJ, \
-    CurrentISOLanguage
+    CurrentISOLanguage, CurrentISOCurrency
 from formulaic.test.example.validate import IsISSN
-from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo, StopWords, MaxLen
+from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo, StopWords, MaxLen, \
+    RequiredIf
 from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput, URLInput
 
 
@@ -21,6 +22,17 @@ class DOAJFormFieldCapability(FormFieldCapability):
     diff_table_context = None
     render_class = DebugFieldHTML
     control_render_class = DebugControlHTML
+    list_render_class = DebugListHTML
+
+class DOAJFormCapability(FormCapability):
+    render_class = DebugFormHTML
+    list_render_class = DebugListHTML
+
+class DOAJFieldsetCapability(FieldsetCapability):
+    list_render_class = DebugListHTML
+
+class DOAJCompoundFieldCapability(CompoundFieldCapability):
+    list_render_class = DebugListHTML
 
 #######################################
 #### FIELD DEFINITIONS
@@ -74,7 +86,6 @@ class APC(Field):
 
     class APCFormCapability(DOAJFormFieldCapability):
         label = "Does the journal charge fees for publishing an article (APCs)?"
-        control_class = Radio
         options = [
             {"value": "y", "label": "Yes"},
             {"value": "n", "label": "No"}
@@ -86,30 +97,33 @@ class APC(Field):
                      "publishing their paper."]
         doaj_criteria = "You must tell us about any APCs"
 
+        control_class = Radio
+
     capabilities = (APCFormCapability(),)
 
 ## APC Currency Field
 class APCCurrency(Field):
     class APCCurrencyFormCapability(DOAJFormFieldCapability):
         label = "What is the currency of the APC?"
-        control_class = Select
-        options = lambda x: currency_list(x)
         placeholder = "Currency"
+
+        options = lambda x: currency_list(x)
         default = ""
+
+        control_class = Select
+
         js = ["select"]
-        attributes = {
-            "class": "input-xlarge"
-        }
 
     name = "apc_currency"
     coerce = [Unicode()]
-    validate = [] #[RequiredIf("apc", "y")],  # CurrentISOCurrency
+    validate = [RequiredIf("apc", "y"), CurrentISOCurrency]
     capabilities = (APCCurrencyFormCapability(),)
 
 ## APC Max Valuue Field
 class APCMax(Field):
     class APCMaxFormCapability(DOAJFormFieldCapability):
         label = "What is the maximum APC charged by this journal?"
+
         control_class = NumberInput
         attributes = {
             "min": "1"
@@ -117,22 +131,47 @@ class APCMax(Field):
 
     name = "apc_max"
     coerce = [int]
-    validate = [] #[RequiredIf("apc", "y")]
+    validate = [RequiredIf("apc", "y")]
     capabilities = (APCMaxFormCapability(),)
+
+class APCURL(Field):
+    class APCURLCapability(DOAJFormFieldCapability):
+        label = "Where can we find this information?"
+        short_help = ["Link to the page where this is stated. The page "
+                     "must declare <b>whether or not</b> there is a fee "
+                     "to publish an article in the journal."]
+        doaj_criteria = "You must provide a URL"
+        placeholder = "https://www.my-journal.com/about#apc"
+
+        control_class = TextInput
+
+        js = [
+            "trim_whitespace",
+            "clickable_url"
+        ]
+
+    name = "apc_url"
+    validators = [IsURL()]
 
 ## APC Compound Field Container
 
 class APCCharges(Structure):
     class APCChargesCapability(CompoundFieldCapability):
-        label = "Highest fee charged"
-        repeatable = {
-            "minimum": 1,
-            "initial": 5
-        }
+        label = "APC"
+        repeatable_label = "Highest fee charged"
+        long_help = [" If the journal charges a range of fees for "
+                          "the publication of an article, enter the highest fee. "
+                          "If the fee can be paid in more than one currency, "
+                          "you may list them here."]
+
+        repeatable_initial = 5
+        repeatable_minimum = 1
+
         conditional = [
             {"field": "apc", "value": "y"}
         ]
         js = ["multiple_field"]
+
         order = ["apc_currency", "apc_max"]
 
     name_ = "apc_charges"
@@ -338,8 +377,9 @@ class Keywords(Field):
 
 class Language(Field):
     class LanguageCapability(DOAJFormFieldCapability):
-        label = "Languages in which the journal accepts manuscripts"
-        placeholer = "Type or select the language"
+        label = "Language"
+        placeholder = "Type or select the language"
+        repeatable_label = "Languages in which the journal accepts manuscripts"
 
         control_class = Select
         default = ""
@@ -504,7 +544,7 @@ class TitleUpdateRequest(Title):
 # presented in alphabetical order
 
 class AboutTheJournal(Structure):
-    class AboutTheJournalCapability(FieldsetCapability):
+    class AboutTheJournalCapability(DOAJFieldsetCapability):
         label = "About the journal"
         order = [
             "title",
@@ -528,7 +568,7 @@ class AboutTheJournal(Structure):
     language = Language(OPTIONAL, REPEATABLE)
 
 class APCFieldset(Structure):
-    class APCFieldsetCapability(FieldsetCapability):
+    class APCFieldsetCapability(DOAJFieldsetCapability):
         label = "Publication fees"
         order = ["apc", "apc_charges"]
 
@@ -537,9 +577,10 @@ class APCFieldset(Structure):
 
     apc = APC(REQUIRED, SINGLE)
     apc_charges = APCCharges(OPTIONAL, REPEATABLE)
+    apc_url = APCURL(OPTIONAL, SINGLE)
 
 class BasicCompliance(Structure):
-    class BasicComplianceCapability(FieldsetCapability):
+    class BasicComplianceCapability(DOAJFieldsetCapability):
         label = "Open access compliance"
         order = ["boai", "oa_statement_url"]
 
@@ -554,7 +595,7 @@ class BasicCompliance(Structure):
 #######################################
 
 class PublicApplicationForm(Structure):
-    class PublicApplicationFormCapability(FormCapability):
+    class PublicApplicationFormCapability(DOAJFormCapability):
         action = "/application"
         method = "POST"
         order = [
@@ -562,8 +603,6 @@ class PublicApplicationForm(Structure):
             "about_the_journal",
             "apcs"
         ]
-
-        render_class = DebugFormHTML
 
     name_ = "public_application_form"
     capabilities_ = (PublicApplicationFormCapability(),)
@@ -597,10 +636,10 @@ def iso_language_list(capability):
         {"value": "GER", "label": "German"},
         {"value": "ESP", "label": "Spanish"},
     ]
-    cl = [{"display": " ", "value": ""}]
-    for v, d in language_options:
-        cl.append({"display": d, "value": v})
-    return cl
+    # cl = [{"display": " ", "value": ""}]
+    # for v, d in language_options:
+    #     cl.append({"display": d, "value": v})
+    # return cl
 
 if __name__ == "__main__":
     from formulaic.test.example.data import JOURNAL_FORM

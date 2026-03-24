@@ -27,10 +27,16 @@ FORM
     |-- COMPOUND
         |-- FIELD (as above)
         |-- COMPOUND (ad infinitum)
+        |-- LIST (as below)
     |-- FIELDSET
-            |-- FIELD (as above)
-            |-- COMPOUND (as above)
-            |-- FIELDSET (ad infinitum)
+        |-- FIELD (as above)
+        |-- COMPOUND (as above)
+        |-- FIELDSET (ad infinitum)
+        |-- LIST (as below)
+    |-- LIST
+        |-- FIELD (as above)
+        |-- COMPOUND (as above)
+        |-- FIELDSET (as above)
 
 Therefore we define renderers for each layer in the hierarchy, and a renderer is responsible
 for calling those lower down the hierarchy than them.
@@ -39,6 +45,8 @@ for calling those lower down the hierarchy than them.
     * Responsible for rendering the <form> tag and calling each fieldset renderer
 * FIELDSET: FieldsetHTML
     * Responsible for rendering the <fieldset> tag and calling each field and group renderer
+* LIST: ElementListHTML
+    * Responsible for rendering the containers for lists of other elements
 * COMPOUND: CompoundHTML
     * Responsible for rendering a group of fields (or sub groups).  This may include a container, label etc.  This
     would also then render the individual fields (using a FieldHTML) or sub groups (using a CompoundHTML)
@@ -64,6 +72,10 @@ class FieldsetHTML(HTMLGenerator):
     #     self._fieldset = fieldset
     #     self._context = context
 
+    def draw(self, representation):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+class ElementListHMTL(HTMLGenerator):
     def draw(self, representation):
         raise NotImplementedError("Subclasses must implement this method.")
 
@@ -113,6 +125,10 @@ class DefaultFormHTML(FormHTML):
                     f_capabiltiy = element.get("ref")
                     f_render = f_capabiltiy.get_renderer()
                     element_frags.append(f_render.draw(element))
+                case "list":
+                    f_capabiltiy = element.get("ref")
+                    f_render = f_capabiltiy.get_list_renderer()
+                    element_frags.append(f_render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
 
@@ -147,6 +163,10 @@ class DefaultFieldsetHTML(FieldsetHTML):
                     f_capabiltiy = element.get("ref")
                     f_render = f_capabiltiy.get_renderer()
                     element_frags.append(f_render.draw(element))
+                case "list":
+                    f_capabiltiy = element.get("ref")
+                    f_render = f_capabiltiy.get_list_renderer()
+                    element_frags.append(f_render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
 
@@ -160,9 +180,44 @@ class DefaultFieldsetHTML(FieldsetHTML):
 
         return html
 
+class DefaultElementListHTML(ElementListHMTL):
+    def draw(self, representation):
+        label = representation.get("ref").repeatable_label
+        if not label:
+            label = representation.get("ref").label
+
+        element_frags = [
+            self._make_tag('legend', content=label)
+        ]
+
+        for element in representation.get("elements"):
+            match element.get("type"):
+                case "fieldset":
+                    fs_capability = element.get("ref")
+                    fs_render = fs_capability.get_renderer()
+                    element_frags.append(fs_render.draw(element))
+                case "compound":
+                    c_capability = element.get("ref")
+                    c_render = c_capability.get_renderer()
+                    element_frags.append(c_render.draw(element))
+                case "field":
+                    f_capabiltiy = element.get("ref")
+                    f_render = f_capabiltiy.get_renderer()
+                    element_frags.append(f_render.draw(element))
+
+        elements_frag = "\n" + "\n".join(element_frags) + "\n"
+        html = self._make_tag('fieldset',
+                              content=elements_frag
+                              )
+
+        return html
+
 class DefaultCompoundHTML(CompoundHTML):
     def draw(self, representation):
-        element_frags = []
+        label = representation.get("ref").label
+        element_frags = [
+            self._make_tag('legend', content=label)
+        ]
         for element in representation.get("elements"):
             match element.get("type"):
                 case "compound":
@@ -172,6 +227,10 @@ class DefaultCompoundHTML(CompoundHTML):
                 case "field":
                     f_capabiltiy = element.get("ref")
                     f_render = f_capabiltiy.get_renderer()
+                    element_frags.append(f_render.draw(element))
+                case "list":
+                    f_capabiltiy = element.get("ref")
+                    f_render = f_capabiltiy.get_list_renderer()
                     element_frags.append(f_render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
@@ -191,11 +250,13 @@ class DefaultFieldHTML(FieldHTML):
         ctx = representation.get("ref")
         ctrl = representation.get("control")
         c_renderer = ctx.get_control_renderer()
+
         html = c_renderer.draw(ctrl)
         if len(ctrl) > 1:
             legend = self._make_tag("legend", content=ctx.label)
             html = self._make_tag("fieldset", content="\n" + legend + "\n" + html + "\n")
         html = self._make_tag("div", content="\n" + html + "\n")
+
         return html
 
 class DefaultControlHTML(ControlHTML):
@@ -240,6 +301,21 @@ class DefaultControlHTML(ControlHTML):
 ## Debug implementations
 
 class DebugFormHTML(DefaultFormHTML):
+    def draw(self, representation):
+        html = super().draw(representation)
+
+        ref = representation.get("ref")
+        prefix = representation.get("prefix")
+
+        debug_info = []
+        debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
+        debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
+        ul = self._make_tag("ul", attributes={"style": "color: #888888"}, content="\n".join(debug_info))
+        html = ul + html
+
+        return html
+
+class DebugListHTML(DefaultElementListHTML):
     def draw(self, representation):
         html = super().draw(representation)
 
