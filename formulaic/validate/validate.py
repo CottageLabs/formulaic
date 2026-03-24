@@ -212,3 +212,20 @@ class MaxLen(Validator):
     def validate(self, val, field, data):
         if len(field.data) > self.max_len:
             raise ValueError(self.message.format(max_len=self.max_len))
+
+class OnlyIfExists(Validator):
+    """
+    Field only validates if other fields DOES have ANY values (or are truthy)
+    ~~NotIf:FormValidator~~
+    """
+    def __init__(self):
+        super().__init__()
+
+    def validate(self, val, field, data):
+        return True
+        # others = self.get_other_fields(form)
+        #
+        # for o_f in self.other_fields:
+        #     other = others[o_f["field"]]
+        #     if not other.data or not field.data:
+        #         validators.ValidationError(self.message)

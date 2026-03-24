@@ -137,6 +137,39 @@ JOURNAL_FORM = {
     }
 }
 
+JOURNAL_BROWSER_FORM = {
+    "boai": "y",
+    "oa_statement_url": "https://cottagelabs.com/",
+    "title": "",
+    "alternative_title": "",
+    "journal_url": "",
+    "pissn": "",
+    "eissn": "",
+    "keywords": "",
+    "language-0": "FRE",
+    "language-1": "ESP",
+    "language-2": "",
+    "language-3": "",
+    "language-4": "",
+    "publisher_name": "",
+    "publisher_country": "",
+    "institution_name": "",
+    "institution_country": "",
+    "license_terms_url": "",
+    "license_display_example_url": "",
+    "apc": "y",
+    "apc_charges-0-apc_currency": "GBP",
+    "apc_charges-0-apc_max": "1000",
+    "apc_charges-1-apc_currency": "",
+    "apc_charges-1-apc_max": "",
+    "apc_charges-2-apc_currency": "",
+    "apc_charges-2-apc_max": "",
+    "apc_charges-3-apc_currency": "",
+    "apc_charges-3-apc_max": "",
+    "apc_charges-4-apc_currency": "",
+    "apc_charges-4-apc_max": ""
+}
+
 if __name__ == "__main__":
     from formulaic.test.example.structs import JournalStructure
     from formulaic.serialise.json.json import JSONSerialiser

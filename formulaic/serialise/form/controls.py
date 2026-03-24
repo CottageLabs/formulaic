@@ -193,6 +193,43 @@ class Select(FormControl):
         tags = [{"control": select, "label": label_tag}]
         return tags
 
+class Checkbox(FormControl):
+    def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
+        attrs = self._generic_attributes()
+        attrs["name"] = id_prefix
+        attrs["type"] = "checkbox"
+        form_cap = self._capability.field.root.ref_.get_capability(FormCapability)
+
+        tags = []
+        if not isinstance(val, list):
+            val = [val]
+
+        field_options = self._capability.get_options()
+        for i, opt in enumerate(field_options):
+            id = id_prefix + form_cap.separator + str(i)
+            value = opt.get('value', '')
+
+            option_attrs = deepcopy(attrs)
+            option_attrs["id"] = id
+            if value in val:
+                option_attrs["checked"] = "checked"
+
+            option = {
+                "tag": "input",
+                "attrs": option_attrs
+            }
+
+            label = opt.get('label', '')
+            label_tag = {
+                "tag": "label",
+                "attrs": {"for": option_attrs["id"]},
+                "content": label
+            }
+
+            tags.append({"control": option, "label": label_tag})
+
+        return tags
+
 class NumberInput(FormControl):
     def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
         attrs = self._generic_attributes()

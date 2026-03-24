@@ -7,8 +7,8 @@ from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLI
     CurrentISOLanguage, CurrentISOCurrency
 from formulaic.test.example.validate import IsISSN
 from formulaic.validate.validate import RequiredValue, IsURL, NoScriptTag, OptionalIf, DifferentTo, StopWords, MaxLen, \
-    RequiredIf
-from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput, URLInput
+    RequiredIf, OnlyIfExists
+from formulaic.serialise.form.controls import Radio, TextInput, Select, NumberInput, URLInput, Checkbox
 
 
 ####################################
@@ -291,6 +291,76 @@ class EISSNAdmin(EISSN):
 #############################
 
 #############################
+## Institution Country
+
+class InstitutionCountryCapability(DOAJFormFieldCapability):
+    label = "Other organisation's country"
+    short_help = "The country in which the other organisation is based"
+    doaj_criteria = "You must provide a publisher country"
+    placeholder = "Type or select the country"
+
+    options = lambda x: iso_country_list(x)
+    default = ""
+    control_class = Select
+
+    js = [
+        {"select": {"allow_clear": True}}
+    ]
+
+class InstitutionCountry(Field):
+    name = "institution_country"
+    coerce = [Unicode()]
+    capabilities = (InstitutionCountryCapability(),)
+
+class InstitutionCountryPublisher(InstitutionCountry):
+    validators = [OnlyIfExists()]
+
+## / Institution Country
+#############################
+
+#############################
+## Institution Name
+
+class InstitutionNameCapability(DOAJFormFieldCapability):
+    label = "Other organisation's name"
+    placeholder = "Type or select the other organisation's name"
+    short_help = "Any other organisation associated with the journal"
+    long_help = [
+                "The journal may be owned, funded, sponsored, or supported by another organisation that is not "
+                "the publisher. If your journal is linked to "
+                "a second organisation, enter its name here."]
+
+    control_class = TextInput
+
+    js = [
+        "trim_whitespace",
+        {"autocomplete": {"type": "journal", "field": "bibjson.institution.name.exact"}},
+        "full_contents"
+    ]
+
+class InstitutionName(Field):
+    name = "institution_name"
+    coerce = [Unicode()]
+
+    capabilities = (InstitutionNameCapability(),)
+
+class IntitutionNameEditorial(InstitutionName):
+    class InstitutionNameEditorialCapability(InstitutionNameCapability):
+        js = [
+            "trim_whitespace",
+            {"autocomplete": {"type": "journal", "field": "bibjson.institution.name.exact"}},
+            "click_to_copy"
+        ]
+
+    capabilities = (InstitutionNameEditorialCapability(),)
+
+class InstitionalNamePublisher(InstitutionName):
+    validators = [DifferentTo("publisher_name")]
+
+## / Institution Name
+#############################
+
+#############################
 ## Journal URL
 
 class JournalURLCapability(DOAJFormFieldCapability):
@@ -402,6 +472,181 @@ class Language(Field):
 #############################
 
 #############################
+## License
+
+class License(Field):
+    class LicenseCapability(DOAJFormFieldCapability):
+        label = "License(s) permitted by the journal"
+        long_help = ["The journal must use some form of licensing to be considered for indexing in DOAJ. ",
+                          "If Creative Commons licensing is not used, then select <em>Publisher's own license</em> and enter "
+                          "more details below.",
+                          "More information on CC licenses: <br/>"
+                          "<a href='https://creativecommons.org/licenses/by/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY</a> <br/>"
+                          "<a href='https://creativecommons.org/licenses/by-sa/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY-SA</a> <br/>"
+                          "<a href='https://creativecommons.org/licenses/by-nd/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY-ND</a> <br/>"
+                          "<a href='https://creativecommons.org/licenses/by-nc/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY-NC</a> <br/>"
+                          "<a href='https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY-NC-SA</a> <br/>"
+                          "<a href='https://creativecommons.org/licenses/by-nc-nd/4.0/"
+                          "' target='_blank' 'rel='noopener'>CC BY-NC-ND</a>",
+                          "<a href='https://wiki.creativecommons.org/wiki/CC0_"
+                          "FAQ#What_is_the_difference_between_CC0_and_the_Publ"
+                          "ic_Domain_Mark_.28.22PDM.22.29.3F' target='_blank' "
+                          "rel='noopener'>What is the difference between CC0 "
+                          "and the Public Domain Mark (\"PDM\")?</a>"]
+        doaj_criteria = "Content must be licensed"
+
+        multiple = True
+        options = [
+            {"label": "CC BY", "value": "CC BY"},
+            {"label": "CC BY-SA", "value": "CC BY-SA"},
+            {"label": "CC BY-ND", "value": "CC BY-ND"},
+            {"label": "CC BY-NC", "value": "CC BY-NC"},
+            {"label": "CC BY-NC-SA", "value": "CC BY-NC-SA"},
+            {"label": "CC BY-NC-ND", "value": "CC BY-NC-ND"},
+            {"label": "CC0", "value": "CC0"},
+            {"label": "Public domain", "value": "Public domain"},
+            {"label": "Publisher's own license", "value": "Publisher's own license"},
+        ]
+        control_class = Checkbox
+
+    name = "license"
+    coerce = [Unicode()]
+    capabilities = (LicenseCapability(),)
+
+## / License
+#############################
+
+#############################
+## License Attributes
+
+class LicenseAttributes(Field):
+    class LicenseAttributesCapability(DOAJFormFieldCapability):
+        label = "Select all the attributes that your license has"
+        doaj_criteria = "Content must be licensed"
+
+        options = [
+            {"label": "Attribution", "value": "BY"},
+            {"label": "Share Alike", "value": "SA"},
+            {"label": "No Derivatives", "value": "ND"},
+            {"label": "No Commercial Usage", "value": "NC"}
+        ]
+        multiple = True
+        control_class = Checkbox
+
+        display_conditional = [{"field": "license", "value": "Publisher's own license"}]
+        js = [
+            {"conditional": {"field": "license", "value": "Publisher's own license"}}
+        ]
+
+    name = "license_attributes"
+    coerce = [Unicode()]
+    capabilities = (LicenseAttributesCapability(),)
+
+## / License Attributes
+#############################
+
+#############################
+## License Terms URL
+
+class LicenseTermsURL(Field):
+    class LicenseTermsURLCapability(DOAJFormFieldCapability):
+        label = "Where can we find this information?"
+        diff_table_context = "License terms"
+        short_help = "Link to the page where the license terms are stated on your site."
+        doaj_criteria = "You must provide a link to your license terms"
+        placeholder = "https://www.my-journal.com/about#licensing"
+
+        control_class = TextInput
+
+        display_conditional = [{"field": "license", "value": "Publisher's own license"}]
+        js = [
+            {"conditional": {"field": "license", "value": "Publisher's own license"}}
+        ]
+
+    name = "license_terms_url"
+    coerce = [Unicode()]
+    validators = [IsURL()]
+    capabilities = (LicenseTermsURLCapability(),)
+
+    js = [
+        "trim_whitespace",
+        "clickable_url"
+    ]
+
+## / License Terms URL
+#############################
+
+#############################
+## License Display
+
+class LicenseDisplay(Field):
+    class LicenseDisplayCapability(DOAJFormFieldCapability):
+        label = "Does the journal embed and/or display licensing information in its articles?"
+        long_help = ["It is recommended that licensing information is included in full-text articles "
+                          "but it is not required for inclusion. "
+                          "Answer <strong>Yes</strong> if licensing is displayed or "
+                          "embedded in all versions of each article."]
+
+        options = [
+            {"label": "Yes", "value": "y"},
+            {"label": "No", "value": "n"}
+        ]
+        control_class = Radio
+
+        display_conditional = [{"field": "license", "value": "Publisher's own license"}]
+        js = [
+            {"conditional": {"field": "license", "value": "Publisher's own license"}}
+        ]
+
+    name = "license_display"
+    coerce = [Unicode()]
+    capabilities = (LicenseDisplayCapability(),)
+
+    js = [
+        "trim_whitespace",
+        "clickable_url"
+    ]
+
+
+## / License Display
+#############################
+
+#############################
+## License Display Example URL
+
+class LicenseDisplayExampleURL(Field):
+    class LicenseDisplayExampleURLCapability(DOAJFormFieldCapability):
+        label = "Recent article displaying or embedding a license in the full text"
+        short_help = "Link to an example article"
+        placeholder = "https://www.my-journal.com/articles/article-page"
+
+        control_class = TextInput
+
+        display_conditional = [{"field": "license_display", "value": "y"}]
+        js = [
+            {"conditional": {"field": "license_display", "value": "y"}}
+        ]
+
+    name = "license_display_example_url"
+    coerce = [Unicode()]
+    validators = [RequiredIf("license_display", "y"), IsURL()]
+    capabilities = (LicenseDisplayExampleURLCapability(),)
+
+    js = [
+        "trim_whitespace",
+        "clickable_url"
+    ]
+
+
+## / License Display Example URL
+#############################
+
+#############################
 ## OA Statement URL
 
 class OAStatementURLFormCapability(DOAJFormFieldCapability):
@@ -491,6 +736,74 @@ class PISSNAdmin(PISSN):
         ]
 
 ## / PISSN
+#############################
+
+#############################
+## Publisher Country
+
+class PublisherCountryCapability(DOAJFormFieldCapability):
+    label = "Publisher's country"
+    long_help = "The country where the publisher carries out its business operations and is registered."
+    doaj_criteria = "You must provide a publisher country"
+    placeholder = "Type or select the country"
+
+    options = lambda x: iso_country_list(x)
+    default = ""
+    control_class = Select
+
+    js = [
+        "select"
+    ]
+
+class PublisherCountry(Field):
+    name = "publisher_country"
+    coerce = [Unicode()]
+    capabilities = (PublisherCountryCapability(),)
+
+class PublisherCountryAssEd(PublisherCountry):
+    class PublisherCountryAssEdCapability(PublisherCountryCapability):
+        disabled = True
+
+    capabilities = (PublisherCountryCapability(),)
+
+## / Publisher Country
+#############################
+
+#############################
+## Publisher Name
+
+class PublisherNameCapability(DOAJFormFieldCapability):
+    label = "Publisher's name"
+    placeholder = "Type or select the publisher's name"
+
+    control_class = TextInput
+
+    js = [
+        "trim_whitespace",
+        {"autocomplete": {"type": "journal", "field": "bibjson.publisher.name.exact"}},
+        "full_contents"
+    ]
+
+class PublisherName(Field):
+    name = "publisher_name"
+    coerce = [Unicode()]
+
+    capabilities = (PublisherNameCapability(),)
+
+class PublisherNameEditorial(PublisherName):
+    class PublisherNameEditorialCapability(PublisherNameCapability):
+        js = [
+            "trim_whitespace",
+            {"autocomplete": {"type": "journal", "field": "bibjson.publisher.name.exact"}},
+            "click_to_copy"
+        ]
+
+    capabilities = (PublisherNameEditorialCapability(),)
+
+class PublisherNamePublisher(PublisherName):
+    validators = [DifferentTo("institution_name")]
+
+## / Publisher Name
 #############################
 
 #############################
@@ -590,6 +903,51 @@ class BasicCompliance(Structure):
     boai = BOAI(REQUIRED, SINGLE)
     oa_statement_url = OAStatementURL(REQUIRED, SINGLE)
 
+class Licensing(Structure):
+    class LicensingCapability(DOAJFieldsetCapability):
+        label = "Licensing"
+        order = ["license", "license_attributes", "license_terms_url"]
+
+    name_ = "licensing"
+    capabilities_ = (LicensingCapability(),)
+
+    license = License(OPTIONAL, SINGLE)
+    license_attributes = LicenseAttributes(OPTIONAL, SINGLE)
+    license_terms_url = LicenseTermsURL(OPTIONAL, SINGLE)
+
+class EmbeddedLicensing(Structure):
+    class EmbeddedLicensingCapability(DOAJFieldsetCapability):
+        label = "Embedded licenses"
+        order = ["license_display", "license_display_example_url"]
+
+    name_ = "embedded_licensing"
+    capabilities_ = (EmbeddedLicensingCapability(),)
+
+    license_display = LicenseDisplay(OPTIONAL, SINGLE)
+    license_display_example_url = LicenseDisplayExampleURL(OPTIONAL, SINGLE)
+
+class OtherOrganisation(Structure):
+    class OtherOrganisationCapability(DOAJFieldsetCapability):
+        label = "Other organisation, if applicable"
+        order = ["institution_name", "institution_country"]
+
+    name_ = "society_or_institution"
+    capabilities_ = (OtherOrganisationCapability(),)
+
+    institution_name = InstitutionName(OPTIONAL, SINGLE)
+    institution_country = InstitutionCountry(OPTIONAL, SINGLE)
+
+class Publisher(Structure):
+    class PublisherCapability(DOAJFieldsetCapability):
+        label = "Publisher"
+        order = ["publisher_name", "publisher_country"]
+
+    name_ = "publisher"
+    capabilities_ = (PublisherCapability(),)
+
+    publisher_name = PublisherNamePublisher(REQUIRED, SINGLE)
+    publisher_country = PublisherCountry(REQUIRED, SINGLE)
+
 #######################################
 #### FORM DEFINTIONS
 #######################################
@@ -601,6 +959,10 @@ class PublicApplicationForm(Structure):
         order = [
             "basic_compliance",
             "about_the_journal",
+            "publisher",
+            "other_organisation",
+            "licensing",
+            "embedded_licensing",
             "apcs"
         ]
 
@@ -609,6 +971,10 @@ class PublicApplicationForm(Structure):
 
     basic_compliance = BasicCompliance(OPTIONAL, SINGLE)
     about_the_journal = AboutTheJournal(OPTIONAL, SINGLE)
+    publisher = Publisher(OPTIONAL, SINGLE)
+    other_organisation = OtherOrganisation(OPTIONAL, SINGLE)
+    licensing = Licensing(OPTIONAL, SINGLE)
+    embedded_licensing = EmbeddedLicensing(OPTIONAL, SINGLE)
     apcs = APCFieldset(OPTIONAL, SINGLE)
 
 
@@ -640,6 +1006,14 @@ def iso_language_list(capability):
     # for v, d in language_options:
     #     cl.append({"display": d, "value": v})
     # return cl
+
+def iso_country_list(capability):
+    return [
+        {"value": "US", "label": "United States"},
+        {"value": "CA", "label": "Canada"},
+        {"value": "NZ", "label": "New Zealand"},
+        {"value": "BG", "label": "Bangladesh"}
+    ]
 
 if __name__ == "__main__":
     from formulaic.test.example.data import JOURNAL_FORM
