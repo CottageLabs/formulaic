@@ -425,3 +425,98 @@ class FormSerialiser(Serialiser):
         html = form_renderer.draw(representation)
         return html
 
+
+class FormDataParser(Serialiser):
+    def representation_to_data(self, representation:dict, struct:Structure, **kwargs) -> dict:
+        data = {}
+
+        form_cap = struct.ref_.get_capability(FormCapability)
+        prefix = ""
+        if form_cap.use_form_in_name:
+            prefix = struct.name_ + form_cap.separator
+
+        def extract_to_list_by_prefix(prefix, representation):
+            elements = {}
+            for k, v in representation.items():
+                if k.startswith(prefix):
+                    suffix = k[len(prefix):]
+                    idx = int(suffix)
+                    elements[idx] = v
+
+            indexes = sorted(list(elements.keys()))
+            return [elements[i] for i in indexes if elements[i]]
+
+        def extract_nested_by_prefix(prefix, separator, representation):
+            elements = {}
+            for k, v in representation.items():
+                if k.startswith(prefix):
+                    suffix = k[len(prefix):]
+                    offset = suffix.index(separator)
+                    idx = int(suffix[:offset])
+                    onward_path = suffix[offset+1:]
+                    if idx not in elements:
+                        elements[idx] = {}
+                    elements[idx][onward_path] = v
+
+            indexes = sorted(list(elements.keys()))
+            return [elements[i] for i in indexes]
+
+        def recurse(prefix, representation, ordered_elements, data):
+            for element in ordered_elements:
+                if isinstance(element, Field):
+                    if element.repeatable:
+                        new_prefix = prefix + element.name + form_cap.separator
+                        vals = extract_to_list_by_prefix(new_prefix, representation)
+                        if len(vals) > 0:
+                            data[element.name] = vals
+                    else:
+                        new_prefix = prefix + element.name
+                        # extract the exact value
+                        val = representation.get(new_prefix)
+                        if val:
+                            data[element.name] = val
+                else:
+                    if element.ref_.has_capability(FieldsetCapability):
+                        # if this is a fieldset, just add the fieldset to the data model
+                        # and recurse into it to see what other form fields apply to it
+                        new_prefix = prefix
+                        if form_cap.use_fieldsets_in_name:
+                            new_prefix = prefix + element.name_ + form_cap.separator
+                        cap = element.ref_.get_capability(FieldsetCapability)
+                        nested = {}
+                        next_ordered_elements = cap.get_in_order()
+                        recurse(new_prefix, representation, next_ordered_elements, nested)
+                        if len(nested) > 0:
+                            data[element.name_] = nested
+
+                    elif element.ref_.has_capability(CompoundFieldCapability):
+                        cap = element.ref_.get_capability(CompoundFieldCapability)
+                        new_prefix = prefix + element.name_ + form_cap.separator
+
+                        if element.ref_.repeatable:
+                            # Extract all the fields that sit within this compound field, such
+                            # that we have a list of objects with all their prefixes to this point
+                            # stripped, then we can recurse into each nested field with the subset of
+                            # data (this is why we detach the structure at this point, to rebase on
+                            # the empty prefix
+                            compounds = extract_nested_by_prefix(new_prefix, form_cap.separator, representation)
+                            if len(compounds) > 0:
+                                next_ordered_elements = cap.get_in_order(detach=True)
+                                for c in compounds:
+                                    nested = {}
+                                    recurse("", c, next_ordered_elements, nested)
+                                    if len(nested) > 0:
+                                        if element.name_ not in data:
+                                            data[element.name_] = []
+                                        data[element.name_].append(nested)
+                        else:
+                            next_ordered_elements = cap.get_in_order()
+                            nested = {}
+                            recurse(new_prefix, representation, next_ordered_elements, nested)
+                            if len(nested) > 0:
+                                data[element.name_] = nested
+
+        ordered_elements = form_cap.get_in_order()
+        recurse(prefix, representation, ordered_elements, data)
+
+        return data

@@ -211,6 +211,7 @@ class Checkbox(FormControl):
 
             option_attrs = deepcopy(attrs)
             option_attrs["id"] = id
+            option_attrs["value"] = value
             if value in val:
                 option_attrs["checked"] = "checked"
 

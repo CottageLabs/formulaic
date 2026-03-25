@@ -1,7 +1,7 @@
 from formulaic.coerce.coerce import Unicode
 from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATABLE
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
-    FormCapability, FormSerialiser
+    FormCapability, FormSerialiser, FormDataParser
 from formulaic.serialise.form.render import DebugFormHTML, DebugFieldHTML, DebugControlHTML, DebugListHTML
 from formulaic.test.example.forms.validate import RequiredValueDOAJ, JournalURLInPublicDOAJ, ISSNInPublicDOAJ, \
     CurrentISOLanguage, CurrentISOCurrency
@@ -1016,7 +1016,7 @@ def iso_country_list(capability):
     ]
 
 if __name__ == "__main__":
-    from formulaic.test.example.data import JOURNAL_FORM
+    from formulaic.test.example.data import JOURNAL_FORM, JOURNAL_PARSED_FORM
     import json
 
     serialiser = FormSerialiser()
@@ -1031,3 +1031,7 @@ if __name__ == "__main__":
         f.write(html)
         f.write("\n\n<pre>\n" + json.dumps(representation, indent=2, default=repr) + "\n</pre>")
         f.write("\n</html>")
+
+    parser = FormDataParser()
+    data = parser.representation_to_data(JOURNAL_PARSED_FORM, PublicApplicationForm())
+    print(json.dumps(data, indent=2, default=repr))
