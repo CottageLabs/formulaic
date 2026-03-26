@@ -20,6 +20,15 @@ class FormControl:
         if disabled:
             attrs['disabled'] = 'disabled'
 
+        required = False
+        if isinstance(self._capability, FormFieldCapability):
+            required = self._capability.field.required
+        else:
+            required = self._capability.struct.ref_.required
+
+        if required:
+            attrs["required"] = "required"
+
         # FIXME: validators need to be separated from their representations
         # in html
         validators = self._capability.field.validators or []
@@ -240,6 +249,28 @@ class NumberInput(FormControl):
 
         if val is not None:
             attrs["value"] = val
+
+        min = None
+        max = None
+        range = self._capability.field.allowed_range
+        if len(range) == 1:
+            min = range[0]
+        elif len(range) == 2:
+            min = range[0]
+            max = range[1]
+
+        if min is not None:
+            try:
+                min = int(min)
+                attrs["min"] = min
+            except:
+                pass
+        if max is not None:
+            try:
+                max = int(max)
+                attrs["max"] = max
+            except:
+                pass
 
         input = {
             "tag": "input",

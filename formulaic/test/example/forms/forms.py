@@ -1,4 +1,4 @@
-from formulaic.coerce.coerce import Unicode
+from formulaic.coerce.coerce import Unicode, Integer
 from formulaic.core import Field, Structure, OPTIONAL, SINGLE, REQUIRED, REPEATABLE
 from formulaic.serialise.form.core import FormFieldCapability, CompoundFieldCapability, FieldsetCapability, \
     FormCapability, FormSerialiser, FormDataParser
@@ -233,6 +233,59 @@ class BOAIAssEd(BOAI):
     capabilities = (BOAIFormCapability(),)
 
 ## /BOAI
+#############################
+
+#############################
+## Copyright Author Retains
+
+class CopyrightAuthorRetains(Field):
+    class CopyrightAuthorRetainsCapability(DOAJFormFieldCapability):
+        label = ("For all the licenses you have indicated above, do authors retain the copyright "
+                 "<b>and</b> full publishing rights without restrictions?")
+
+        long_help = ["Answer <strong>No</strong> if authors transfer "
+                          "copyright or assign exclusive rights to the publisher"
+                          " (including commercial rights). <br/><br/> Answer "
+                          "<strong>Yes</strong> only if authors publishing "
+                          "under any license allowed by the journal "
+                          "retain all rights."]
+
+        options = [
+            {"label": "Yes", "value": "y"},
+            {"label": "No", "value": "n"}
+        ]
+        control_class = Radio
+
+    name = "copyright_author_retains"
+    coerce = [Unicode()]
+    capabilities = (CopyrightAuthorRetainsCapability(),)
+
+## / Copyright Author Retains
+#############################
+
+#############################
+## Copyright URL
+
+class CopyrightURL(Field):
+    class CopyrightURLCapability(DOAJFormFieldCapability):
+        label = "Where can we find this information?"
+        diff_table_context = "Copyright terms"
+        short_help = "Link to the journal’s copyright terms"
+        placeholder = "https://www.my-journal.com/about#licensing"
+
+        control_class = TextInput
+
+        js = [
+            "trim_whitespace",
+            "clickable_url"
+        ]
+
+    name = "copyright_url"
+    coerce = [Unicode()]
+    validators = [IsURL()]
+    capabilities = (CopyrightURLCapability(),)
+
+## Copyright URL
 #############################
 
 #############################
@@ -647,6 +700,27 @@ class LicenseDisplayExampleURL(Field):
 #############################
 
 #############################
+## OA Start
+
+class OAStart(Field):
+    class OAStartCapability(DOAJFormFieldCapability):
+        label = "When did the journal start to publish all content using an open license?"
+        long_help = [
+                "Please enter the year that the journal started to publish all content as true open access, according to DOAJ's <a href='https://blog.doaj.org/2020/11/17/what-does-doaj-define-as-open-access/' target='_blank' rel='nofollow'>definition</a>.",
+                "For journals that have flipped to open access, enter the year that the journal flipped, not the original launch date of the journal.",
+                "For journals that have made digitised backfiles freely available, enter the year that the journal started publishing as a fully open access title, not the date of the earliest free content."]
+
+        control_class = NumberInput
+
+    name = "oa_start"
+    coerce = [Integer()]
+    allowed_range = (1900, 2026)
+    capabilities = (OAStartCapability(),)
+
+## / OA Start
+#############################
+
+#############################
 ## OA Statement URL
 
 class OAStatementURLFormCapability(DOAJFormFieldCapability):
@@ -807,6 +881,87 @@ class PublisherNamePublisher(PublisherName):
 #############################
 
 #############################
+## Review Process
+
+class ReviewProcess(Field):
+    class ReviewProcessCapability(DOAJFormFieldCapability):
+        label = ("DOAJ only accepts peer-reviewed journals. "
+                 "Which type(s) of peer review does this journal use?")
+        long_help = ("Enter all types of review used by the journal for "
+                          "research articles. Note that editorial review is "
+                          "only accepted for <a href='https://doaj.org/apply/guide/#arts-and-humanities-journals' target='_blank' rel='nofollow'>arts and humanities journals</a>."
+                          "For a detailed description of the peer review types, "
+                          "see <a href='https://docs.google.com/document/d/1ADiVPR7tY8a9JKr2VjFEXbNG7FIpz22nOPDDPfRzJxA/edit?tab=t.0' target='_blank' rel='nofollow'>this summary</a>.")
+        doaj_criteria = "Peer review must be carried out"
+
+        options = [
+            {"label": "Editorial review", "value": "Editorial review"},
+            {"label": "Peer review", "value": "Peer review"},
+            {"label": "Anonymous peer review", "value": "Anonymous peer review"},
+            {"label": "Double anonymous peer review", "value": "Double anonymous peer review"},
+            {"label": "Post-publication peer review", "value": "Post-publication peer review"},
+            {"label": "Open peer review", "value": "Open peer review"},
+            {"label": "Other", "value": "other"}
+        ]
+        multiple = True
+        control_class = Checkbox
+
+    name = "review_process"
+    coerce = [Unicode()]
+    capabilities = (ReviewProcessCapability(),)
+
+## / Review Process
+#############################
+
+#############################
+## Review Process Other
+
+class ReviewProcessOther(Field):
+    class ReviewProcessOtherCapability(DOAJFormFieldCapability):
+        label = "Other peer review"
+        placeholder = "Other peer review"
+
+        control_class = TextInput
+
+        display_conditional = [{"field": "review_process", "value": "other"}]
+        js = [
+            "trim_whitespace",
+        ]
+
+    name = "review_process_other"
+    coerce = [Unicode()]
+    validators = [RequiredIf("review_process", "other")]
+    capabilities = (ReviewProcessOtherCapability(),)
+
+## / Review Process Other
+#############################
+
+#############################
+## Review URL
+
+class ReviewURL(Field):
+    class ReviewURLCapability(DOAJFormFieldCapability):
+        label = "Where can we find this information?"
+        diff_table_context = "Peer review policy"
+        doaj_criteria = "You must provide a URL"
+        short_help = "Link to the journal’s peer review policy"
+
+        control_class = TextInput
+
+        js = [
+            "trim_whitespace",
+            "clickable_url"
+        ]
+
+    name = "review_url"
+    coerce = [Unicode()]
+    validators = [IsURL()]
+    capabilities = (ReviewURLCapability(),)
+
+## / Review URL
+#############################
+
+#############################
 ## Title
 
 class TitleCapability(DOAJFormFieldCapability):
@@ -895,13 +1050,36 @@ class APCFieldset(Structure):
 class BasicCompliance(Structure):
     class BasicComplianceCapability(DOAJFieldsetCapability):
         label = "Open access compliance"
-        order = ["boai", "oa_statement_url"]
+        order = ["boai", "oa_statement_url", "oa_start"]
 
     name_ = "basic_compliance"
     capabilities_ = (BasicComplianceCapability(),)
 
     boai = BOAI(REQUIRED, SINGLE)
     oa_statement_url = OAStatementURL(REQUIRED, SINGLE)
+    oa_start = OAStart(REQUIRED, SINGLE)
+
+class CopyrightFieldset(Structure):
+    class CopyrightFieldsetCapability(DOAJFieldsetCapability):
+        label = "Copyright"
+        order = ["copyright_author_retains", "copyright_url"]
+
+    name_ = "copyright"
+    capabilities_ = (CopyrightFieldsetCapability(),)
+
+    copyright_author_retains = CopyrightAuthorRetains(REQUIRED, SINGLE)
+    copyright_url = CopyrightURL(REQUIRED, SINGLE)
+
+class EmbeddedLicensing(Structure):
+    class EmbeddedLicensingCapability(DOAJFieldsetCapability):
+        label = "Embedded licenses"
+        order = ["license_display", "license_display_example_url"]
+
+    name_ = "embedded_licensing"
+    capabilities_ = (EmbeddedLicensingCapability(),)
+
+    license_display = LicenseDisplay(OPTIONAL, SINGLE)
+    license_display_example_url = LicenseDisplayExampleURL(OPTIONAL, SINGLE)
 
 class Licensing(Structure):
     class LicensingCapability(DOAJFieldsetCapability):
@@ -915,17 +1093,6 @@ class Licensing(Structure):
     license_attributes = LicenseAttributes(OPTIONAL, SINGLE)
     license_terms_url = LicenseTermsURL(OPTIONAL, SINGLE)
 
-class EmbeddedLicensing(Structure):
-    class EmbeddedLicensingCapability(DOAJFieldsetCapability):
-        label = "Embedded licenses"
-        order = ["license_display", "license_display_example_url"]
-
-    name_ = "embedded_licensing"
-    capabilities_ = (EmbeddedLicensingCapability(),)
-
-    license_display = LicenseDisplay(OPTIONAL, SINGLE)
-    license_display_example_url = LicenseDisplayExampleURL(OPTIONAL, SINGLE)
-
 class OtherOrganisation(Structure):
     class OtherOrganisationCapability(DOAJFieldsetCapability):
         label = "Other organisation, if applicable"
@@ -936,6 +1103,18 @@ class OtherOrganisation(Structure):
 
     institution_name = InstitutionName(OPTIONAL, SINGLE)
     institution_country = InstitutionCountry(OPTIONAL, SINGLE)
+
+class PeerReview(Structure):
+    class PeerReviewCapability(DOAJFieldsetCapability):
+        label = "Peer review"
+        order = ["review_process", "review_process_other", "review_url"]
+
+    name_ = "peer_review"
+    capabilities_ = (PeerReviewCapability(),)
+
+    review_process = ReviewProcess(REQUIRED, SINGLE)
+    review_process_other = ReviewProcessOther(OPTIONAL, SINGLE)
+    review_url = ReviewURL(REQUIRED, SINGLE)
 
 class Publisher(Structure):
     class PublisherCapability(DOAJFieldsetCapability):
@@ -963,6 +1142,8 @@ class PublicApplicationForm(Structure):
             "other_organisation",
             "licensing",
             "embedded_licensing",
+            "copyright",
+            "peer_review",
             "apcs"
         ]
 
@@ -975,6 +1156,8 @@ class PublicApplicationForm(Structure):
     other_organisation = OtherOrganisation(OPTIONAL, SINGLE)
     licensing = Licensing(OPTIONAL, SINGLE)
     embedded_licensing = EmbeddedLicensing(OPTIONAL, SINGLE)
+    copyright = CopyrightFieldset(OPTIONAL, SINGLE)
+    peer_review = PeerReview(OPTIONAL, SINGLE)
     apcs = APCFieldset(OPTIONAL, SINGLE)
 
 

@@ -1,56 +1,72 @@
 <html>
-<ul style="color: #888888"><li>Capability: <__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x74b15d86b0a0></li>
+<ul style="color: #888888"><li>Capability: <__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x76d962a2f940></li>
 <li>Prefix: ''</li></ul><form id="public_application_form" action="/application" method="POST">
 <fieldset id="basic_compliance">
 <legend>Open access compliance</legend>
-<ul style="color: #888888"><li>Capability: <__main__.BOAIFormCapability object at 0x74b15df8f9d0></li>
+<ul style="color: #888888"><li>Capability: <__main__.BOAIFormCapability object at 0x76d9629c8df0></li>
 <li>Prefix: 'boai'</li></ul><div>
 <fieldset>
-<legend>Does the journal have a BOAI-compliant open access policy?</legend>
-<ul style="color: #888888"><li>data-parsley-requiredvalue: y</li>
+<legend>Does the journal have a BOAI-compliant open access policy? (required)</legend>
+<ul style="color: #888888"><li>required: required</li>
+<li>data-parsley-requiredvalue: y</li>
 <li>type: radio</li>
 <li>name: boai</li>
 <li>id: boai-0</li>
 <li>value: y</li>
 <li>checked: checked</li></ul>
-<ul style="color: #888888"><li>data-parsley-requiredvalue: y</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>data-parsley-requiredvalue: y</li>
 <li>type: radio</li>
 <li>name: boai</li>
 <li>id: boai-1</li>
 <li>value: n</li></ul>
 <label for="boai-0">Yes</label>
-<input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
+<input required="required" data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-0" value="y" checked="checked" />
 <label for="boai-1">No</label>
-<input data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-1" value="n" />
+<input required="required" data-parsley-requiredvalue="y" type="radio" name="boai" id="boai-1" value="n" />
 
 </fieldset>
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.OAStatementURLFormCapability object at 0x74b15df8f8e0></li>
+<ul style="color: #888888"><li>Capability: <__main__.OAStatementURLFormCapability object at 0x76d9629c8fd0></li>
 <li>Prefix: 'oa_statement_url'</li></ul><div>
-<ul style="color: #888888"><li>type: url</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: url</li>
 <li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
 <li>name: oa_statement_url</li>
 <li>id: oa_statement_url</li>
 <li>placeholder: https://www.my-journal.com/open-access</li>
 <li>value: https://cottagelabs.com/</li></ul>
-<label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information?</label>
-<input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
+<label for="oa_statement_url">The journal website must display its open access statement. Where can we find this information? (required)</label>
+<input required="required" type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="oa_statement_url" id="oa_statement_url" placeholder="https://www.my-journal.com/open-access" value="https://cottagelabs.com/" />
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.OAStart.OAStartCapability object at 0x76d9629c8ee0></li>
+<li>Prefix: 'oa_start'</li></ul><div>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: oa_start</li>
+<li>id: oa_start</li>
+<li>type: number</li>
+<li>min: 1900</li>
+<li>max: 2026</li></ul>
+<label for="oa_start">When did the journal start to publish all content using an open license? (required)</label>
+<input required="required" name="oa_start" id="oa_start" type="number" min="1900" max="2026" />
 
 </div>
 </fieldset>
 <fieldset id="about_the_journal">
 <legend>About the journal</legend>
-<ul style="color: #888888"><li>Capability: <__main__.TitleCapability object at 0x74b15d86a830></li>
+<ul style="color: #888888"><li>Capability: <__main__.TitleCapability object at 0x76d962a2d990></li>
 <li>Prefix: 'title'</li></ul><div>
-<ul style="color: #888888"><li>type: text</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: text</li>
 <li>name: title</li>
 <li>id: title</li>
 <li>placeholder: Journal title</li></ul>
-<label for="title">Journal title</label>
-<input type="text" name="title" id="title" placeholder="Journal title" />
+<label for="title">Journal title (required)</label>
+<input required="required" type="text" name="title" id="title" placeholder="Journal title" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.AlternativeTitleCapability object at 0x74b15d86aec0></li>
+<ul style="color: #888888"><li>Capability: <__main__.AlternativeTitleCapability object at 0x76d962a2e020></li>
 <li>Prefix: 'alternative_title'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>name: alternative_title</li>
@@ -60,18 +76,19 @@
 <input type="text" name="alternative_title" id="alternative_title" placeholder="Ma revue" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.JournalURLCapability object at 0x74b15d86ace0></li>
+<ul style="color: #888888"><li>Capability: <__main__.JournalURLCapability object at 0x76d962a2de40></li>
 <li>Prefix: 'journal_url'</li></ul><div>
-<ul style="color: #888888"><li>type: url</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: url</li>
 <li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
 <li>name: journal_url</li>
 <li>id: journal_url</li>
 <li>placeholder: https://www.my-journal.com</li></ul>
-<label for="journal_url">Link to the journal’s homepage</label>
-<input type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="journal_url" id="journal_url" placeholder="https://www.my-journal.com" />
+<label for="journal_url">Link to the journal’s homepage (required)</label>
+<input required="required" type="url" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="journal_url" id="journal_url" placeholder="https://www.my-journal.com" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.PISSNCapability object at 0x74b15d86aa10></li>
+<ul style="color: #888888"><li>Capability: <__main__.PISSNCapability object at 0x76d962a2db70></li>
 <li>Prefix: 'pissn'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>name: pissn</li>
@@ -81,7 +98,7 @@
 <input type="text" name="pissn" id="pissn" placeholder="" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.EISSNCapability object at 0x74b15d86add0></li>
+<ul style="color: #888888"><li>Capability: <__main__.EISSNCapability object at 0x76d962a2df30></li>
 <li>Prefix: 'eissn'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>name: eissn</li>
@@ -91,7 +108,7 @@
 <input type="text" name="eissn" id="eissn" placeholder="" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Keywords.KeywordsCapability object at 0x74b15d86abf0></li>
+<ul style="color: #888888"><li>Capability: <__main__.Keywords.KeywordsCapability object at 0x76d962a2dd50></li>
 <li>Prefix: 'keywords'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>name: keywords</li>
@@ -101,10 +118,10 @@
 <input type="text" name="keywords" id="keywords" placeholder="" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-'</li></ul><fieldset>
 <legend>Languages in which the journal accepts manuscripts</legend>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-0'</li></ul><div>
 <ul style="color: #888888"><li>name: language-0</li>
 <li>id: language-0</li></ul>
@@ -116,7 +133,7 @@
 <option value="ESP">Spanish</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-1'</li></ul><div>
 <ul style="color: #888888"><li>name: language-1</li>
 <li>id: language-1</li></ul>
@@ -128,7 +145,7 @@
 <option value="ESP" selected="selected">Spanish</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-'</li></ul><div>
 <ul style="color: #888888"><li>name: language-2</li>
 <li>id: language-2</li></ul>
@@ -140,7 +157,7 @@
 <option value="ESP">Spanish</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-'</li></ul><div>
 <ul style="color: #888888"><li>name: language-3</li>
 <li>id: language-3</li></ul>
@@ -152,7 +169,7 @@
 <option value="ESP">Spanish</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x74b15d86ab00></li>
+<ul style="color: #888888"><li>Capability: <__main__.Language.LanguageCapability object at 0x76d962a2dc60></li>
 <li>Prefix: 'language-'</li></ul><div>
 <ul style="color: #888888"><li>name: language-4</li>
 <li>id: language-4</li></ul>
@@ -168,22 +185,24 @@
 </fieldset>
 <fieldset id="publisher">
 <legend>Publisher</legend>
-<ul style="color: #888888"><li>Capability: <__main__.PublisherNameCapability object at 0x74b15df8d420></li>
+<ul style="color: #888888"><li>Capability: <__main__.PublisherNameCapability object at 0x76d962bd9cf0></li>
 <li>Prefix: 'publisher_name'</li></ul><div>
-<ul style="color: #888888"><li>type: text</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: text</li>
 <li>name: publisher_name</li>
 <li>id: publisher_name</li>
 <li>placeholder: Type or select the publisher's name</li></ul>
-<label for="publisher_name">Publisher's name</label>
-<input type="text" name="publisher_name" id="publisher_name" placeholder="Type or select the publisher's name" />
+<label for="publisher_name">Publisher's name (required)</label>
+<input required="required" type="text" name="publisher_name" id="publisher_name" placeholder="Type or select the publisher's name" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.PublisherCountryCapability object at 0x74b15df8d330></li>
+<ul style="color: #888888"><li>Capability: <__main__.PublisherCountryCapability object at 0x76d962bd9c00></li>
 <li>Prefix: 'publisher_country'</li></ul><div>
-<ul style="color: #888888"><li>name: publisher_country</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: publisher_country</li>
 <li>id: publisher_country</li></ul>
-<label for="publisher_country">Publisher's country</label>
-<select name="publisher_country" id="publisher_country"><option value="" selected="selected">Type or select the country</option>
+<label for="publisher_country">Publisher's country (required)</label>
+<select required="required" name="publisher_country" id="publisher_country"><option value="" selected="selected">Type or select the country</option>
 <option value="US">United States</option>
 <option value="CA">Canada</option>
 <option value="NZ">New Zealand</option>
@@ -193,7 +212,7 @@
 </fieldset>
 <fieldset id="society_or_institution">
 <legend>Other organisation, if applicable</legend>
-<ul style="color: #888888"><li>Capability: <__main__.InstitutionNameCapability object at 0x74b15df8cf70></li>
+<ul style="color: #888888"><li>Capability: <__main__.InstitutionNameCapability object at 0x76d962bdaa10></li>
 <li>Prefix: 'institution_name'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>name: institution_name</li>
@@ -203,7 +222,7 @@
 <input type="text" name="institution_name" id="institution_name" placeholder="Type or select the other organisation's name" />
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.InstitutionCountryCapability object at 0x74b15df8e260></li>
+<ul style="color: #888888"><li>Capability: <__main__.InstitutionCountryCapability object at 0x76d962bdab00></li>
 <li>Prefix: 'institution_country'</li></ul><div>
 <ul style="color: #888888"><li>name: institution_country</li>
 <li>id: institution_country</li></ul>
@@ -218,7 +237,7 @@
 </fieldset>
 <fieldset id="licensing">
 <legend>Licensing</legend>
-<ul style="color: #888888"><li>Capability: <__main__.License.LicenseCapability object at 0x74b15df8ef50></li>
+<ul style="color: #888888"><li>Capability: <__main__.License.LicenseCapability object at 0x76d962bdb1f0></li>
 <li>Prefix: 'license'</li></ul><div>
 <fieldset>
 <legend>License(s) permitted by the journal</legend>
@@ -279,7 +298,7 @@
 
 </fieldset>
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.LicenseAttributes.LicenseAttributesCapability object at 0x74b15df8ee60></li>
+<ul style="color: #888888"><li>Capability: <__main__.LicenseAttributes.LicenseAttributesCapability object at 0x76d962bdb100></li>
 <li>Prefix: 'license_attributes'</li></ul><div>
 <fieldset>
 <legend>Select all the attributes that your license has</legend>
@@ -310,7 +329,7 @@
 
 </fieldset>
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.LicenseTermsURL.LicenseTermsURLCapability object at 0x74b15df8ed70></li>
+<ul style="color: #888888"><li>Capability: <__main__.LicenseTermsURL.LicenseTermsURLCapability object at 0x76d962bdb010></li>
 <li>Prefix: 'license_terms_url'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
@@ -324,7 +343,7 @@
 </fieldset>
 <fieldset id="embedded_licensing">
 <legend>Embedded licenses</legend>
-<ul style="color: #888888"><li>Capability: <__main__.LicenseDisplay.LicenseDisplayCapability object at 0x74b15df8f490></li>
+<ul style="color: #888888"><li>Capability: <__main__.LicenseDisplay.LicenseDisplayCapability object at 0x76d963254eb0></li>
 <li>Prefix: 'license_display'</li></ul><div>
 <fieldset>
 <legend>Does the journal embed and/or display licensing information in its articles?</legend>
@@ -343,7 +362,7 @@
 
 </fieldset>
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.LicenseDisplayExampleURL.LicenseDisplayExampleURLCapability object at 0x74b15df8f3a0></li>
+<ul style="color: #888888"><li>Capability: <__main__.LicenseDisplayExampleURL.LicenseDisplayExampleURLCapability object at 0x76d9632fc3a0></li>
 <li>Prefix: 'license_display_example_url'</li></ul><div>
 <ul style="color: #888888"><li>type: text</li>
 <li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
@@ -355,25 +374,144 @@
 
 </div>
 </fieldset>
+<fieldset id="copyright">
+<legend>Copyright</legend>
+<ul style="color: #888888"><li>Capability: <__main__.CopyrightAuthorRetains.CopyrightAuthorRetainsCapability object at 0x76d9629c94e0></li>
+<li>Prefix: 'copyright_author_retains'</li></ul><div>
+<fieldset>
+<legend>For all the licenses you have indicated above, do authors retain the copyright <b>and</b> full publishing rights without restrictions? (required)</legend>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: radio</li>
+<li>name: copyright_author_retains</li>
+<li>id: copyright_author_retains-0</li>
+<li>value: y</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: radio</li>
+<li>name: copyright_author_retains</li>
+<li>id: copyright_author_retains-1</li>
+<li>value: n</li></ul>
+<label for="copyright_author_retains-0">Yes</label>
+<input required="required" type="radio" name="copyright_author_retains" id="copyright_author_retains-0" value="y" />
+<label for="copyright_author_retains-1">No</label>
+<input required="required" type="radio" name="copyright_author_retains" id="copyright_author_retains-1" value="n" />
+
+</fieldset>
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.CopyrightURL.CopyrightURLCapability object at 0x76d9629c95d0></li>
+<li>Prefix: 'copyright_url'</li></ul><div>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: text</li>
+<li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
+<li>name: copyright_url</li>
+<li>id: copyright_url</li>
+<li>placeholder: https://www.my-journal.com/about#licensing</li></ul>
+<label for="copyright_url">Where can we find this information? (required)</label>
+<input required="required" type="text" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="copyright_url" id="copyright_url" placeholder="https://www.my-journal.com/about#licensing" />
+
+</div>
+</fieldset>
+<fieldset id="peer_review">
+<legend>Peer review</legend>
+<ul style="color: #888888"><li>Capability: <__main__.ReviewProcess.ReviewProcessCapability object at 0x76d962bd9270></li>
+<li>Prefix: 'review_process'</li></ul><div>
+<fieldset>
+<legend>DOAJ only accepts peer-reviewed journals. Which type(s) of peer review does this journal use? (required)</legend>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-0</li>
+<li>value: Editorial review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-1</li>
+<li>value: Peer review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-2</li>
+<li>value: Anonymous peer review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-3</li>
+<li>value: Double anonymous peer review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-4</li>
+<li>value: Post-publication peer review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-5</li>
+<li>value: Open peer review</li></ul>
+<ul style="color: #888888"><li>required: required</li>
+<li>name: review_process</li>
+<li>type: checkbox</li>
+<li>id: review_process-6</li>
+<li>value: other</li></ul>
+<label for="review_process-0">Editorial review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-0" value="Editorial review"></input>
+<label for="review_process-1">Peer review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-1" value="Peer review"></input>
+<label for="review_process-2">Anonymous peer review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-2" value="Anonymous peer review"></input>
+<label for="review_process-3">Double anonymous peer review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-3" value="Double anonymous peer review"></input>
+<label for="review_process-4">Post-publication peer review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-4" value="Post-publication peer review"></input>
+<label for="review_process-5">Open peer review</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-5" value="Open peer review"></input>
+<label for="review_process-6">Other</label>
+<input required="required" name="review_process" type="checkbox" id="review_process-6" value="other"></input>
+
+</fieldset>
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.ReviewProcessOther.ReviewProcessOtherCapability object at 0x76d962bd9360></li>
+<li>Prefix: 'review_process_other'</li></ul><div>
+<ul style="color: #888888"><li>type: text</li>
+<li>name: review_process_other</li>
+<li>id: review_process_other</li>
+<li>placeholder: Other peer review</li></ul>
+<label for="review_process_other">Other peer review</label>
+<input type="text" name="review_process_other" id="review_process_other" placeholder="Other peer review" />
+
+</div>
+<ul style="color: #888888"><li>Capability: <__main__.ReviewURL.ReviewURLCapability object at 0x76d962bd9450></li>
+<li>Prefix: 'review_url'</li></ul><div>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: text</li>
+<li>pattern: ^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$</li>
+<li>name: review_url</li>
+<li>id: review_url</li>
+<li>placeholder: </li></ul>
+<label for="review_url">Where can we find this information? (required)</label>
+<input required="required" type="text" pattern="^(?:https?)://(?:[\w\-]+\.)*[\w\-]+(?:\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\/[^\/\s]*)*(?:\?[^\/\s]*)?(?:#[^\/\s]*)?$" name="review_url" id="review_url" placeholder="" />
+
+</div>
+</fieldset>
 <fieldset id="apc">
 <legend>Publication fees</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APC.APCFormCapability object at 0x74b15d869f90></li>
+<ul style="color: #888888"><li>Capability: <__main__.APC.APCFormCapability object at 0x76d9629c81c0></li>
 <li>Prefix: 'apc'</li></ul><div>
 <fieldset>
-<legend>Does the journal charge fees for publishing an article (APCs)?</legend>
-<ul style="color: #888888"><li>type: radio</li>
+<legend>Does the journal charge fees for publishing an article (APCs)? (required)</legend>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: radio</li>
 <li>name: apc</li>
 <li>id: apc-0</li>
 <li>value: y</li>
 <li>checked: checked</li></ul>
-<ul style="color: #888888"><li>type: radio</li>
+<ul style="color: #888888"><li>required: required</li>
+<li>type: radio</li>
 <li>name: apc</li>
 <li>id: apc-1</li>
 <li>value: n</li></ul>
 <label for="apc-0">Yes</label>
-<input type="radio" name="apc" id="apc-0" value="y" checked="checked" />
+<input required="required" type="radio" name="apc" id="apc-0" value="y" checked="checked" />
 <label for="apc-1">No</label>
-<input type="radio" name="apc" id="apc-1" value="n" />
+<input required="required" type="radio" name="apc" id="apc-1" value="n" />
 
 </fieldset>
 </div>
@@ -381,7 +519,7 @@
 <legend>Highest fee charged</legend>
 <fieldset id="apc_charges">
 <legend>APC</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0></li>
 <li>Prefix: 'apc_charges-0-apc_currency'</li></ul><div>
 <ul style="color: #888888"><li>name: apc_charges-0-apc_currency</li>
 <li>id: apc_charges-0-apc_currency</li></ul>
@@ -393,7 +531,7 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630></li>
 <li>Prefix: 'apc_charges-0-apc_max'</li></ul><div>
 <ul style="color: #888888"><li>min: 1</li>
 <li>name: apc_charges-0-apc_max</li>
@@ -407,7 +545,7 @@
 </fieldset>
 <fieldset id="apc_charges">
 <legend>APC</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0></li>
 <li>Prefix: 'apc_charges-1-apc_currency'</li></ul><div>
 <ul style="color: #888888"><li>name: apc_charges-1-apc_currency</li>
 <li>id: apc_charges-1-apc_currency</li></ul>
@@ -419,7 +557,7 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630></li>
 <li>Prefix: 'apc_charges-1-apc_max'</li></ul><div>
 <ul style="color: #888888"><li>min: 1</li>
 <li>name: apc_charges-1-apc_max</li>
@@ -432,7 +570,7 @@
 </fieldset>
 <fieldset id="apc_charges">
 <legend>APC</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0></li>
 <li>Prefix: 'apc_charges-2-apc_currency'</li></ul><div>
 <ul style="color: #888888"><li>name: apc_charges-2-apc_currency</li>
 <li>id: apc_charges-2-apc_currency</li></ul>
@@ -444,7 +582,7 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630></li>
 <li>Prefix: 'apc_charges-2-apc_max'</li></ul><div>
 <ul style="color: #888888"><li>min: 1</li>
 <li>name: apc_charges-2-apc_max</li>
@@ -457,7 +595,7 @@
 </fieldset>
 <fieldset id="apc_charges">
 <legend>APC</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0></li>
 <li>Prefix: 'apc_charges-3-apc_currency'</li></ul><div>
 <ul style="color: #888888"><li>name: apc_charges-3-apc_currency</li>
 <li>id: apc_charges-3-apc_currency</li></ul>
@@ -469,7 +607,7 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630></li>
 <li>Prefix: 'apc_charges-3-apc_max'</li></ul><div>
 <ul style="color: #888888"><li>min: 1</li>
 <li>name: apc_charges-3-apc_max</li>
@@ -482,7 +620,7 @@
 </fieldset>
 <fieldset id="apc_charges">
 <legend>APC</legend>
-<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0></li>
 <li>Prefix: 'apc_charges-4-apc_currency'</li></ul><div>
 <ul style="color: #888888"><li>name: apc_charges-4-apc_currency</li>
 <li>id: apc_charges-4-apc_currency</li></ul>
@@ -494,7 +632,7 @@
 <option value="JPY">Japanese Yen</option></select>
 
 </div>
-<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900></li>
+<ul style="color: #888888"><li>Capability: <__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630></li>
 <li>Prefix: 'apc_charges-4-apc_max'</li></ul><div>
 <ul style="color: #888888"><li>min: 1</li>
 <li>name: apc_charges-4-apc_max</li>
@@ -511,17 +649,17 @@
 
 <pre>
 {
-  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x74b15d86b0a0>",
+  "ref": "<__main__.PublicApplicationForm.PublicApplicationFormCapability object at 0x76d962a2f940>",
   "prefix": "",
   "elements": [
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x74b15df8f820>",
+      "ref": "<__main__.BasicCompliance.BasicComplianceCapability object at 0x76d9629c9090>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.BOAIFormCapability object at 0x74b15df8f9d0>",
+          "ref": "<__main__.BOAIFormCapability object at 0x76d9629c8df0>",
           "prefix": "boai",
           "control": [
             {
@@ -536,6 +674,7 @@
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "data-parsley-requiredvalue": "y",
                   "type": "radio",
                   "name": "boai",
@@ -558,6 +697,7 @@
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "data-parsley-requiredvalue": "y",
                   "type": "radio",
                   "name": "boai",
@@ -571,13 +711,14 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.OAStatementURLFormCapability object at 0x74b15df8f8e0>",
+          "ref": "<__main__.OAStatementURLFormCapability object at 0x76d9629c8fd0>",
           "prefix": "oa_statement_url",
           "control": [
             {
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "url",
                   "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
                   "name": "oa_statement_url",
@@ -596,23 +737,52 @@
               }
             }
           ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.OAStart.OAStartCapability object at 0x76d9629c8ee0>",
+          "prefix": "oa_start",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "oa_start",
+                  "id": "oa_start",
+                  "type": "number",
+                  "min": 1900,
+                  "max": 2026
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "oa_start"
+                },
+                "content": "When did the journal start to publish all content using an open license?"
+              }
+            }
+          ]
         }
       ]
     },
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x74b15d86a740>",
+      "ref": "<__main__.AboutTheJournal.AboutTheJournalCapability object at 0x76d962a2d8a0>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.TitleCapability object at 0x74b15d86a830>",
+          "ref": "<__main__.TitleCapability object at 0x76d962a2d990>",
           "prefix": "title",
           "control": [
             {
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "text",
                   "name": "title",
                   "id": "title",
@@ -632,7 +802,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.AlternativeTitleCapability object at 0x74b15d86aec0>",
+          "ref": "<__main__.AlternativeTitleCapability object at 0x76d962a2e020>",
           "prefix": "alternative_title",
           "control": [
             {
@@ -658,13 +828,14 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.JournalURLCapability object at 0x74b15d86ace0>",
+          "ref": "<__main__.JournalURLCapability object at 0x76d962a2de40>",
           "prefix": "journal_url",
           "control": [
             {
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "url",
                   "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
                   "name": "journal_url",
@@ -685,7 +856,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.PISSNCapability object at 0x74b15d86aa10>",
+          "ref": "<__main__.PISSNCapability object at 0x76d962a2db70>",
           "prefix": "pissn",
           "control": [
             {
@@ -711,7 +882,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.EISSNCapability object at 0x74b15d86add0>",
+          "ref": "<__main__.EISSNCapability object at 0x76d962a2df30>",
           "prefix": "eissn",
           "control": [
             {
@@ -737,7 +908,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.Keywords.KeywordsCapability object at 0x74b15d86abf0>",
+          "ref": "<__main__.Keywords.KeywordsCapability object at 0x76d962a2dd50>",
           "prefix": "keywords",
           "control": [
             {
@@ -763,12 +934,12 @@
         },
         {
           "type": "list",
-          "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+          "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
           "prefix": "language-",
           "elements": [
             {
               "type": "field",
-              "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+              "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
               "prefix": "language-0",
               "control": [
                 {
@@ -829,7 +1000,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+              "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
               "prefix": "language-1",
               "control": [
                 {
@@ -890,7 +1061,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+              "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
               "prefix": "language-",
               "control": [
                 {
@@ -951,7 +1122,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+              "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
               "prefix": "language-",
               "control": [
                 {
@@ -1012,7 +1183,7 @@
             },
             {
               "type": "field",
-              "ref": "<__main__.Language.LanguageCapability object at 0x74b15d86ab00>",
+              "ref": "<__main__.Language.LanguageCapability object at 0x76d962a2dc60>",
               "prefix": "language-",
               "control": [
                 {
@@ -1078,17 +1249,18 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.Publisher.PublisherCapability object at 0x74b15df8d390>",
+      "ref": "<__main__.Publisher.PublisherCapability object at 0x76d962bd9c60>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.PublisherNameCapability object at 0x74b15df8d420>",
+          "ref": "<__main__.PublisherNameCapability object at 0x76d962bd9cf0>",
           "prefix": "publisher_name",
           "control": [
             {
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "text",
                   "name": "publisher_name",
                   "id": "publisher_name",
@@ -1108,13 +1280,14 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.PublisherCountryCapability object at 0x74b15df8d330>",
+          "ref": "<__main__.PublisherCountryCapability object at 0x76d962bd9c00>",
           "prefix": "publisher_country",
           "control": [
             {
               "control": {
                 "tag": "select",
                 "attrs": {
+                  "required": "required",
                   "name": "publisher_country",
                   "id": "publisher_country"
                 },
@@ -1172,11 +1345,11 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.OtherOrganisation.OtherOrganisationCapability object at 0x74b15df8d030>",
+      "ref": "<__main__.OtherOrganisation.OtherOrganisationCapability object at 0x76d962bd8f70>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.InstitutionNameCapability object at 0x74b15df8cf70>",
+          "ref": "<__main__.InstitutionNameCapability object at 0x76d962bdaa10>",
           "prefix": "institution_name",
           "control": [
             {
@@ -1202,7 +1375,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.InstitutionCountryCapability object at 0x74b15df8e260>",
+          "ref": "<__main__.InstitutionCountryCapability object at 0x76d962bdab00>",
           "prefix": "institution_country",
           "control": [
             {
@@ -1266,11 +1439,11 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.Licensing.LicensingCapability object at 0x74b15df8ecb0>",
+      "ref": "<__main__.Licensing.LicensingCapability object at 0x76d962bdaf50>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.License.LicenseCapability object at 0x74b15df8ef50>",
+          "ref": "<__main__.License.LicenseCapability object at 0x76d962bdb1f0>",
           "prefix": "license",
           "control": [
             {
@@ -1439,7 +1612,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.LicenseAttributes.LicenseAttributesCapability object at 0x74b15df8ee60>",
+          "ref": "<__main__.LicenseAttributes.LicenseAttributesCapability object at 0x76d962bdb100>",
           "prefix": "license_attributes",
           "control": [
             {
@@ -1518,7 +1691,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.LicenseTermsURL.LicenseTermsURLCapability object at 0x74b15df8ed70>",
+          "ref": "<__main__.LicenseTermsURL.LicenseTermsURLCapability object at 0x76d962bdb010>",
           "prefix": "license_terms_url",
           "control": [
             {
@@ -1548,11 +1721,11 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.EmbeddedLicensing.EmbeddedLicensingCapability object at 0x74b15df8f2e0>",
+      "ref": "<__main__.EmbeddedLicensing.EmbeddedLicensingCapability object at 0x76d963254a30>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.LicenseDisplay.LicenseDisplayCapability object at 0x74b15df8f490>",
+          "ref": "<__main__.LicenseDisplay.LicenseDisplayCapability object at 0x76d963254eb0>",
           "prefix": "license_display",
           "control": [
             {
@@ -1599,7 +1772,7 @@
         },
         {
           "type": "field",
-          "ref": "<__main__.LicenseDisplayExampleURL.LicenseDisplayExampleURLCapability object at 0x74b15df8f3a0>",
+          "ref": "<__main__.LicenseDisplayExampleURL.LicenseDisplayExampleURLCapability object at 0x76d9632fc3a0>",
           "prefix": "license_display_example_url",
           "control": [
             {
@@ -1629,11 +1802,296 @@
     {
       "type": "fieldset",
       "prefix": "",
-      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x74b15d869ed0>",
+      "ref": "<__main__.CopyrightFieldset.CopyrightFieldsetCapability object at 0x76d9629c9690>",
       "elements": [
         {
           "type": "field",
-          "ref": "<__main__.APC.APCFormCapability object at 0x74b15d869f90>",
+          "ref": "<__main__.CopyrightAuthorRetains.CopyrightAuthorRetainsCapability object at 0x76d9629c94e0>",
+          "prefix": "copyright_author_retains",
+          "control": [
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "copyright_author_retains-0"
+                },
+                "close": true,
+                "content": "Yes"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "type": "radio",
+                  "name": "copyright_author_retains",
+                  "id": "copyright_author_retains-0",
+                  "value": "y"
+                },
+                "close": false
+              }
+            },
+            {
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "copyright_author_retains-1"
+                },
+                "close": true,
+                "content": "No"
+              },
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "type": "radio",
+                  "name": "copyright_author_retains",
+                  "id": "copyright_author_retains-1",
+                  "value": "n"
+                },
+                "close": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.CopyrightURL.CopyrightURLCapability object at 0x76d9629c95d0>",
+          "prefix": "copyright_url",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "type": "text",
+                  "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
+                  "name": "copyright_url",
+                  "id": "copyright_url",
+                  "placeholder": "https://www.my-journal.com/about#licensing"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "copyright_url"
+                },
+                "content": "Where can we find this information?"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "prefix": "",
+      "ref": "<__main__.PeerReview.PeerReviewCapability object at 0x76d962bd97b0>",
+      "elements": [
+        {
+          "type": "field",
+          "ref": "<__main__.ReviewProcess.ReviewProcessCapability object at 0x76d962bd9270>",
+          "prefix": "review_process",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-0",
+                  "value": "Editorial review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-0"
+                },
+                "content": "Editorial review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-1",
+                  "value": "Peer review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-1"
+                },
+                "content": "Peer review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-2",
+                  "value": "Anonymous peer review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-2"
+                },
+                "content": "Anonymous peer review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-3",
+                  "value": "Double anonymous peer review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-3"
+                },
+                "content": "Double anonymous peer review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-4",
+                  "value": "Post-publication peer review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-4"
+                },
+                "content": "Post-publication peer review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-5",
+                  "value": "Open peer review"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-5"
+                },
+                "content": "Open peer review"
+              }
+            },
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "name": "review_process",
+                  "type": "checkbox",
+                  "id": "review_process-6",
+                  "value": "other"
+                }
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process-6"
+                },
+                "content": "Other"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.ReviewProcessOther.ReviewProcessOtherCapability object at 0x76d962bd9360>",
+          "prefix": "review_process_other",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "type": "text",
+                  "name": "review_process_other",
+                  "id": "review_process_other",
+                  "placeholder": "Other peer review"
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_process_other"
+                },
+                "content": "Other peer review"
+              }
+            }
+          ]
+        },
+        {
+          "type": "field",
+          "ref": "<__main__.ReviewURL.ReviewURLCapability object at 0x76d962bd9450>",
+          "prefix": "review_url",
+          "control": [
+            {
+              "control": {
+                "tag": "input",
+                "attrs": {
+                  "required": "required",
+                  "type": "text",
+                  "pattern": "^(?:https?)://(?:[\\w\\-]+\\.)*[\\w\\-]+(?:\\.[a-z]{2,})(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?(?:\\/[^\\/\\s]*)*(?:\\?[^\\/\\s]*)?(?:#[^\\/\\s]*)?$",
+                  "name": "review_url",
+                  "id": "review_url",
+                  "placeholder": ""
+                },
+                "close": false
+              },
+              "label": {
+                "tag": "label",
+                "attrs": {
+                  "for": "review_url"
+                },
+                "content": "Where can we find this information?"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "prefix": "",
+      "ref": "<__main__.APCFieldset.APCFieldsetCapability object at 0x76d9629c8370>",
+      "elements": [
+        {
+          "type": "field",
+          "ref": "<__main__.APC.APCFormCapability object at 0x76d9629c81c0>",
           "prefix": "apc",
           "control": [
             {
@@ -1648,6 +2106,7 @@
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "radio",
                   "name": "apc",
                   "id": "apc-0",
@@ -1669,6 +2128,7 @@
               "control": {
                 "tag": "input",
                 "attrs": {
+                  "required": "required",
                   "type": "radio",
                   "name": "apc",
                   "id": "apc-1",
@@ -1682,16 +2142,16 @@
         {
           "type": "list",
           "prefix": "apc_charges-",
-          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+          "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
           "elements": [
             {
               "type": "compound",
               "prefix": "apc_charges-0-",
-              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
               "elements": [
                 {
                   "type": "field",
-                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0>",
+                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0>",
                   "prefix": "apc_charges-0-apc_currency",
                   "control": [
                     {
@@ -1752,7 +2212,7 @@
                 },
                 {
                   "type": "field",
-                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900>",
+                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630>",
                   "prefix": "apc_charges-0-apc_max",
                   "control": [
                     {
@@ -1781,12 +2241,12 @@
             },
             {
               "type": "compound",
-              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
               "prefix": "apc_charges-1-",
               "elements": [
                 {
                   "type": "field",
-                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0>",
+                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0>",
                   "prefix": "apc_charges-1-apc_currency",
                   "control": [
                     {
@@ -1847,7 +2307,7 @@
                 },
                 {
                   "type": "field",
-                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900>",
+                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630>",
                   "prefix": "apc_charges-1-apc_max",
                   "control": [
                     {
@@ -1875,12 +2335,12 @@
             },
             {
               "type": "compound",
-              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
               "prefix": "apc_charges-2-",
               "elements": [
                 {
                   "type": "field",
-                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0>",
+                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0>",
                   "prefix": "apc_charges-2-apc_currency",
                   "control": [
                     {
@@ -1941,7 +2401,7 @@
                 },
                 {
                   "type": "field",
-                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900>",
+                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630>",
                   "prefix": "apc_charges-2-apc_max",
                   "control": [
                     {
@@ -1969,12 +2429,12 @@
             },
             {
               "type": "compound",
-              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
               "prefix": "apc_charges-3-",
               "elements": [
                 {
                   "type": "field",
-                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0>",
+                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0>",
                   "prefix": "apc_charges-3-apc_currency",
                   "control": [
                     {
@@ -2035,7 +2495,7 @@
                 },
                 {
                   "type": "field",
-                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900>",
+                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630>",
                   "prefix": "apc_charges-3-apc_max",
                   "control": [
                     {
@@ -2063,12 +2523,12 @@
             },
             {
               "type": "compound",
-              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x74b15d869ba0>",
+              "ref": "<__main__.APCCharges.APCChargesCapability object at 0x76d9629c85b0>",
               "prefix": "apc_charges-4-",
               "elements": [
                 {
                   "type": "field",
-                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x74b15df8d9c0>",
+                  "ref": "<__main__.APCCurrency.APCCurrencyFormCapability object at 0x76d962a2d5d0>",
                   "prefix": "apc_charges-4-apc_currency",
                   "control": [
                     {
@@ -2129,7 +2589,7 @@
                 },
                 {
                   "type": "field",
-                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x74b15df8d900>",
+                  "ref": "<__main__.APCMax.APCMaxFormCapability object at 0x76d962a2d630>",
                   "prefix": "apc_charges-4-apc_max",
                   "control": [
                     {

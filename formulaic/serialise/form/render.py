@@ -251,9 +251,14 @@ class DefaultFieldHTML(FieldHTML):
         ctrl = representation.get("control")
         c_renderer = ctx.get_control_renderer()
 
+        label = ctx.label
+        required = ctx.field.required
+        if required:
+            label += " (required)"
+
         html = c_renderer.draw(ctrl)
         if len(ctrl) > 1:
-            legend = self._make_tag("legend", content=ctx.label)
+            legend = self._make_tag("legend", content=label)
             html = self._make_tag("fieldset", content="\n" + legend + "\n" + html + "\n")
         html = self._make_tag("div", content="\n" + html + "\n")
 
@@ -262,17 +267,26 @@ class DefaultFieldHTML(FieldHTML):
 class DefaultControlHTML(ControlHTML):
     def draw(self, representation):
         inl_frags = []
+
+        suppress_required = False
+        if len(representation) > 1:
+            suppress_required = True
+
         for control in representation:
             label = control.get("label")
             input = control.get("control")
+
+            label_text = label.get("content")
+            required = input.get("attrs", {}).get("required", False)
+            if required and not suppress_required:
+                label_text += " (required)"
 
             label_html = self._make_tag(
                 label.get("tag", "label"),
                 label.get("attrs", {}),
                 close=label.get("close", True),
-                content=label.get("content")
+                content=label_text
             )
-
 
             def render_content(content_list):
                 if isinstance(content_list, str):
