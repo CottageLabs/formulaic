@@ -265,6 +265,13 @@ class Field:
         """
         return self.get_capability(capability_class) is not None
 
+    def get_validation_chain(self):
+        chain = []
+        if self.required:
+            from formulaic.validate.validate import Required
+            chain.append(Required())
+        return chain
+
 
 class FieldCapability:
     def __init__(self):
@@ -692,15 +699,18 @@ class Validator:
 #########################################
 ## Exceptions and Error Handling
 
-class DataError(Exception):
+class DataError:
     def __init__(self, field:Union[Field, Structure], original_value, code, **kwargs):
-        super(Exception, self).__init__(field, original_value, code, kwargs)
         self.field = field
         self.original_value = original_value
         self.code = code
         self.params = kwargs
 
 class ValidationError(DataError):
+    def __init__(self, field:Union[Field, Structure], original_value, code, stop_validation=False, **kwargs):
+        super().__init__(field, original_value, code, **kwargs)
+        self.stop_validation = stop_validation
+
     def __str__(self):
         s = (f"ValidationError: `{self.code}` "
              f"on field `{self.field.name}` "
@@ -729,6 +739,10 @@ class ErrorCode:
 
     def __init__(self, *args, **kwargs):
         pass
+
+    def __str__(self):
+        s = f"ErrorCode: `{self.id}`"
+        return s
 
 class DataProcessingResult(Exception):
     def __init__(self, errors=None):

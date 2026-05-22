@@ -3,7 +3,7 @@ from typing import Union
 
 from formulaic.core import Field, Structure, CoerceError, ValidationError, DataProcessingResult, StructureError, StructRef
 from formulaic.error_codes import ValueNotInAllowedList, NoneNotAllowed, ListNotFound, \
-    EmptyArrayNotPermitted, Required, FieldNotInAllowedList
+    EmptyArrayNotPermitted, IsRequired, FieldNotInAllowedList
 from formulaic.lib import unity
 
 ################################################
@@ -509,6 +509,34 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
             dpr.merge(sdpr)
 
     return ready
+
+def validate(data: dict, struct: Structure):
+    dpr = DataProcessingResult()
+
+    def recurse(data, struct):
+        for field in struct.ref_.fields:
+            validators = field.get_validation_chain()
+            val = get_data(field, data)
+            for validator in validators:
+                result = validator.validate(val, field, data)
+                if result is not True:
+                    dpr.add_error(result)
+                    if result.stop_validation:
+                        break
+
+        for substruct in struct.ref_.structures:
+            if substruct.ref_.repeatable:
+                detached = substruct.detach()
+                new_data = get_data(substruct, data)
+                for data_entry in new_data:
+                    recurse(data_entry, detached)
+            else:
+                recurse(data, substruct)
+
+
+    recurse(data, struct)
+    return dpr
+
 
 # def validate(reference: Union[Field, Structure, StructRef], data: dict):
 #

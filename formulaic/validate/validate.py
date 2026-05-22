@@ -1,13 +1,22 @@
 from urllib.parse import urlparse
 
 from formulaic import engine
-from formulaic.core import Validator
+from formulaic.core import Validator, ValidationError
+from formulaic.error_codes import IsRequired
 
-# FIXME: not sure if we need this yet
+
 class Required(Validator):
+    """
+    Determine if a field or structure is required to be present
+
+    This validator can be explicitly added to the field or structure, but if not it will automatically
+    be added to the object as a "binding validator", dependent on whether the structure is defined as
+    REQUIRED when added to its parent
+    """
     def validate(self, val, field, data):
         if val is None or val == "":
-            raise ValueError("This field is required and cannot be empty.")
+            return ValidationError(field, val, IsRequired())
+        return True
 
     def html_attrs(self, attrs):
         pass

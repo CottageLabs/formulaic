@@ -225,3 +225,12 @@ class JournalStructure(JournalLike):
     name_ = "journal"
 
     admin = JournalAdmin(OPTIONAL, SINGLE)
+
+
+if __name__ == "__main__":
+    from formulaic.test.example.data import JOURNAL_SOURCE
+    from formulaic import engine
+
+    dpr = engine.validate(JOURNAL_SOURCE, JournalStructure())
+    for error in dpr.errors:
+        print(error)
