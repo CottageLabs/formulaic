@@ -287,3 +287,30 @@ class NumberInput(FormControl):
 
         tags = [{"control": input, "label": label_tag}]
         return tags
+
+class Textarea(FormControl):
+    def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
+        attrs = self._generic_attributes()
+        attrs["name"] = id_prefix
+        attrs["id"] = id_prefix
+
+        placeholder = self._capability.placeholder or ""
+        attrs["placeholder"] = placeholder
+
+        label = self._capability.label or ""
+
+        tags = [{
+            "control": {
+                "tag": "textarea",
+                "attrs": attrs,
+                "close": True,
+                "content": val if val is not None else ""
+            },
+            "label": {
+                "tag": "label",
+                "attrs": {"for": attrs["id"]},
+                "content": label
+            }
+        }]
+
+        return tags

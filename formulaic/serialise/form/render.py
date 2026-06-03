@@ -135,7 +135,8 @@ class DefaultFormHTML(FormHTML):
         ctx = representation.get("ref")
         attrs = ctx.attributes
         attrs["id"] = ctx.struct_ref.name
-        attrs["action"] = ctx.action
+        if ctx.action is not None:
+            attrs["action"] = ctx.action
         attrs["method"] = ctx.method
         html = self._make_tag('form',
                        content=elements_frag,
@@ -310,6 +311,54 @@ class DefaultControlHTML(ControlHTML):
 
         html = "\n" + "\n".join(inl_frags) + "\n"
         return html
+
+class InvertedLabelInputControlHTML(ControlHTML):
+    def draw(self, representation):
+        inl_frags = []
+
+        suppress_required = False
+        if len(representation) > 1:
+            suppress_required = True
+
+        for control in representation:
+            label = control.get("label")
+            input = control.get("control")
+
+            label_text = label.get("content")
+            required = input.get("attrs", {}).get("required", False)
+            if required and not suppress_required:
+                label_text += " (required)"
+
+            label_html = self._make_tag(
+                label.get("tag", "label"),
+                label.get("attrs", {}),
+                close=label.get("close", True),
+                content=label_text
+            )
+
+            def render_content(content_list):
+                if isinstance(content_list, str):
+                    return content_list
+
+                if isinstance(content_list, list):
+                    contents = []
+                    for ic in input_content:
+                        ic_content = ic.get("content")
+                        rendered_content = render_content(ic_content)
+                        contents.append(self._make_tag(ic.get("tag"), ic.get("attrs", {}), close=ic.get("close", True), content=rendered_content))
+                    return "\n".join(contents)
+
+                return content_list
+
+            input_content = input.get("content")
+            content = render_content(input_content)
+            input_html = self._make_tag(input.get("tag"), input.get("attrs", {}), close=input.get("close", True), content=content)
+
+            inl_frags.append(f"{input_html}\n{label_html}")
+
+        html = "\n" + "\n".join(inl_frags) + "\n"
+        return html
+
 
 ###########################################
 ## Debug implementations

@@ -64,7 +64,7 @@ class FormCapability(GenericFormStructureCapability):
     use_fieldsets_in_name = False
     separator = "-"
 
-    render_class = None  # FormRenderer
+    render_class = None  # DefaultFormHTML
 
     def __init__(self):
         super().__init__()
@@ -80,6 +80,26 @@ class FormCapability(GenericFormStructureCapability):
         self._renderer = rc()
         return self._renderer
 
+
+class FieldsetCapability(GenericFormStructureCapability):
+    label = "Fieldset"
+    attributes:dict[str,str] = {}
+
+    render_class = None # DefaultFieldsetHTML
+
+    def __init__(self):
+        super().__init__()
+        self._renderer = None
+
+    def get_renderer(self):
+        if self._renderer is not None:
+            return self._renderer
+        rc = self.render_class
+        if rc is None:
+            from formulaic.serialise.form.render import DefaultFieldsetHTML
+            rc = DefaultFieldsetHTML
+        self._renderer = rc()
+        return self._renderer
 
 class CompoundFieldCapability(GenericFormStructureCapability):
     label = "Compound"
@@ -106,26 +126,6 @@ class CompoundFieldCapability(GenericFormStructureCapability):
         if rc is None:
             from formulaic.serialise.form.render import DefaultCompoundHTML
             rc = DefaultCompoundHTML
-        self._renderer = rc()
-        return self._renderer
-
-class FieldsetCapability(GenericFormStructureCapability):
-    label = "Fieldset"
-    attributes:dict[str,str] = {}
-
-    render_class = None
-
-    def __init__(self):
-        super().__init__()
-        self._renderer = None
-
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
-        rc = self.render_class
-        if rc is None:
-            from formulaic.serialise.form.render import DefaultFieldsetHTML
-            rc = DefaultFieldsetHTML
         self._renderer = rc()
         return self._renderer
 
@@ -168,16 +168,17 @@ class FormFieldCapability(FieldCapability):
 
     conditional:bool = False
 
-    control_class = None  # FormControl
+    control_class = None  # FormControl, no default
     """Class responsible for representing the form field"""
 
-    render_class = None
+    render_class = None # DefaultFieldHTML
     """Class which will render this form field, including all its controls and labels"""
 
-    control_render_class = None
+    control_render_class = None # DefaultControlHTML
     """Class which will render the control itsef"""
 
-    list_render_class = None
+    list_render_class = None    # DefaultElementListHTML
+    """Class which will render a list of this field, if it is repeatable"""
 
     js: list[str] = []
     """List of strings or objects to be JSON serialised and passed to the front end JS"""
