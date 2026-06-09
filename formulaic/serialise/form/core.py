@@ -423,7 +423,7 @@ class FormSerialiser(Serialiser):
     def representation_to_string(self, representation:dict, **kwargs):
         form_cap = representation.get("ref")
         form_renderer = form_cap.get_renderer()
-        html = form_renderer.draw(representation)
+        html = form_renderer.draw(representation, **kwargs)
         return html
 
 
