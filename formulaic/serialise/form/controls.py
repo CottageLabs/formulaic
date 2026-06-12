@@ -150,6 +150,27 @@ class TextInput(BasicInput):
 class URLInput(BasicInput):
     type = "url"
 
+class Hidden(FormControl):
+    type = "hidden"
+
+    def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
+        attrs = self._generic_attributes()
+        attrs["type"] = self.type
+        attrs["name"] = id_prefix
+        attrs["id"] = id_prefix
+
+        if val is not None:
+            attrs["value"] = val
+
+        tags =[{
+            "control": {
+                "tag": "input",
+                "attrs": attrs,
+                "close": False,
+            }
+        }]
+
+        return tags
 
 class Select(FormControl):
     def inputs_and_labels(self, id_prefix, val, *args, **kwargs):

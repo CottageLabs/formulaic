@@ -261,8 +261,6 @@ class DefaultFieldHTML(FieldHTML):
         if len(ctrl) > 1:
             legend = self._make_tag("legend", content=label)
             html = self._make_tag("fieldset", content="\n" + legend + "\n" + html + "\n")
-        html = self._make_tag("div", content="\n" + html + "\n")
-
         return html
 
 class DefaultControlHTML(ControlHTML):
@@ -277,17 +275,19 @@ class DefaultControlHTML(ControlHTML):
             label = control.get("label")
             input = control.get("control")
 
-            label_text = label.get("content")
-            required = input.get("attrs", {}).get("required", False)
-            if required and not suppress_required:
-                label_text += " (required)"
+            label_html = ""
+            if label is not None:
+                label_text = label.get("content")
+                required = input.get("attrs", {}).get("required", False)
+                if required and not suppress_required:
+                    label_text += " (required)"
 
-            label_html = self._make_tag(
-                label.get("tag", "label"),
-                label.get("attrs", {}),
-                close=label.get("close", True),
-                content=label_text
-            )
+                label_html = self._make_tag(
+                    label.get("tag", "label"),
+                    label.get("attrs", {}),
+                    close=label.get("close", True),
+                    content=label_text
+                )
 
             def render_content(content_list):
                 if isinstance(content_list, str):
@@ -324,17 +324,19 @@ class InvertedLabelInputControlHTML(ControlHTML):
             label = control.get("label")
             input = control.get("control")
 
-            label_text = label.get("content")
-            required = input.get("attrs", {}).get("required", False)
-            if required and not suppress_required:
-                label_text += " (required)"
+            label_html = ""
+            if label is not None:
+                label_text = label.get("content")
+                required = input.get("attrs", {}).get("required", False)
+                if required and not suppress_required:
+                    label_text += " (required)"
 
-            label_html = self._make_tag(
-                label.get("tag", "label"),
-                label.get("attrs", {}),
-                close=label.get("close", True),
-                content=label_text
-            )
+                label_html = self._make_tag(
+                    label.get("tag", "label"),
+                    label.get("attrs", {}),
+                    close=label.get("close", True),
+                    content=label_text
+                )
 
             def render_content(content_list):
                 if isinstance(content_list, str):
