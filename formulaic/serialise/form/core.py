@@ -1,6 +1,5 @@
 from collections.abc import Callable
-from copy import deepcopy
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, Generic, TypeVar, cast
 
 from formulaic import engine
 from formulaic.core import Field, FieldCapability, StructureCapability, Structure
@@ -8,14 +7,37 @@ from formulaic.lib import unity
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.serialise.core import Serialiser
 
+class DefaultRendererFactory:
+    @staticmethod
+    def get(capability) -> Optional[Callable]:
+        if isinstance(capability, FormCapability):
+            from formulaic.serialise.form.render import DefaultFormHTML
+            return DefaultFormHTML
+        elif isinstance(capability, FieldsetCapability):
+            from formulaic.serialise.form.render import DefaultFieldsetHTML
+            return DefaultFieldsetHTML
+        elif isinstance(capability, CompoundFieldCapability):
+            from formulaic.serialise.form.render import DefaultCompoundHTML
+            return DefaultCompoundHTML
+        elif isinstance(capability, FieldCapability):
+            from formulaic.serialise.form.render import DefaultFieldHTML
+            return DefaultFieldHTML
+        return None
+
+######################################
+## Capabilities that each layer of the form may wish to have
 
 class GenericFormStructureCapability(StructureCapability):
+    label = "Generic"
     order: list[str] = []
+    attributes: dict[str, str] = {}
     list_render_class = None
+    render_class = None
 
     def __init__(self):
         super().__init__()
         self._list_renderer = None
+        self._renderer = None
 
     def get_in_order(self, detach=False):
         return [x for x in self.ordered_iterator(detach=detach)]
@@ -44,6 +66,17 @@ class GenericFormStructureCapability(StructureCapability):
                         yield entry
             # if it doesn't match a form capability, we skip over it
 
+    def get_renderer(self):
+        if self._renderer is not None:
+            return self._renderer
+        rc = self.render_class
+        if rc is None:
+            rc = DefaultRendererFactory.get(self)
+        if rc is None:
+            raise ValueError(f"Renderer not defined on {self.__class__}")
+        self._renderer = rc()
+        return self._renderer
+
     def get_list_renderer(self):
         if self._list_renderer is not None:
             return self._list_renderer
@@ -56,50 +89,18 @@ class GenericFormStructureCapability(StructureCapability):
 
 
 class FormCapability(GenericFormStructureCapability):
+    label = "Form"
     action: Optional[str] = None
     method: str = "post"
-    attributes:dict[str,str] = {}
 
     use_form_in_name = False
     use_fieldsets_in_name = False
     separator = "-"
 
-    render_class = None  # DefaultFormHTML
-
-    def __init__(self):
-        super().__init__()
-        self._renderer = None
-
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
-        rc = self.render_class
-        if rc is None:
-            from formulaic.serialise.form.render import DefaultFormHTML
-            rc = DefaultFormHTML
-        self._renderer = rc()
-        return self._renderer
-
 
 class FieldsetCapability(GenericFormStructureCapability):
     label = "Fieldset"
-    attributes:dict[str,str] = {}
 
-    render_class = None # DefaultFieldsetHTML
-
-    def __init__(self):
-        super().__init__()
-        self._renderer = None
-
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
-        rc = self.render_class
-        if rc is None:
-            from formulaic.serialise.form.render import DefaultFieldsetHTML
-            rc = DefaultFieldsetHTML
-        self._renderer = rc()
-        return self._renderer
 
 class CompoundFieldCapability(GenericFormStructureCapability):
     label = "Compound"
@@ -111,23 +112,7 @@ class CompoundFieldCapability(GenericFormStructureCapability):
         many instances of the field are rendered by default, and the minimum number of displayed fields"""
     conditional = False
     js = []
-    attributes: dict[str, str] = {}
 
-    render_class = None
-
-    def __init__(self):
-        super().__init__()
-        self._renderer = None
-
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
-        rc = self.render_class
-        if rc is None:
-            from formulaic.serialise.form.render import DefaultCompoundHTML
-            rc = DefaultCompoundHTML
-        self._renderer = rc()
-        return self._renderer
 
 class FormFieldCapability(FieldCapability):
     label:str = "Field"
@@ -168,7 +153,7 @@ class FormFieldCapability(FieldCapability):
 
     conditional:bool = False
 
-    control_class = None  # FormControl, no default
+    control_class:Callable = None  # FormControl, no default
     """Class responsible for representing the form field"""
 
     render_class = None # DefaultFieldHTML
@@ -216,8 +201,10 @@ class FormFieldCapability(FieldCapability):
             return self._renderer
         rc = self.render_class
         if rc is None:
-            from formulaic.serialise.form.render import DefaultFieldHTML
-            rc = DefaultFieldHTML
+            rc = DefaultRendererFactory.get(self)
+        if rc is None:
+            raise ValueError(f"Renderer not defined on {self.__class__}")
+        rc = cast(Callable, rc)
         self._renderer = rc()
         return self._renderer
 
@@ -241,24 +228,168 @@ class FormFieldCapability(FieldCapability):
         self._list_renderer = rc()
         return self._list_renderer
 
+#############################################
+## Model classes to offer a representation of the form as it should be rendered
+
+AnyContainerCapability = Union[GenericFormStructureCapability, FormFieldCapability]
+TElementCapability = TypeVar("TElementCapability", bound=AnyContainerCapability)
+
+class ElementContainerRepresentation(Generic[TElementCapability]):
+    def __init__(self, capability: TElementCapability, prefix="", elements=None, parent=None):
+        self._capability = capability
+        self._prefix = prefix
+        self._elements = elements or []
+        self._parent = parent
+
+    @property
+    def capability(self):
+        return self._capability
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, prefix):
+        self._prefix = prefix
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        self._parent = parent
+
+    @property
+    def elements(self):
+        return self._elements
+
+    def add_element(self, element):
+        element.parent = self
+        self._elements.append(element)
+
+    #########################################
+    ## utilities to aid rendering
+
+    @property
+    def renderer(self):
+        return self._capability.get_renderer()
+
+    @property
+    def attributes(self):
+        return self._capability.attributes
+
+    @property
+    def name(self):
+        if isinstance(self._capability, FormFieldCapability):
+            return self._capability.field.name
+        return str(getattr(self._capability.struct_ref, "name", ""))
+
+    @property
+    def label(self):
+        return self._capability.label
+
+class FormRepresentation(ElementContainerRepresentation[FormCapability]):
+    @property
+    def action(self):
+        return self._capability.action
+
+    @property
+    def method(self):
+        return self._capability.method
+
+class ListRepresentation(ElementContainerRepresentation[AnyContainerCapability]):
+    @property
+    def renderer(self):
+        return self._capability.get_list_renderer()
+
+    @property
+    def repeatable_label(self):
+        label = self._capability.repeatable_label
+        if not label:
+            label = self._capability.label
+        return label
+
+class FieldsetRepresentation(ElementContainerRepresentation[FieldsetCapability]):
+    pass
+
+class CompoundRepresentation(ElementContainerRepresentation[CompoundFieldCapability]):
+    pass
+
+class FieldRepresentation:
+    def __init__(self, capability:FormFieldCapability, prefix="", control=None, parent=None):
+        self._capability = capability
+        self._prefix = prefix
+        self._control = control or []
+        self._parent = parent
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        self._parent = parent
+
+    @property
+    def capability(self):
+        return self._capability
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def control(self):
+        return self._control
+
+    #########################################
+    ## utilities to aid rendering
+
+    @property
+    def control_renderer(self):
+        return self._capability.get_control_renderer()
+
+    @property
+    def required(self):
+        return self._capability.field.required
+
+    @property
+    def renderer(self):
+        return self._capability.get_renderer()
+
+    @property
+    def attributes(self):
+        return self._capability.attributes
+
+    @property
+    def name(self):
+        return self._capability.field.name
+
+    @property
+    def label(self):
+        return self._capability.label
+
+###########################################
+## Form serialiser
+##
+## This serialiser can turn data and a struct into a tree
+## of elements and their properties for rendering
 
 class FormSerialiser(Serialiser):
-    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Structure=None, **kwargs):
+    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Optional[Structure]=None, **kwargs):
         mixin, fo, struct, data = unity.expand(data, struct)
         form_cap = struct.ref_.get_capability(FormCapability)
 
-        repr = {
-            "ref": form_cap,
-            "prefix": "",
-            "elements": []
-        }
+        repr = FormRepresentation(form_cap)
 
         if form_cap.use_form_in_name:
-            repr["prefix"] = struct.name_ + form_cap.separator
+            repr.prefix = struct.name_ + form_cap.separator
 
         ordered_elements = form_cap.get_in_order()
 
-        def recurse(prefix, data, ordered_elements, container):
+        def recurse(prefix, data, ordered_elements, representation):
             for element in ordered_elements:
                 if isinstance(element, Field):
                     # Handle a form field
@@ -269,66 +400,37 @@ class FormSerialiser(Serialiser):
 
                     if element.repeatable:
                         new_prefix = prefix + element.name + form_cap.separator
-                        rrepr = {
-                            "type": "list",
-                            "ref": cap,
-                            "prefix": new_prefix,
-                            "elements": []
-                        }
-                        container.append(rrepr)
+                        rrepr = ListRepresentation(cap, prefix=new_prefix)
+                        representation.add_element(rrepr)
 
                         vals = engine.get_list(element, data)
                         if len(vals) > 0:
                             for i, val in enumerate(vals):
                                 index_prefix = new_prefix + str(i)
                                 inl = control.inputs_and_labels(index_prefix, val)
-
-                                erepr = {
-                                    "type": "field",
-                                    "ref": cap,
-                                    "prefix": index_prefix,
-                                    "control": inl
-                                }
-                                rrepr["elements"].append(erepr)
+                                erepr = FieldRepresentation(cap, prefix=index_prefix, control=inl)
+                                rrepr.add_element(erepr)
 
                             remaining = cap.repeatable_initial - len(vals)
                             if remaining > 0:
                                 for i in range(len(vals), cap.repeatable_initial):
                                     index_prefix = new_prefix + str(i)
                                     inl = control.inputs_and_labels(index_prefix, None)
-
-                                    erepr = {
-                                        "type": "field",
-                                        "ref": cap,
-                                        "prefix": new_prefix,
-                                        "control": inl
-                                    }
-                                    rrepr["elements"].append(erepr)
+                                    erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                                    rrepr.add_element(erepr)
                         else:
                             target = cap.repeatable_initial
                             for i in range(target):
                                 index_prefix = new_prefix + str(i)
                                 inl = control.inputs_and_labels(index_prefix, None)
-
-                                erepr = {
-                                    "type": "field",
-                                    "ref": cap,
-                                    "prefix": new_prefix,
-                                    "control": inl
-                                }
-                                rrepr["elements"].append(erepr)
+                                erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                                rrepr.add_element(erepr)
                     else:
                         new_prefix = prefix + element.name
                         val = engine.get_single(element, data)
                         inl = control.inputs_and_labels(new_prefix, val)
-
-                        erepr = {
-                            "type": "field",
-                            "ref": cap,
-                            "prefix": new_prefix,
-                            "control": inl
-                        }
-                        container.append(erepr)
+                        erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                        representation.add_element(erepr)
                 else:
                     if element.ref_.has_capability(FieldsetCapability):
                         # Handle a fieldset.
@@ -340,92 +442,68 @@ class FormSerialiser(Serialiser):
                             new_prefix = prefix + element.name_ + form_cap.separator
 
                         cap = element.ref_.get_capability(FieldsetCapability)
-
-                        erepr = {
-                            "type": "fieldset",
-                            "prefix": new_prefix,
-                            "ref": cap,
-                            "elements": []
-                        }
-                        container.append(erepr)
+                        erepr = FieldsetRepresentation(cap, prefix=new_prefix)
+                        representation.add_element(erepr)
 
                         next_ordered_elements = cap.get_in_order()
-                        recurse(new_prefix, data, next_ordered_elements, erepr["elements"])
+                        recurse(new_prefix, data, next_ordered_elements, erepr)
 
                     elif element.ref_.has_capability(CompoundFieldCapability):
                         cap = element.ref_.get_capability(CompoundFieldCapability)
                         new_prefix = prefix + element.name_ + form_cap.separator
 
                         if element.ref_.repeatable:
-                            rrepr = {
-                                "type": "list",
-                                "prefix": new_prefix,
-                                "ref": cap,
-                                "elements": []
-                            }
-                            container.append(rrepr)
+                            rrepr = ListRepresentation(cap, prefix=new_prefix)
+                            representation.add_element(rrepr)
 
                             objs = engine.get_list(element, data)
                             if len(objs) > 0:
                                 next_ordered_elements = cap.get_in_order(detach=True)
                                 for i, obj in enumerate(objs):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = {
-                                        "type": "compound",
-                                        "prefix": index_prefix,
-                                        "ref": cap,
-                                        "elements": []
-                                    }
-                                    rrepr["elements"].append(erepr)
-                                    recurse(index_prefix, obj, next_ordered_elements, erepr["elements"])
+                                    erepr = CompoundRepresentation(cap, prefix=index_prefix)
+                                    rrepr.add_element(erepr)
+                                    recurse(index_prefix, obj, next_ordered_elements, erepr)
 
                                 remaining = cap.repeatable_initial - len(objs)
                                 if remaining > 0:
                                     for i in range(len(objs), cap.repeatable_initial):
                                         index_prefix = new_prefix + str(i) + form_cap.separator
-                                        erepr = {
-                                            "type": "compound",
-                                            "ref": cap,
-                                            "prefix": index_prefix,
-                                            "elements": []
-                                        }
-                                        rrepr["elements"].append(erepr)
-                                        recurse(index_prefix, {}, next_ordered_elements, erepr["elements"])
+                                        erepr = CompoundRepresentation(cap, prefix=index_prefix)
+                                        rrepr.add_element(erepr)
+                                        recurse(index_prefix, {}, next_ordered_elements, erepr)
                             else:
                                 next_ordered_elements = cap.get_in_order()
                                 target = cap.repeatable_initial
                                 for i in range(target):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = {
-                                        "type": "compound",
-                                        "ref": cap,
-                                        "prefix": new_prefix,
-                                        "elements": []
-                                    }
-                                    rrepr["elements"].append(erepr)
-                                    recurse(index_prefix, data, next_ordered_elements, erepr["elements"])
+                                    erepr = CompoundRepresentation(cap, prefix=new_prefix)
+                                    rrepr.add_element(erepr)
+                                    recurse(index_prefix, data, next_ordered_elements, erepr)
                         else:
-                            erepr = {
-                                "type": "compound",
-                                "ref": cap,
-                                "prefix": new_prefix,
-                                "elements": []
-                            }
-                            container.append(erepr)
-
+                            erepr = CompoundRepresentation(cap, prefix=new_prefix)
+                            representation.add_element(erepr)
                             next_ordered_elements = cap.get_in_order()
-                            recurse(new_prefix, data, next_ordered_elements, erepr["elements"])
+                            recurse(new_prefix, data, next_ordered_elements, erepr)
 
-        recurse(repr["prefix"], data, ordered_elements, repr["elements"])
-
+        recurse(repr.prefix, data, ordered_elements, repr)
         return repr
 
-    def representation_to_string(self, representation:dict, **kwargs):
-        form_cap = representation.get("ref")
+    def representation_to_string(self, representation:FormRepresentation, **kwargs):
+        form_cap = representation.capability
         form_renderer = form_cap.get_renderer()
         html = form_renderer.draw(representation, **kwargs)
         return html
 
+
+########################################
+## Form Data parser
+##
+## This works from data that you would get back from a form (the representation)
+## and the true model data.
+##
+## Note that it is NOT the opposite of FormSerialiser, as this does not
+## Interpret a full HTML form, only the data that comes back from such a form
 
 class FormDataParser(Serialiser):
     def representation_to_data(self, representation:dict, struct:Structure, **kwargs) -> dict:

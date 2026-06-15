@@ -1,3 +1,9 @@
+from copy import deepcopy
+
+from formulaic.serialise.form.core import FormRepresentation, FieldsetRepresentation, ListRepresentation, \
+    CompoundRepresentation, FieldRepresentation
+
+
 class HTMLGenerator:
     def _make_tag(self, tag_name, attributes=None, close=True, content=None):
         """
@@ -60,48 +66,32 @@ for calling those lower down the hierarchy than them.
 """
 
 class FormHTML(HTMLGenerator):
-    # def __init__(self, context:ContextualForm):
-    #     self._context = context
-
-    def draw(self, representation):
+    def draw(self, form:FormRepresentation, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
 class FieldsetHTML(HTMLGenerator):
-    # def __init__(self, context:ContextualForm, fieldset:Fieldset.__class__):
-    #     self._fieldset = fieldset
-    #     self._context = context
-
-    def draw(self, representation):
+    def draw(self, fieldset:FieldsetRepresentation, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
+
 
 class ElementListHMTL(HTMLGenerator):
-    def draw(self, representation):
+    def draw(self, element_list:ListRepresentation, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
+
 
 class CompoundHTML(HTMLGenerator):
-    # def __init__(self, context:ContextualForm, group:FormGroup):
-    #     self._context = context
-    #     self._group = group
-
-    def draw(self, representation):
+    def draw(self, compound:CompoundRepresentation, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
-class FieldHTML(HTMLGenerator):
-    # def __init__(self, context:ContextualForm, field:FormField):
-    #     self._context = context
-    #     self._field = field
 
-    def draw(self, representation):
+class FieldHTML(HTMLGenerator):
+    def draw(self, field:FieldRepresentation, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
 class ControlHTML(HTMLGenerator):
-    # def __init__(self, context:ContextualForm, field:FormField):
-    #     self._context = context
-    #     self._field = field
-
-    def draw(self, representation):
+    def draw(self, controls:dict, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
@@ -109,35 +99,19 @@ class ControlHTML(HTMLGenerator):
 ## Default implementations
 
 class DefaultFormHTML(FormHTML):
-    def draw(self, representation):
+    def draw(self, form:FormRepresentation, *args, **kwargs):
         element_frags = []
-        for element in representation.get("elements"):
-            match element.get("type"):
-                case "fieldset":
-                    fs_capability = element.get("ref")
-                    fs_render = fs_capability.get_renderer()
-                    element_frags.append(fs_render.draw(element))
-                case "compound":
-                    c_capability = element.get("ref")
-                    c_render = c_capability.get_renderer()
-                    element_frags.append(c_render.draw(element))
-                case "field":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_renderer()
-                    element_frags.append(f_render.draw(element))
-                case "list":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_list_renderer()
-                    element_frags.append(f_render.draw(element))
+        for element in form.elements:
+            render = element.renderer
+            element_frags.append(render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
 
-        ctx = representation.get("ref")
-        attrs = ctx.attributes
-        attrs["id"] = ctx.struct_ref.name
-        if ctx.action is not None:
-            attrs["action"] = ctx.action
-        attrs["method"] = ctx.method
+        attrs = deepcopy(form.attributes)
+        attrs["id"] = form.name
+        if form.action is not None:
+            attrs["action"] = form.action
+        attrs["method"] = form.method
         html = self._make_tag('form',
                        content=elements_frag,
                        attributes=attrs
@@ -146,34 +120,19 @@ class DefaultFormHTML(FormHTML):
         return html
 
 class DefaultFieldsetHTML(FieldsetHTML):
-    def draw(self, representation):
+    def draw(self, fieldset:FieldsetRepresentation, *args, **kwargs):
         element_frags = [
-            self._make_tag('legend', content=representation.get("ref").label)
+            self._make_tag('legend', content=fieldset.label)
         ]
-        for element in representation.get("elements"):
-            match element.get("type"):
-                case "fieldset":
-                    fs_capability = element.get("ref")
-                    fs_render = fs_capability.get_renderer()
-                    element_frags.append(fs_render.draw(element))
-                case "compound":
-                    c_capability = element.get("ref")
-                    c_render = c_capability.get_renderer()
-                    element_frags.append(c_render.draw(element))
-                case "field":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_renderer()
-                    element_frags.append(f_render.draw(element))
-                case "list":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_list_renderer()
-                    element_frags.append(f_render.draw(element))
+
+        for element in fieldset.elements:
+            render = element.renderer
+            element_frags.append(render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
 
-        ctx = representation.get("ref")
-        attrs = ctx.attributes
-        attrs["id"] = ctx.struct_ref.name
+        attrs = deepcopy(fieldset.attributes)
+        attrs["id"] = fieldset.name
         html = self._make_tag('fieldset',
                               content=elements_frag,
                               attributes=attrs
@@ -182,78 +141,50 @@ class DefaultFieldsetHTML(FieldsetHTML):
         return html
 
 class DefaultElementListHTML(ElementListHMTL):
-    def draw(self, representation):
-        label = representation.get("ref").repeatable_label
-        if not label:
-            label = representation.get("ref").label
-
+    def draw(self, element_list:ListRepresentation, *args, **kwargs):
+        label = element_list.repeatable_label
         element_frags = [
             self._make_tag('legend', content=label)
         ]
 
-        for element in representation.get("elements"):
-            match element.get("type"):
-                case "fieldset":
-                    fs_capability = element.get("ref")
-                    fs_render = fs_capability.get_renderer()
-                    element_frags.append(fs_render.draw(element))
-                case "compound":
-                    c_capability = element.get("ref")
-                    c_render = c_capability.get_renderer()
-                    element_frags.append(c_render.draw(element))
-                case "field":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_renderer()
-                    element_frags.append(f_render.draw(element))
+        for element in element_list.elements:
+            render = element.renderer
+            element_frags.append(render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
         html = self._make_tag('fieldset',
                               content=elements_frag
                               )
-
         return html
 
 class DefaultCompoundHTML(CompoundHTML):
-    def draw(self, representation):
-        label = representation.get("ref").label
+    def draw(self, compound:CompoundRepresentation, *args, **kwargs):
+        label = compound.label
         element_frags = [
             self._make_tag('legend', content=label)
         ]
-        for element in representation.get("elements"):
-            match element.get("type"):
-                case "compound":
-                    c_capability = element.get("ref")
-                    c_render = c_capability.get_renderer()
-                    element_frags.append(c_render.draw(element))
-                case "field":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_renderer()
-                    element_frags.append(f_render.draw(element))
-                case "list":
-                    f_capabiltiy = element.get("ref")
-                    f_render = f_capabiltiy.get_list_renderer()
-                    element_frags.append(f_render.draw(element))
+
+        for element in compound.elements:
+            render = element.get_renderer()
+            element_frags.append(render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
 
-        ctx = representation.get("ref")
-        attrs = ctx.attributes
-        attrs["id"] = ctx.struct_ref.name
+        attrs = deepcopy(compound.attributes)
+        attrs["id"] = compound.name
         html = self._make_tag('fieldset',
                               content=elements_frag,
                               attributes=attrs
                               )
-
         return html
 
 class DefaultFieldHTML(FieldHTML):
-    def draw(self, representation):
-        ctx = representation.get("ref")
-        ctrl = representation.get("control")
-        c_renderer = ctx.get_control_renderer()
+    def draw(self, field:FieldRepresentation, *args, **kwargs):
+        ctrl = field.control
+        c_renderer = field.control_renderer
 
-        label = ctx.label
-        required = ctx.field.required
+        label = field.label
+        required = field.required
         if required:
             label += " (required)"
 
@@ -264,14 +195,14 @@ class DefaultFieldHTML(FieldHTML):
         return html
 
 class DefaultControlHTML(ControlHTML):
-    def draw(self, representation):
+    def draw(self, controls:list[dict], *args, **kwargs):
         inl_frags = []
 
         suppress_required = False
-        if len(representation) > 1:
+        if len(controls) > 1:
             suppress_required = True
 
-        for control in representation:
+        for control in controls:
             label = control.get("label")
             input = control.get("control")
 
@@ -295,7 +226,7 @@ class DefaultControlHTML(ControlHTML):
 
                 if isinstance(content_list, list):
                     contents = []
-                    for ic in input_content:
+                    for ic in content_list:
                         ic_content = ic.get("content")
                         rendered_content = render_content(ic_content)
                         contents.append(self._make_tag(ic.get("tag"), ic.get("attrs", {}), close=ic.get("close", True), content=rendered_content))
@@ -313,14 +244,14 @@ class DefaultControlHTML(ControlHTML):
         return html
 
 class InvertedLabelInputControlHTML(ControlHTML):
-    def draw(self, representation):
+    def draw(self, controls:list[dict], *args, **kwargs):
         inl_frags = []
 
         suppress_required = False
-        if len(representation) > 1:
+        if len(controls) > 1:
             suppress_required = True
 
-        for control in representation:
+        for control in controls:
             label = control.get("label")
             input = control.get("control")
 
@@ -366,11 +297,11 @@ class InvertedLabelInputControlHTML(ControlHTML):
 ## Debug implementations
 
 class DebugFormHTML(DefaultFormHTML):
-    def draw(self, representation):
-        html = super().draw(representation)
+    def draw(self, form:FormRepresentation, *args, **kwargs):
+        html = super().draw(form)
 
-        ref = representation.get("ref")
-        prefix = representation.get("prefix")
+        ref = form.capability
+        prefix = form.prefix
 
         debug_info = []
         debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
@@ -381,12 +312,11 @@ class DebugFormHTML(DefaultFormHTML):
         return html
 
 class DebugListHTML(DefaultElementListHTML):
-    def draw(self, representation):
-        html = super().draw(representation)
+    def draw(self, element_list:ListRepresentation, *args, **kwargs):
+        html = super().draw(element_list)
 
-        ref = representation.get("ref")
-        prefix = representation.get("prefix")
-
+        ref = element_list.capability
+        prefix = element_list.prefix
         debug_info = []
         debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
         debug_info.append(self._make_tag("li", content="Prefix: " + repr(prefix)))
@@ -396,11 +326,11 @@ class DebugListHTML(DefaultElementListHTML):
         return html
 
 class DebugFieldHTML(DefaultFieldHTML):
-    def draw(self, representation):
-        html = super().draw(representation)
+    def draw(self, field:FieldRepresentation, *args, **kwargs):
+        html = super().draw(field)
 
-        ref = representation.get("ref")
-        prefix = representation.get("prefix")
+        ref = field.capability
+        prefix = field.prefix
 
         debug_info = []
         debug_info.append(self._make_tag("li", content="Capability: " + repr(ref)))
@@ -411,11 +341,11 @@ class DebugFieldHTML(DefaultFieldHTML):
         return html
 
 class DebugControlHTML(DefaultControlHTML):
-    def draw(self, representation):
-        html = super().draw(representation)
+    def draw(self, controls:list[dict], *args, **kwargs):
+        html = super().draw(controls)
 
         uls = []
-        for control in representation:
+        for control in controls:
             attrs = control.get("control").get("attrs", {})
             lis = []
             for k,v in attrs.items():
