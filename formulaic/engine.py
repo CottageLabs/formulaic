@@ -29,6 +29,20 @@ def get_data(reference: Union[Field, Structure, StructRef], data: dict, default=
     else:
         return get_list(reference, data, default=default, by_reference=by_reference)
 
+def get_data__nested_list_aware(reference: Union[Field, Structure, StructRef],
+                                data: dict,
+                                data_context=None,
+                                default=None,
+                                by_reference=True) -> list:
+    if isinstance(reference, Structure):
+        reference = reference.ref_
+
+    context_vals = _get_path__nested_list_aware(reference, data, data_context=data_context, default=default)
+
+    if not by_reference:
+        context_vals = deepcopy(context_vals)
+
+    return context_vals
 
 def get_single(reference: Union[Field, Structure, StructRef], data: dict, default=None, by_reference=True):
     """
@@ -146,7 +160,6 @@ def exists_in_list(reference: Union[Field, Structure, StructRef], data: dict, va
             return True
 
     return False
-
 
 ##############################################
 ## Data setting
@@ -511,31 +524,53 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
     return ready
 
 def validate(data: dict, struct: Structure):
-    dpr = DataProcessingResult()
+    error_report = DataProcessingResult()
 
-    def recurse(data, struct):
+    def recurse(data, struct, dpr):
+        # begin by validating all the fields (leaf nodes)
         for field in struct.ref_.fields:
             validators = field.get_validation_chain()
-            val = get_data(field, data)
+            context_vals = get_data__nested_list_aware(field, data)
             for validator in validators:
-                result = validator.validate(val, field, data)
+                result = validator.validate_list(context_vals, data)
                 if result is not True:
                     dpr.add_error(result)
-                    if result.stop_validation:
+                    stop_validation = any([r.stop_validation for r in result])
+                    if stop_validation:
                         break
 
+        # now iterate through the sub structures, and recurse into them
+        # (to validate their fields) first, before finally apply the
+        # struct level validators
         for substruct in struct.ref_.structures:
-            if substruct.ref_.repeatable:
-                detached = substruct.detach()
-                new_data = get_data(substruct, data)
-                for data_entry in new_data:
-                    recurse(data_entry, detached)
-            else:
-                recurse(data, substruct)
+            # first recurse into sub structures, so that leaf nodes are
+            # validated first
+            recurse(data, substruct, dpr)
+            #
+            # if substruct.ref_.repeatable:
+            #     detached = substruct.detach()
+            #     new_data = get_data(substruct, data)
+            #     subdpr = DataProcessingResult()
+            #     for data_entry in new_data:
+            #         recurse(data_entry, detached, subdpr)
+            #     # TODO: rebase the errors to the main document
+            # else:
+            #     recurse(data, substruct, dpr)
+
+            # now call structure validators
+            validators = substruct.ref_.get_validation_chain()
+            context_vals = get_data__nested_list_aware(substruct, data)
+            for validator in validators:
+                result = validator.validate_list(context_vals, data)
+                if result is not True:
+                    dpr.add_error(result)
+                    stop_validation = any([r.stop_validation for r in result])
+                    if stop_validation:
+                        break
 
 
-    recurse(data, struct)
-    return dpr
+    recurse(data, struct, error_report)
+    return error_report
 
 
 # def validate(reference: Union[Field, Structure, StructRef], data: dict):
@@ -653,6 +688,41 @@ def _get_path(reference: Union[Field, StructRef], data: dict, default=None):
         d = {} if i < len(parts) - 1 else default
         context = context.get(p, d)
     return context
+
+def _get_path__nested_list_aware(reference: Union[Field, StructRef], data: dict, data_context=None, default=None):
+    parts = reference.path
+    context = data
+
+    def recurse(path, data, dc):
+        p = path[0]
+        d = default if len(path) == 1 else {}
+        nd = data.get(p, d)
+
+        if len(path) == 1:
+            return [(nd, [0])]
+
+        results = []
+        if isinstance(nd, list):
+            if dc is None:
+                for i in range(len(nd)):
+                    c = nd[i]
+                    r = recurse(path[1:], c, None)
+                    for entry in r:
+                        results.append([entry[0], [i] + [entry[1]]])
+            else:
+                c = nd[dc[0]]
+                r = recurse(path[1:], c, dc[1:])
+                for entry in r:
+                    results.append([entry[0], [dc[0]] + [entry[1]]])
+        else:
+            r = recurse(path[1:], nd, dc[1:] if dc is not None else None)
+            for entry in r:
+                results.append((entry[0], [0] + entry[1]))
+
+        return results
+
+    result = recurse(parts, context, data_context)
+    return result
 
 
 def _set_path(reference: Union[Field, StructRef], value, data: dict):

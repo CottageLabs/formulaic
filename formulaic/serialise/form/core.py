@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Optional, Union, Any, Generic, TypeVar, cast
 
 from formulaic import engine
-from formulaic.core import Field, FieldCapability, StructureCapability, Structure
+from formulaic.core import Field, FieldCapability, StructureCapability, Structure, DataProcessingResult, ErrorCode
 from formulaic.lib import unity
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.serialise.core import Serialiser
@@ -136,6 +136,9 @@ class FormFieldCapability(FieldCapability):
     placeholder:str = None
     """Placeholder value for the field.  Controls may interpret this in whichever way makes the most sense for them"""
 
+    error_messages:dict[ErrorCode, Union[str, Callable]] = {}
+    """Map from error codes to messages: either a plain string, or a function which can be called with the error code instance"""
+
     attributes:dict[str,str] = {}
     """Attributes to attach to the main form control"""
 
@@ -235,11 +238,12 @@ AnyContainerCapability = Union[GenericFormStructureCapability, FormFieldCapabili
 TElementCapability = TypeVar("TElementCapability", bound=AnyContainerCapability)
 
 class ElementContainerRepresentation(Generic[TElementCapability]):
-    def __init__(self, capability: TElementCapability, prefix="", elements=None, parent=None):
+    def __init__(self, capability: TElementCapability, prefix="", elements=None, parent=None, error_codes=None):
         self._capability = capability
         self._prefix = prefix
         self._elements = elements or []
         self._parent = parent
+        self._error_codes = error_codes or []
 
     @property
     def capability(self):
@@ -248,6 +252,10 @@ class ElementContainerRepresentation(Generic[TElementCapability]):
     @property
     def prefix(self):
         return self._prefix
+
+    @property
+    def errors(self):
+        return self._error_codes
 
     @prefix.setter
     def prefix(self, prefix):
@@ -290,6 +298,15 @@ class ElementContainerRepresentation(Generic[TElementCapability]):
     def label(self):
         return self._capability.label
 
+    def error_message(self, error_code:ErrorCode):
+        msg = self._capability.error_messages.get(error_code.__class__)
+        if msg is None:
+            return error_code.id
+        if isinstance(msg, str):
+            return msg
+        msg = msg(error_code)
+        return msg
+
 class FormRepresentation(ElementContainerRepresentation[FormCapability]):
     @property
     def action(self):
@@ -318,11 +335,12 @@ class CompoundRepresentation(ElementContainerRepresentation[CompoundFieldCapabil
     pass
 
 class FieldRepresentation:
-    def __init__(self, capability:FormFieldCapability, prefix="", control=None, parent=None):
+    def __init__(self, capability:FormFieldCapability, prefix="", control=None, parent=None, error_codes=None):
         self._capability = capability
         self._prefix = prefix
         self._control = control or []
         self._parent = parent
+        self._error_codes = error_codes or []
 
     @property
     def parent(self):
@@ -343,6 +361,10 @@ class FieldRepresentation:
     @property
     def control(self):
         return self._control
+
+    @property
+    def errors(self):
+        return self._error_codes
 
     #########################################
     ## utilities to aid rendering
@@ -371,6 +393,15 @@ class FieldRepresentation:
     def label(self):
         return self._capability.label
 
+    def error_message(self, error_code:ErrorCode):
+        msg = self._capability.error_messages.get(error_code.__class__)
+        if msg is None:
+            return error_code.id
+        if isinstance(msg, str):
+            return msg
+        msg = msg(error_code)
+        return msg
+
 ###########################################
 ## Form serialiser
 ##
@@ -378,11 +409,18 @@ class FieldRepresentation:
 ## of elements and their properties for rendering
 
 class FormSerialiser(Serialiser):
-    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin], struct:Optional[Structure]=None, **kwargs):
+    def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin],
+                               struct:Optional[Structure]=None,
+                               errors:Optional[DataProcessingResult]=None,
+                               **kwargs):
         mixin, fo, struct, data = unity.expand(data, struct)
         form_cap = struct.ref_.get_capability(FormCapability)
+        if errors is None:
+            # for convenience, make an empty DPR so we can avoid a lot of None checks
+            errors = DataProcessingResult()
 
-        repr = FormRepresentation(form_cap)
+        form_errors = errors.error_codes_for(struct)
+        repr = FormRepresentation(form_cap, error_codes=form_errors)
 
         if form_cap.use_form_in_name:
             repr.prefix = struct.name_ + form_cap.separator
@@ -400,7 +438,8 @@ class FormSerialiser(Serialiser):
 
                     if element.repeatable:
                         new_prefix = prefix + element.name + form_cap.separator
-                        rrepr = ListRepresentation(cap, prefix=new_prefix)
+                        error_codes = errors.error_codes_for(element)
+                        rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
                         representation.add_element(rrepr)
 
                         vals = engine.get_list(element, data)
@@ -408,7 +447,7 @@ class FormSerialiser(Serialiser):
                             for i, val in enumerate(vals):
                                 index_prefix = new_prefix + str(i)
                                 inl = control.inputs_and_labels(index_prefix, val)
-                                erepr = FieldRepresentation(cap, prefix=index_prefix, control=inl)
+                                erepr = FieldRepresentation(cap, prefix=index_prefix, control=inl, error_codes=error_codes)
                                 rrepr.add_element(erepr)
 
                             remaining = cap.repeatable_initial - len(vals)
@@ -429,7 +468,8 @@ class FormSerialiser(Serialiser):
                         new_prefix = prefix + element.name
                         val = engine.get_single(element, data)
                         inl = control.inputs_and_labels(new_prefix, val)
-                        erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                        error_codes = errors.error_codes_for(element)
+                        erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, error_codes=error_codes)
                         representation.add_element(erepr)
                 else:
                     if element.ref_.has_capability(FieldsetCapability):
@@ -442,7 +482,8 @@ class FormSerialiser(Serialiser):
                             new_prefix = prefix + element.name_ + form_cap.separator
 
                         cap = element.ref_.get_capability(FieldsetCapability)
-                        erepr = FieldsetRepresentation(cap, prefix=new_prefix)
+                        error_codes = errors.error_codes_for(element)
+                        erepr = FieldsetRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
                         representation.add_element(erepr)
 
                         next_ordered_elements = cap.get_in_order()
@@ -453,7 +494,8 @@ class FormSerialiser(Serialiser):
                         new_prefix = prefix + element.name_ + form_cap.separator
 
                         if element.ref_.repeatable:
-                            rrepr = ListRepresentation(cap, prefix=new_prefix)
+                            error_codes = errors.error_codes_for(element)
+                            rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
                             representation.add_element(rrepr)
 
                             objs = engine.get_list(element, data)
@@ -461,7 +503,7 @@ class FormSerialiser(Serialiser):
                                 next_ordered_elements = cap.get_in_order(detach=True)
                                 for i, obj in enumerate(objs):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = CompoundRepresentation(cap, prefix=index_prefix)
+                                    erepr = CompoundRepresentation(cap, prefix=index_prefix, error_codes=error_codes)
                                     rrepr.add_element(erepr)
                                     recurse(index_prefix, obj, next_ordered_elements, erepr)
 
@@ -475,13 +517,15 @@ class FormSerialiser(Serialiser):
                             else:
                                 next_ordered_elements = cap.get_in_order()
                                 target = cap.repeatable_initial
+                                error_codes = errors.error_codes_for(element)
                                 for i in range(target):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = CompoundRepresentation(cap, prefix=new_prefix)
+                                    erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
                                     rrepr.add_element(erepr)
                                     recurse(index_prefix, data, next_ordered_elements, erepr)
                         else:
-                            erepr = CompoundRepresentation(cap, prefix=new_prefix)
+                            error_codes = errors.error_codes_for(element)
+                            erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
                             representation.add_element(erepr)
                             next_ordered_elements = cap.get_in_order()
                             recurse(new_prefix, data, next_ordered_elements, erepr)

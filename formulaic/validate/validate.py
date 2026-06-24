@@ -1,8 +1,9 @@
 from urllib.parse import urlparse
+import re
 
 from formulaic import engine
-from formulaic.core import Validator, ValidationError
-from formulaic.error_codes import IsRequired
+from formulaic.core import Validator, ValidationError, Field
+from formulaic.error_codes import IsRequired, RegexDoesNotMatch, FieldsShouldBeDifferent
 
 
 class Required(Validator):
@@ -13,14 +14,71 @@ class Required(Validator):
     be added to the object as a "binding validator", dependent on whether the structure is defined as
     REQUIRED when added to its parent
     """
-    def validate(self, val, field, data):
-        if val is None or val == "":
-            return ValidationError(field, val, IsRequired())
+    def validate(self, val, data):
+        if isinstance(self._reference, Field) and val is None or val == "":
+            return ValidationError(self._reference, val, IsRequired(self))
+        elif val is None:
+            return ValidationError(self._reference, val, IsRequired(self))
         return True
 
     def html_attrs(self, attrs):
         pass
 
+
+class Regex(Validator):
+    """
+    Validates the field against a user provided regex
+    """
+    def __init__(self, regex, reference=None, flags=0):
+        if isinstance(regex, str):
+            regex = re.compile(regex, flags)
+        self._regex = regex
+
+        super(Regex, self).__init__(reference)
+
+    def validate(self, val, data, value_context):
+        match = self._regex.match(val or '')
+        if not match:
+            return ValidationError(self._reference, val, RegexDoesNotMatch(self))
+        return True
+
+
+class Different(Validator):
+    def __init__(self, field1, field2, reference=None, ignore_empty=True):
+        super(Different, self).__init__(reference)
+        self._ignore_empty = ignore_empty
+        self._field1 = field1
+        self._field2 = field2
+
+    def validate(self, val, data, value_context):
+        self._bind_fields()
+        f1_cval = engine.get_data__nested_list_aware(self._field1, data, value_context)
+        f2_cval = engine.get_data__nested_list_aware(self._field2, data, value_context)
+
+        f1_val = []
+        f2_val = []
+        if len(f1_cval) > 0:
+            f1_val = [f[0] for f in f1_cval if not (self._ignore_empty and (f[0] == "" or f[0] is None))]
+        if len(f2_cval) > 0:
+            f2_val = [f[0] for f in f2_cval if not (self._ignore_empty and (f[0] == "" or f[0] is None))]
+        f1_val.sort()
+        f2_val.sort()
+
+        if f1_val == f2_val:
+            if self._ignore_empty and (len(f1_val) == 0 or len(f2_val) == 0):
+                return True
+            return ValidationError(self._reference, val,
+                                   FieldsShouldBeDifferent(self, self._field1, self._field2),
+                                   relevant_references=[self._field1, self._field2])
+        return True
+
+    def _bind_fields(self):
+        self._field1 = self._reference.ref_.by_name(self._field1.name)
+        self._field2 = self._reference.ref_.by_name(self._field2.name)
+
+
+#####################################################
+## UNREVIEWED
 
 class IsURL(Validator):
     HTTP_URL = (

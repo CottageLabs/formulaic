@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from formulaic import coerce, engine
+from formulaic import engine
+from formulaic.coerce import coerce
 from formulaic.core import Field, Structure, REQUIRED, OPTIONAL, REPEATABLE, SINGLE, DUPLICABLE, StructRef
 from formulaic.lib import unity
 

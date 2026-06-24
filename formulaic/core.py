@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Union, Callable, Tuple, Any
+from typing import Union, Callable, Tuple, Any, Literal, Optional
 
 from formulaic.lib import unity, introspection
 
@@ -81,6 +81,8 @@ class Field:
         self._capabilities = []
         for cap in self._collect_class_capabilities():
             self.add_capability(cap)
+
+        self._validation_chain = None
 
         if check_coherence:
             self._check_coherence()
@@ -266,11 +268,21 @@ class Field:
         return self.get_capability(capability_class) is not None
 
     def get_validation_chain(self):
-        chain = []
+        if self._validation_chain is not None:
+            return self._validation_chain
+
+        self._validation_chain = []
         if self.required:
             from formulaic.validate.validate import Required
-            chain.append(Required())
-        return chain
+            self._validation_chain.append(Required())
+
+        # TODO: validation for things like options, ranges, etc
+
+        for validator in self.validators:
+            validator.bind(self)
+            self._validation_chain.append(validator)
+
+        return self._validation_chain
 
 
 class FieldCapability:
@@ -324,6 +336,7 @@ class StructRef:
         self._duplicability = duplicability
         self._parent = parent
         self._capabilities = []
+        self._validation_chain = None
 
         for base in reversed(self._struct.__class__.__mro__):
             for cap in getattr(base, "capabilities_", ()):
@@ -568,6 +581,20 @@ class StructRef:
         """
         return self.get_capability(capability_class) is not None
 
+    def get_validation_chain(self):
+        if self._validation_chain is not None:
+            return self._validation_chain
+
+        self._validation_chain = []
+        if self.required:
+            from formulaic.validate.validate import Required
+            self._validation_chain.append(Required())
+        for validator in self.struct.validators_:
+            validator.bind(self.struct)
+            self._validation_chain.append(validator)
+
+        return self._validation_chain
+
 class StructureCapability:
     def __init__(self):
         self._struct_ref = None
@@ -656,7 +683,14 @@ class Structure:
         # class as clean as possible
         self._ref_obj = self.ref_class_(self, need, multiplicity, duplicability, parent, **kwargs)
 
-        # now clone all the fields and structures, and set their parent to this structure
+        # now clone all the fields and structures, and set their parent to this structure.
+        # This is necessary because otherwise multiple instances of the same structure will
+        # introduce a confused parent chain for the nested attributes.  That is
+        #
+        # s1 = MyStructure()
+        # s2 = MyStructure()
+        # s1.nested_attribute.ref_.parent will be s2, not s1
+        #
         rebound = {}
         for attr_name, attr_value in introspection.attributes(self.__class__): #self.__class__.__dict__.items():
             if isinstance(attr_value, Field):
@@ -671,6 +705,14 @@ class Structure:
         # set all the cloned fields and structures onto this instance
         for k, v in rebound.items():
             setattr(self, k, v)
+
+        # For reference, here's an implementation that does not clone the attributes
+        # for attr_name, attr_value in introspection.attributes(self.__class__):
+        #     if isinstance(attr_value, Field):
+        #         attr_value.parent = self
+        #     elif isinstance(attr_value, Structure):
+        #         attr_value.ref_.parent = self
+
 
     @property
     def ref_(self) -> StructRef:
@@ -687,14 +729,56 @@ class Coerce:
         pass
 
 class Validator:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, *args, reference:Optional[Union[Field, Structure, StructRef]]=None, **kwargs):
+        if isinstance(reference, StructRef):
+            self._reference = reference.struct
+        else:
+            self._reference = reference
 
-    def validate(self, val, field, data):
+    def validate_list(self, context_vals, data) -> Union[list["ValidationError"], Literal[True]]:
+        errors = []
+        for val, context in context_vals:
+            result = self.validate(val, data, context)
+            if result is not True:
+                result.data_context = context
+                errors.append(result)
+        if len(errors) > 0:
+            return errors
+        return True
+
+    def validate(self, val, data, value_context) -> Union[list["ValidationError"], Literal[True]]:
         pass
 
     def html_attrs(self, attrs):
         pass
+
+    def bind(self, reference:Union[Field, Structure, StructRef]):
+        if isinstance(reference, StructRef):
+            self._reference = reference.struct
+        else:
+            self._reference = reference
+
+# class StructureValidator:
+    # def __init__(self, *args, structure=None, **kwargs):
+    #     self._struct = structure
+    #
+    # def validate_list(self, context_vals, data) -> Union[list["StructureValidationError"], Literal[True]]:
+    #     errors = []
+    #     for val, context in context_vals:
+    #         result = self.validate(val, data)
+    #         if result is not True:
+    #             result.data_context = context
+    #             errors.append(result)
+    #     return errors
+    #
+    # def validate(self, val, data) -> Union[list["StructureValidationError"], Literal[True]]:
+    #     pass
+    #
+    # def html_attrs(self, attrs):
+    #     pass
+    #
+    # def bind(self, structure:Structure):
+    #     self._struct = structure
 
 #########################################
 ## Exceptions and Error Handling
@@ -706,15 +790,45 @@ class DataError:
         self.code = code
         self.params = kwargs
 
+    def is_relevant_to(self, reference:Union[Field, Structure, StructRef]):
+        if isinstance(reference, StructRef):
+            reference = reference.struct
+        return reference == self.field
+
 class ValidationError(DataError):
-    def __init__(self, field:Union[Field, Structure], original_value, code, stop_validation=False, **kwargs):
+    def __init__(self, field:Union[Field, Structure, StructRef],
+                 original_value,
+                 code,
+                 stop_validation=False,
+                 data_context=None,
+                 relevant_references=None,
+                 **kwargs):
         super().__init__(field, original_value, code, **kwargs)
         self.stop_validation = stop_validation
+        self._data_context = data_context
+        self._relevant_references = relevant_references or []
+
+    @property
+    def data_context(self):
+        return self._data_context
+
+    @data_context.setter
+    def data_context(self, value):
+        self._data_context = value
+
+    def is_relevant_to(self, reference:Union[Field, Structure, StructRef]):
+        if isinstance(reference, StructRef):
+            reference = reference.struct
+        if reference == self.field:
+            return True
+        if reference in self._relevant_references:
+            return True
+        return False
 
     def __str__(self):
         s = (f"ValidationError: `{self.code}` "
              f"on field `{self.field.name}` "
-             f"at path `{self.field.path}` "
+             f"at path `{self.field.path}` (context `{self.data_context}`) "
              f"with original value `{self.original_value}`")
         return s
 
@@ -737,24 +851,39 @@ class StructureError(DataError):
 class ErrorCode:
     id = "_id"
 
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, validator, *args, **kwargs):
+        self._validator = validator
 
     def __str__(self):
         s = f"ErrorCode: `{self.id}`"
         return s
 
 class DataProcessingResult(Exception):
-    def __init__(self, errors=None):
+    def __init__(self, errors:list[DataError]=None):
         super(Exception, self).__init__()
         self.errors = errors if errors is not None else []
 
-    def add_error(self, error):
-        self.errors.append(error)
+    def add_error(self, error:Union[DataError, list[DataError]]):
+        if isinstance(error, list):
+            self.errors.extend(error)
+        else:
+            self.errors.append(error)
 
+    @property
     def is_valid(self):
         return len(self.errors) == 0
 
     def merge(self, other):
         self.errors.extend(other.errors)
+
+    def error_codes_for(self, reference:Union[Field, Structure, StructRef]):
+        if isinstance(reference, StructRef):
+            reference = reference.struct
+
+        codes = []
+        for e in self.errors:
+            if e.is_relevant_to(reference):
+                codes.append(e.code)
+
+        return codes
 
