@@ -643,3 +643,26 @@ class FormDataParser(Serialiser):
         recurse(prefix, representation, ordered_elements, data)
 
         return data
+
+##############################################
+## Form Object, to pull all the bits together
+
+class FormObject(FormulaicObject):
+    apply_structure_on_init = False
+    check_required_on_init = False
+
+    def __init__(self, data=None, **kwargs):
+        super(FormObject, self).__init__(data=data)
+        self._validation_result = DataProcessingResult()
+
+    def validate(self) -> bool:
+        self._validation_result = engine.validate(self.data, self.struct)
+        return self._validation_result.is_valid
+
+    @property
+    def is_valid(self):
+        return self._validation_result.is_valid
+
+    @property
+    def validation_result(self):
+        return self._validation_result
