@@ -801,12 +801,12 @@ class ValidationError(DataError):
                  code,
                  stop_validation=False,
                  data_context=None,
-                 relevant_references=None,
+                 bind_to=None,
                  **kwargs):
         super().__init__(field, original_value, code, **kwargs)
         self.stop_validation = stop_validation
         self._data_context = data_context
-        self._relevant_references = relevant_references or []
+        self._relevant_references = bind_to or []
 
     @property
     def data_context(self):

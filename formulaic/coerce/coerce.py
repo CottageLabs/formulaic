@@ -6,19 +6,27 @@ from formulaic.lib import dates
 
 
 class Unicode(Coerce):
+    def __init__(self, trim_whitespace=False):
+        self.trim_whitespace = trim_whitespace
+
+    def _normalise(self, s):
+        if self.trim_whitespace:
+            return s.strip()
+        return s
+
     def coerce(self, val, field):
         if val is None:
             return None
 
         if isinstance(val, str):
-            return val
+            return self._normalise(val)
         elif isinstance(val, bytes):
             try:
-                return val.decode("utf8", "strict")
+                return self._normalise(val.decode("utf8", "strict"))
             except UnicodeDecodeError as e:
-                return CoerceError(field, val, UnicodeCoerceDecodeFailCode(), exception=e)
+                return CoerceError(field, val, UnicodeCoerceDecodeFailCode(self), exception=e)
         else:
-            return str(val)
+            return self._normalise(str(val))
 
 class UnicodeCoerceDecodeFailCode(ErrorCode): id="unicode_coerce_decode_fail"
 

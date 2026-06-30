@@ -4,6 +4,19 @@ from formulaic.core import ErrorCode
 class IsRequired(ErrorCode):
     id="is_required"
 
+
+class IsConditionallyRequired(ErrorCode):
+    id="is_conditionally_required"
+
+class DisallowedValue(ErrorCode):
+    id="disallowed_value"
+
+    def __init__(self, validator, disallowed_values=None):
+        self.disallowed_values = disallowed_values if disallowed_values is not None else []
+        if not isinstance(self.disallowed_values, list):
+            self.disallowed_values = [self.disallowed_values]
+        super().__init__(validator)
+
 class ValueNotInAllowedList(ErrorCode):
     id="value_not_in_allowed_list"
 

@@ -3,7 +3,8 @@ import re
 
 from formulaic import engine
 from formulaic.core import Validator, ValidationError, Field
-from formulaic.error_codes import IsRequired, RegexDoesNotMatch, FieldsShouldBeDifferent
+from formulaic.error_codes import IsRequired, RegexDoesNotMatch, FieldsShouldBeDifferent, IsConditionallyRequired, \
+    DisallowedValue
 
 
 class Required(Validator):
@@ -69,36 +70,86 @@ class Different(Validator):
                 return True
             return ValidationError(self._reference, val,
                                    FieldsShouldBeDifferent(self, self._field1, self._field2),
-                                   relevant_references=[self._field1, self._field2])
+                                   bind_to=[self._field1, self._field2])
         return True
 
     def _bind_fields(self):
         self._field1 = self._reference.ref_.by_name(self._field1.name)
         self._field2 = self._reference.ref_.by_name(self._field2.name)
 
+class RequiredIf(Validator):
+    def __init__(self, conditionally_required_field, depends_on_field, depends_on_value, reference=None):
+        super(RequiredIf, self).__init__(reference)
+        self._conditionally_required_field = conditionally_required_field
+        self._depends_on_field = depends_on_field
+        self._depends_on_value = depends_on_value
 
-#####################################################
-## UNREVIEWED
+    def validate(self, val, data, value_context):
+        self._bind_fields()
+        cf_cval = engine.get_data__nested_list_aware(self._conditionally_required_field, data, value_context)
+        df_cval = engine.get_data__nested_list_aware(self._depends_on_field, data, value_context)
+
+        conditional_values = [f[0] for f in cf_cval if not (f[0] == "" or f[0] is None)]
+        if len(conditional_values) > 0:
+            # the conditionally required field has a value, so it is valid whatever
+            return True
+
+        compare_to = [f[0] for f in df_cval if not (f[0] == "" or f[0] is None)]
+
+        match = False
+        if isinstance(self._depends_on_value, list):
+            match = self._match_list(compare_to)
+        else:
+            match = self._match_single(compare_to)
+
+        if match:
+            # field is required and not set
+            return ValidationError(self._reference, val,
+                                   IsConditionallyRequired(self),
+                                   bind_to=self._conditionally_required_field)
+        return True
+
+    def _bind_fields(self):
+        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
+        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+
+    def _match_single(self, compare_to):
+        if isinstance(compare_to, list):
+            match = self._depends_on_value in compare_to
+        else:
+            match = compare_to == self._depends_on_value
+
+        if match:
+            # field is required and not set
+            return False
+        return True
+
+    def _match_list(self, compare_to):
+        if isinstance(compare_to, list):
+            match = len(list(set(self._depends_on_value) & set(compare_to))) > 0
+        else:
+            match = compare_to in self._depends_on_value
+
+        if match:
+            # field is required and not set
+            return False
+
+        return True
+
+class NoScriptTag(Validator):
+    def validate(self, val, field, data):
+        if val is not None and "<script>" in val:
+            raise ValueError(self.message)
 
 class IsURL(Validator):
-    HTTP_URL = (
-        r'^(?:https?)://'  # Scheme: http(s) or ftp
-        r'(?:[\w\-]+\.)*[\w\-]+'  # Domain name (optional subdomains)
-        r'(?:\.[a-z]{2,})'  # Top-level domain (e.g., .com, .org)
-        r'(?::(0|6[0-5][0-5][0-3][0-5]|[1-5][0-9][0-9][0-9][0-9]|[1-9][0-9]{0,3}))?'  # port (0-65535) preceded with `:`
-        r'(?:\/[^\/\s]*)*'  # Path (optional)
-        r'(?:\?[^\/\s]*)?'  # Query string (optional)
-        r'(?:#[^\/\s]*)?$'  # Fragment (optional)
-    )
-
-    def validate(self, val, field, data):
+    def validate(self, val, data, value_context):
         if not isinstance(val, str):
-            raise ValueError("Argument passed to to_url was not a string, but type '{t}': '{val}'".format(t=type(val), val=val))
+            return ValidationError(self._reference, val, DisallowedValue(self, "{val}".format(val=val)))
 
         val = val.strip()
 
         if val == '':
-            return val
+            return True
 
         # parse with urlparse
         url = urlparse(val)
@@ -107,11 +158,11 @@ class IsURL(Validator):
         if url.scheme and url.scheme.startswith("http"):
             return True
         else:
-            raise ValueError("Could not convert string {val} to viable URL".format(val=val))
+            return ValidationError(self._reference, val, RegexDoesNotMatch(self))
 
-    def html_attrs(self, attrs):
-        attrs["type"] = "url"
-        attrs["pattern"] = self.HTTP_URL
+
+#####################################################
+## UNREVIEWED
 
 
 class RequiredValue(Validator):
@@ -125,49 +176,6 @@ class RequiredValue(Validator):
     def html_attrs(self, attrs):
         return {"data-required-value": self.required_value}
 
-class RequiredIf(Validator):
-    def __init__(self, other_field_path, other_value):
-        self.other_field_path = other_field_path
-        self.other_value = other_value
-
-    def validate(self, val, field, data):
-        root = field.root
-        other_field = root.get_path(self.other_field_path)
-        compare_to = engine.get_data(other_field, data)
-
-        if isinstance(self.other_value, list):
-            self._match_list(val, compare_to)
-        else:
-            self._match_single(val, compare_to)
-
-    def _match_single(self, val, compare_to):
-        if isinstance(compare_to, list):
-            match = self.other_value in compare_to
-        else:
-            match = compare_to == self.other_value
-
-        if match and val is None:
-            # field is required and not set
-            raise ValueError("Field is required because other field matches the required value.")
-
-        return True
-
-    def _match_list(self, val, compare_to):
-        if isinstance(compare_to, list):
-            match = len(list(set(self.other_value) & set(compare_to))) > 0
-        else:
-            match = compare_to in self.other_value
-
-        if match and val is None:
-            # field is required and not set
-            raise ValueError("Field is required because other field matches the required value.")
-
-        return True
-
-class NoScriptTag(Validator):
-    def validate(self, val, field, data):
-        if val is not None and "<script>" in val:
-            raise ValueError(self.message)
 
 class OptionalIf(Validator):
     # A validator which makes a field optional if another field is set
@@ -222,27 +230,6 @@ class OptionalIf(Validator):
     # def __make_optional(self, form, field):
     #     super(OptionalIf, self).__call__(form, field)
     #     raise validators.StopValidation()
-
-class DifferentTo(Validator):
-    """
-    ~~DifferentTo:FormValidator~~
-    """
-    def __init__(self, other_field_name, ignore_empty=True, message=None):
-        super(DifferentTo, self).__init__()
-        self.ignore_empty = ignore_empty
-        # if not message:
-        #     message = "This field must contain a different value to the field '{x}'".format(x=self.other_field_name)
-        self.message = message
-
-    def validate(self, val, field, data):
-        return True
-        # TODO
-        # other_field = self.get_other_field(self.other_field_name, form)
-        #
-        # if other_field.data == field.data:
-        #     if self.ignore_empty and (not other_field.data or not field.data):
-        #         return
-        #     raise validators.ValidationError(self.message)
 
 class StopWords(Validator):
     """
