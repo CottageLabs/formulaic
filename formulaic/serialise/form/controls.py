@@ -247,14 +247,16 @@ class Checkbox(FormControl):
 
             option = {
                 "tag": "input",
-                "attrs": option_attrs
+                "attrs": option_attrs,
+                "close": False
             }
 
             label = opt.get('label', '')
             label_tag = {
                 "tag": "label",
                 "attrs": {"for": option_attrs["id"]},
-                "content": label
+                "content": label,
+                "close": True
             }
 
             tags.append({"control": option, "label": label_tag})

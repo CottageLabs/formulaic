@@ -160,6 +160,26 @@ class IsURL(Validator):
         else:
             return ValidationError(self._reference, val, RegexDoesNotMatch(self))
 
+class RegexOnList(Validator):
+    def __init__(self, regex, list_separator=",", flags=0, reference=None):
+        if isinstance(regex, str):
+            regex = re.compile(regex, flags)
+        self._regex = regex
+        self._list_separator = list_separator
+        super(RegexOnList, self).__init__(reference)
+
+    def validate(self, val, data, value_context):
+        if not isinstance(val, str):
+            raise ValueError(self._reference, val, DisallowedValue(self, val))
+
+        vals = [v.strip() for v in val.split(self._list_separator)]
+
+        for v in vals:
+            match = self._regex.match(val or '')
+            if not match:
+                return ValidationError(self._reference, val, RegexDoesNotMatch(self))
+
+        return True
 
 #####################################################
 ## UNREVIEWED

@@ -436,7 +436,10 @@ class FormSerialiser(Serialiser):
                     cap = element.get_capability(FormFieldCapability)
                     control = cap.get_control()
 
-                    if element.repeatable:
+                    if element.repeatable and not cap.multiple:
+                        # if the element is repeatable, we want to render multiple controls
+                        # EXCEPT if the field is a multiple field, meaning a single control will handle multiple inputs
+                        # If you want a repeatable multi-input, you will need to nest the field in another repeatable container
                         new_prefix = prefix + element.name + form_cap.separator
                         error_codes = errors.error_codes_for(element)
                         rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
@@ -466,7 +469,7 @@ class FormSerialiser(Serialiser):
                                 rrepr.add_element(erepr)
                     else:
                         new_prefix = prefix + element.name
-                        val = engine.get_single(element, data)
+                        val = engine.get_single(element, data) # this will still return a list if the value is a list
                         inl = control.inputs_and_labels(new_prefix, val)
                         error_codes = errors.error_codes_for(element)
                         erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, error_codes=error_codes)
