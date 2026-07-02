@@ -33,6 +33,8 @@ class GenericFormStructureCapability(StructureCapability):
     attributes: dict[str, str] = {}
     list_render_class = None
     render_class = None
+    error_messages: dict[ErrorCode, Union[str, Callable]] = {}
+    """Map from error codes to messages: either a plain string, or a function which can be called with the error code instance"""
 
     def __init__(self):
         super().__init__()
@@ -257,6 +259,24 @@ class ElementContainerRepresentation(Generic[TElementCapability]):
     def errors(self):
         return self._error_codes
 
+    @property
+    def displayable_errors(self):
+        return [e for e in self._error_codes if
+                e.__class__ not in self._capability.error_messages or
+                self._capability.error_messages.get(e.__class__) is not False]
+
+    def has_nested_errors(self):
+        if len(self._error_codes) > 0:
+            return True
+        for element in self.elements:
+            if isinstance(element, ElementContainerRepresentation):
+                if element.has_nested_errors():
+                    return True
+            elif isinstance(element, FieldRepresentation):
+                if len(element.errors) > 0:
+                    return True
+        return False
+
     @prefix.setter
     def prefix(self, prefix):
         self._prefix = prefix
@@ -365,6 +385,12 @@ class FieldRepresentation:
     @property
     def errors(self):
         return self._error_codes
+
+    @property
+    def displayable_errors(self):
+        return [e for e in self._error_codes if
+                e.__class__ not in self._capability.error_messages or
+                self._capability.error_messages.get(e.__class__) is not False]
 
     #########################################
     ## utilities to aid rendering
@@ -590,7 +616,8 @@ class FormDataParser(Serialiser):
         def recurse(prefix, representation, ordered_elements, data):
             for element in ordered_elements:
                 if isinstance(element, Field):
-                    if element.repeatable:
+                    cap = element.get_capability(FormFieldCapability)
+                    if element.repeatable and not cap.multiple:
                         new_prefix = prefix + element.name + form_cap.separator
                         vals = extract_to_list_by_prefix(new_prefix, representation)
                         if len(vals) > 0:
@@ -598,8 +625,10 @@ class FormDataParser(Serialiser):
                     else:
                         new_prefix = prefix + element.name
                         # extract the exact value
-                        val = representation.get(new_prefix)
+                        val = representation.get(new_prefix)    # this may return a list or not
                         if val:
+                            if cap.multiple and not isinstance(val, list):
+                                val = [val]
                             data[element.name] = val
                 else:
                     if element.ref_.has_capability(FieldsetCapability):

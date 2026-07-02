@@ -657,18 +657,19 @@ def _do_coerce(value, reference: Field):
 
 
 def _do_validate(value, reference: Field, data: dict):
-    validators = reference.validators
+    validators = reference.get_validation_chain()
     if validators is None or len(validators) == 0:
         return True
 
+    # FIXME: these need to be worked in to the validation chain
     if len(reference.allowed_values) > 0:
         if value not in reference.allowed_values:
-            return ValidationError(reference, value, ValueNotInAllowedList(), allowed_values=reference.allowed_values)
+            return ValidationError(reference, value, ValueNotInAllowedList(None, value, reference.allowed_values))
 
     if reference.has_allowed_range():
         lower, upper = reference.allowed_range
         if (lower is not None and value < lower) or (upper is not None and value > upper):
-            return ValidationError(reference, value, ValueNotInAllowedList(), allowed_range=reference.allowed_range)
+            return ValidationError(reference, value, ValueNotInAllowedList(None, value, reference.allowed_range))
 
     for validator in validators:
         result = validator.validate(value, reference, data)

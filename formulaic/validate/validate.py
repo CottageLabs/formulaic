@@ -1,3 +1,4 @@
+from typing import Union, Literal
 from urllib.parse import urlparse
 import re
 
@@ -15,15 +16,12 @@ class Required(Validator):
     be added to the object as a "binding validator", dependent on whether the structure is defined as
     REQUIRED when added to its parent
     """
-    def validate(self, val, data):
+    def validate(self, val, data, value_context):
         if isinstance(self._reference, Field) and val is None or val == "":
             return ValidationError(self._reference, val, IsRequired(self))
         elif val is None:
             return ValidationError(self._reference, val, IsRequired(self))
         return True
-
-    def html_attrs(self, attrs):
-        pass
 
 
 class Regex(Validator):
@@ -38,6 +36,9 @@ class Regex(Validator):
         super(Regex, self).__init__(reference)
 
     def validate(self, val, data, value_context):
+        if val is None:
+            return True
+
         match = self._regex.match(val or '')
         if not match:
             return ValidationError(self._reference, val, RegexDoesNotMatch(self))
@@ -94,7 +95,16 @@ class RequiredIf(Validator):
             # the conditionally required field has a value, so it is valid whatever
             return True
 
-        compare_to = [f[0] for f in df_cval if not (f[0] == "" or f[0] is None)]
+        raw_compare_to = [f[0] for f in df_cval if not (f[0] == "" or f[0] is None)]
+
+        # we need to account for the possibility that the values at each object are also lists
+        # so we unpack any nested lists
+        compare_to = []
+        for entry in raw_compare_to:
+            if isinstance(entry, list):
+                compare_to.extend(v for v in entry if v not in ("", None))
+            else:
+                compare_to.append(entry)
 
         match = False
         if isinstance(self._depends_on_value, list):
@@ -115,34 +125,27 @@ class RequiredIf(Validator):
 
     def _match_single(self, compare_to):
         if isinstance(compare_to, list):
-            match = self._depends_on_value in compare_to
+            return self._depends_on_value in compare_to
         else:
-            match = compare_to == self._depends_on_value
-
-        if match:
-            # field is required and not set
-            return False
-        return True
+            return compare_to == self._depends_on_value
 
     def _match_list(self, compare_to):
         if isinstance(compare_to, list):
-            match = len(list(set(self._depends_on_value) & set(compare_to))) > 0
+            return len(list(set(self._depends_on_value) & set(compare_to))) > 0
         else:
-            match = compare_to in self._depends_on_value
-
-        if match:
-            # field is required and not set
-            return False
-
-        return True
+            return compare_to in self._depends_on_value
 
 class NoScriptTag(Validator):
     def validate(self, val, field, data):
         if val is not None and "<script>" in val:
-            raise ValueError(self.message)
+            return ValidationError(self._reference, val, DisallowedValue(self, "{val}".format(val=val)))
+        return True
 
 class IsURL(Validator):
     def validate(self, val, data, value_context):
+        if val is None:
+            return True
+
         if not isinstance(val, str):
             return ValidationError(self._reference, val, DisallowedValue(self, "{val}".format(val=val)))
 
@@ -170,16 +173,17 @@ class RegexOnList(Validator):
 
     def validate(self, val, data, value_context):
         if not isinstance(val, str):
-            raise ValueError(self._reference, val, DisallowedValue(self, val))
+            return True
 
         vals = [v.strip() for v in val.split(self._list_separator)]
 
         for v in vals:
-            match = self._regex.match(val or '')
+            match = self._regex.match(v)
             if not match:
                 return ValidationError(self._reference, val, RegexDoesNotMatch(self))
 
         return True
+
 
 #####################################################
 ## UNREVIEWED

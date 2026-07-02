@@ -274,7 +274,7 @@ class Field:
         self._validation_chain = []
         if self.required:
             from formulaic.validate.validate import Required
-            self._validation_chain.append(Required())
+            self._validation_chain.append(Required(reference=self))
 
         # TODO: validation for things like options, ranges, etc
 
@@ -588,7 +588,7 @@ class StructRef:
         self._validation_chain = []
         if self.required:
             from formulaic.validate.validate import Required
-            self._validation_chain.append(Required())
+            self._validation_chain.append(Required(reference=self))
         for validator in self.struct.validators_:
             validator.bind(self.struct)
             self._validation_chain.append(validator)
@@ -758,28 +758,6 @@ class Validator:
         else:
             self._reference = reference
 
-# class StructureValidator:
-    # def __init__(self, *args, structure=None, **kwargs):
-    #     self._struct = structure
-    #
-    # def validate_list(self, context_vals, data) -> Union[list["StructureValidationError"], Literal[True]]:
-    #     errors = []
-    #     for val, context in context_vals:
-    #         result = self.validate(val, data)
-    #         if result is not True:
-    #             result.data_context = context
-    #             errors.append(result)
-    #     return errors
-    #
-    # def validate(self, val, data) -> Union[list["StructureValidationError"], Literal[True]]:
-    #     pass
-    #
-    # def html_attrs(self, attrs):
-    #     pass
-    #
-    # def bind(self, structure:Structure):
-    #     self._struct = structure
-
 #########################################
 ## Exceptions and Error Handling
 
@@ -801,11 +779,14 @@ class ValidationError(DataError):
                  code,
                  stop_validation=False,
                  data_context=None,
-                 bind_to=None,
+                 bind_to:Optional[Union[Field, Structure, list[Union[Field, Structure]]]]=None,
                  **kwargs):
         super().__init__(field, original_value, code, **kwargs)
         self.stop_validation = stop_validation
         self._data_context = data_context
+
+        if bind_to and not isinstance(bind_to, list):
+            bind_to = [bind_to]
         self._relevant_references = bind_to or []
 
     @property
