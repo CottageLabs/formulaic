@@ -267,20 +267,23 @@ class Field:
         """
         return self.get_capability(capability_class) is not None
 
-    def get_validation_chain(self):
+    def get_validation_chain(self, include_required=True):
         if self._validation_chain is not None:
             return self._validation_chain
 
         self._validation_chain = []
-        if self.required:
+        if self.required and include_required:
             from formulaic.validate.validate import Required
             self._validation_chain.append(Required(reference=self))
 
         # TODO: validation for things like options, ranges, etc
 
         for validator in self.validators:
-            validator.bind(self)
-            self._validation_chain.append(validator)
+            # we need to make a copy, as the validator will be bound, and we
+            # don't know if this is a shared instance
+            cv = deepcopy(validator)
+            cv.bind(self)
+            self._validation_chain.append(cv)
 
         return self._validation_chain
 
@@ -581,17 +584,20 @@ class StructRef:
         """
         return self.get_capability(capability_class) is not None
 
-    def get_validation_chain(self):
+    def get_validation_chain(self, include_required=True):
         if self._validation_chain is not None:
             return self._validation_chain
 
         self._validation_chain = []
-        if self.required:
+        if self.required and include_required:
             from formulaic.validate.validate import Required
             self._validation_chain.append(Required(reference=self))
         for validator in self.struct.validators_:
-            validator.bind(self.struct)
-            self._validation_chain.append(validator)
+            # we need to make a copy, as the validator will be bound, and we
+            # don't know if this is a shared instance
+            cv = deepcopy(validator)
+            cv.bind(self.struct)
+            self._validation_chain.append(cv)
 
         return self._validation_chain
 

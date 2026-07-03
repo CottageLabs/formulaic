@@ -682,6 +682,7 @@ class FormDataParser(Serialiser):
 class FormObject(FormulaicObject):
     apply_structure_on_init = False
     check_required_on_init = False
+    check_required_on_set = False
 
     def __init__(self, data=None, **kwargs):
         super(FormObject, self).__init__(data=data)

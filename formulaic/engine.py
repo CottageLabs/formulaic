@@ -209,7 +209,7 @@ def set_single(reference: Union[Field, Structure, StructRef], value, data: dict,
     if isinstance(reference, Field):
         if value is None and reference.ignore_none:
             return None
-        value = apply_field_constraints(reference, value, data)
+        value = apply_field_constraints(reference, value, data, required_check=required_check)
 
     elif isinstance(reference, StructRef):
         value = apply_structure(reference.struct, value, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
@@ -250,7 +250,7 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
                 # if we are dealing with a StructRef, we need to apply the structure to the value
                 v = apply_structure(reference.struct, v, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
             else:
-                v = apply_field_constraints(reference, v, data)
+                v = apply_field_constraints(reference, v, data, required_check=required_check)
         except DataProcessingResult as dpr:
             # if we get a DataProcessingResult, we need to add the errors to the validation result
             validation_result.merge(dpr)
@@ -298,7 +298,7 @@ def add_to_list(reference: Union[Field, Structure, StructRef], value, data: dict
         # if we are dealing with a StructRef, we need to apply the structure to the value
         value = apply_structure(reference.struct, value, required_check=required_check, silent_prune=silent_prune, allow_other_fields=allow_other_fields)
     else:
-        value = apply_field_constraints(reference, value, data)
+        value = apply_field_constraints(reference, value, data, required_check=required_check)
 
     current = get_list(reference, data, by_reference=True)
 
@@ -379,16 +379,16 @@ def delete_from_list(reference: Union[Field, Structure, StructRef], data: dict, 
 ###################################################
 ## Sturcture wide capabilities
 
-def apply_field_constraints(reference: Field, value, data):
+def apply_field_constraints(reference: Field, value, data, required_check=True):
     if value is None and not reference.allow_none:
-        e = ValidationError(reference, None, NoneNotAllowed())
+        e = ValidationError(reference, None, NoneNotAllowed(None))
         raise DataProcessingResult(errors=[e])
 
     value = _do_coerce(value, reference)
     if isinstance(value, CoerceError):
         raise DataProcessingResult(errors=[value])
 
-    valid = _do_validate(value, reference, data)
+    valid = _do_validate(value, reference, data, required_check=required_check)
     if isinstance(valid, ValidationError):
         raise DataProcessingResult(errors=[valid])
 
@@ -467,11 +467,11 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
                     val = [val]
                 nvals = []
                 for v in val:
-                    v = apply_field_constraints(field, v, data)
+                    v = apply_field_constraints(field, v, data, required_check=required_check)
                     nvals.append(v)
                 constructed[field.name] = nvals  # update the data dict with the coerced values
             else:
-                val = apply_field_constraints(field, val, data)
+                val = apply_field_constraints(field, val, data, required_check=required_check)
                 constructed[field.name] = val  # update the data dict with the coerced value
 
         for struct in structure.ref_.structures:
@@ -656,8 +656,8 @@ def _do_coerce(value, reference: Field):
     return value
 
 
-def _do_validate(value, reference: Field, data: dict):
-    validators = reference.get_validation_chain()
+def _do_validate(value, reference: Field, data: dict, required_check=True):
+    validators = reference.get_validation_chain(required_check)
     if validators is None or len(validators) == 0:
         return True
 
