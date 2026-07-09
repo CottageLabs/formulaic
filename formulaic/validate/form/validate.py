@@ -7,7 +7,7 @@ from formulaic.serialise.form.core import FormFieldCapability
 
 class LimitToFormOptions(Validator):
     def validate(self, val, data, value_context):
-        if val is None:
+        if not val:
             return True
 
         cap = self._reference.get_capability(FormFieldCapability)
