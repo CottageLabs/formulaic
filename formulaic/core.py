@@ -812,6 +812,10 @@ class ValidationError(DataError):
             return True
         return False
 
+    @property
+    def relevant_references(self):
+        return self._relevant_references
+
     def __str__(self):
         s = (f"ValidationError: `{self.code}` "
              f"on field `{self.field.name}` "

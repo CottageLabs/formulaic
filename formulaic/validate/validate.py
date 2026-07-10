@@ -226,7 +226,7 @@ class RegexOnList(Validator):
         if not isinstance(val, str):
             return True
 
-        vals = [v.strip() for v in val.split(self._list_separator)]
+        vals = [v.strip() for v in val.split(self._list_separator) if v.strip() != ""]
 
         for v in vals:
             match = self._regex.match(v)
@@ -242,19 +242,20 @@ class AllInvalid(Validator):
         super(AllInvalid, self).__init__(reference)
 
     def validate(self, val, data, value_context):
-        if not isinstance(val, str):
-            return True
-
         errors = []
         trips = 0
         for v in self._validators:
+            v.bind(self._reference)
             result = v.validate(val, data, value_context)
             if result is not True:
                 errors.append(result)
                 trips += 1
 
         if trips == len(self._validators):
-            return ValidationError(self._reference, val, self._error_code(self, errors))
+            refs = []
+            for e in errors:
+                refs += e.relevant_references
+            return ValidationError(self._reference, val, self._error_code(self, errors), bind_to=refs)
 
         return True
 
