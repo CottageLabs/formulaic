@@ -5,7 +5,7 @@ import re
 from formulaic import engine
 from formulaic.core import Validator, ValidationError, Field
 from formulaic.error_codes import IsRequired, RegexDoesNotMatch, FieldsShouldBeDifferent, IsConditionallyRequired, \
-    DisallowedValue
+    DisallowedValue, MultipleConnectedValidationFailures
 
 
 class Required(Validator):
@@ -77,6 +77,57 @@ class Different(Validator):
     def _bind_fields(self):
         self._field1 = self._reference.ref_.by_name(self._field1.name)
         self._field2 = self._reference.ref_.by_name(self._field2.name)
+
+class RequiredIfNot(Validator):
+    def __init__(self, conditionally_required_field, depends_on_field, reference=None):
+        super(RequiredIfNot, self).__init__(reference)
+        self._conditionally_required_field = conditionally_required_field
+        self._depends_on_field = depends_on_field
+
+    def validate(self, val, data, value_context):
+        self._bind_fields()
+        cf_cval = engine.get_data__nested_list_aware(self._conditionally_required_field, data, value_context)
+        df_cval = engine.get_data__nested_list_aware(self._depends_on_field, data, value_context)
+
+        conditional_values = [f[0] for f in cf_cval if not (f[0] == "" or f[0] is None)]
+        if len(conditional_values) > 0:
+            # the conditionally required field has a value, so it is valid whatever
+            return True
+
+        raw_compare_to = [f[0] for f in df_cval if not (f[0] == "" or f[0] is None)]
+
+        # we need to account for the possibility that the values at each object are also lists
+        # so we unpack any nested lists
+        compare_to = []
+        for entry in raw_compare_to:
+            if isinstance(entry, list):
+                compare_to.extend(v for v in entry if v not in ("", None))
+            else:
+                compare_to.append(entry)
+
+        if not compare_to:
+            # if the depends_on_field has no value, then the conditionally_required_field is required
+            return ValidationError(self._reference, val,
+                                   IsConditionallyRequired(self),
+                                   bind_to=self._conditionally_required_field)
+
+        return True
+
+    def _bind_fields(self):
+        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
+        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+
+    def _match_single(self, compare_to):
+        if isinstance(compare_to, list):
+            return self._depends_on_value in compare_to
+        else:
+            return compare_to == self._depends_on_value
+
+    def _match_list(self, compare_to):
+        if isinstance(compare_to, list):
+            return len(list(set(self._depends_on_value) & set(compare_to))) > 0
+        else:
+            return compare_to in self._depends_on_value
 
 class RequiredIf(Validator):
     def __init__(self, conditionally_required_field, depends_on_field, depends_on_value, reference=None):
@@ -184,6 +235,28 @@ class RegexOnList(Validator):
 
         return True
 
+class AllInvalid(Validator):
+    def __init__(self, *args, error_code=None, reference=None):
+        self._validators = args
+        self._error_code = error_code if error_code is not None else MultipleConnectedValidationFailures
+        super(AllInvalid, self).__init__(reference)
+
+    def validate(self, val, data, value_context):
+        if not isinstance(val, str):
+            return True
+
+        errors = []
+        trips = 0
+        for v in self._validators:
+            result = v.validate(val, data, value_context)
+            if result is not True:
+                errors.append(result)
+                trips += 1
+
+        if trips == len(self._validators):
+            return ValidationError(self._reference, val, self._error_code(self, errors))
+
+        return True
 
 #####################################################
 ## UNREVIEWED

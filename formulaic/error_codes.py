@@ -50,3 +50,10 @@ class FieldsShouldBeDifferent(ErrorCode):
         self.field1 = field1
         self.field2 = field2
         super().__init__(validator)
+
+class MultipleConnectedValidationFailures(ErrorCode):
+    id = "multiple_connected_validation_errors"
+
+    def __init__(self, validator, nested_errors):
+        self.nested_errors = nested_errors
+        super().__init__(validator)
