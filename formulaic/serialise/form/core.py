@@ -124,7 +124,6 @@ class CompoundFieldCapability(GenericFormStructureCapability):
     """Field which are bound to their structure with a REPEATABLE option can use these two properties to control how 
         many instances of the field are rendered by default, and the minimum number of displayed fields"""
     conditional = False
-    js = []
 
 
 class FormFieldCapability(FieldCapability):
