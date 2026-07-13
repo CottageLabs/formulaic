@@ -7,6 +7,7 @@ from formulaic.lib import unity
 from formulaic.objects import FormulaicObject, FormulaicMixin
 from formulaic.serialise.core import Serialiser
 
+
 class DefaultRendererFactory:
     @staticmethod
     def get(capability) -> Optional[Callable]:
@@ -88,6 +89,16 @@ class GenericFormStructureCapability(StructureCapability):
             rc = DefaultElementListHTML
         self._list_renderer = rc()
         return self._list_renderer
+
+    def error_message(self, error_code):
+        msg = self.error_messages.get(error_code.__class__)
+        if msg is None:
+            return error_code.id
+        if isinstance(msg, str):
+            return msg
+        if isinstance(msg, Callable):
+            return msg(error_code)
+        return ""
 
 
 class FormCapability(GenericFormStructureCapability):
@@ -233,6 +244,15 @@ class FormFieldCapability(FieldCapability):
         self._list_renderer = rc()
         return self._list_renderer
 
+    def error_message(self, error_code:ErrorCode):
+        msg = self.error_messages.get(error_code.__class__)
+        if msg is None:
+            return error_code.id
+        if isinstance(msg, str):
+            return msg
+        msg = msg(error_code)
+        return msg
+
 #############################################
 ## Model classes to offer a representation of the form as it should be rendered
 
@@ -319,13 +339,7 @@ class ElementContainerRepresentation(Generic[TElementCapability]):
         return self._capability.label
 
     def error_message(self, error_code:ErrorCode):
-        msg = self._capability.error_messages.get(error_code.__class__)
-        if msg is None:
-            return error_code.id
-        if isinstance(msg, str):
-            return msg
-        msg = msg(error_code)
-        return msg
+        return self._capability.error_message(error_code)
 
 class FormRepresentation(ElementContainerRepresentation[FormCapability]):
     @property
@@ -420,13 +434,7 @@ class FieldRepresentation:
         return self._capability.label
 
     def error_message(self, error_code:ErrorCode):
-        msg = self._capability.error_messages.get(error_code.__class__)
-        if msg is None:
-            return error_code.id
-        if isinstance(msg, str):
-            return msg
-        msg = msg(error_code)
-        return msg
+        return self._capability.error_message(error_code)
 
 ###########################################
 ## Form serialiser
@@ -435,6 +443,41 @@ class FieldRepresentation:
 ## of elements and their properties for rendering
 
 class FormSerialiser(Serialiser):
+    def make_id(self, struct, path, data_context=None):
+        if data_context is None:
+            data_context = []
+
+        form_cap = struct.ref_.get_capability(FormCapability)
+
+        id = ""
+        if form_cap.use_form_in_name:
+            id = struct.name_ + form_cap.separator
+
+        ctx = struct
+        for i, p in enumerate(path):
+            next = ctx.ref_.by_name(p)
+            if isinstance(next, Field):
+                cap = next.get_capability(FormFieldCapability)
+                if next.repeatable and not cap.multiple:
+                    id += next.name + form_cap.separator
+                    id += str(data_context[i]) if len(data_context) > i else "0"
+                else:
+                    id += next.name
+                # We return here because you can't go lower than the field, but it's possible
+                # the request is garbled, and we ought to check it and throw an error
+                return id
+            else:
+                if next.ref_.has_capability(FieldsetCapability):
+                    if form_cap.use_fieldsets_in_name:
+                        id += next.name_ + form_cap.separator
+                elif next.ref_.has_capability(CompoundFieldCapability):
+                    id += next.name_ + form_cap.separator
+                    if next.ref_.repeatable:
+                        id += str(data_context[i]) if len(data_context) > i else "0"
+                        id += form_cap.separator
+            ctx = next
+        return id
+
     def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin],
                                struct:Optional[Structure]=None,
                                errors:Optional[DataProcessingResult]=None,

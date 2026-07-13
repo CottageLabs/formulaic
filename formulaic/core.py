@@ -772,12 +772,21 @@ class DataError:
         self.field = field
         self.original_value = original_value
         self.code = code
+        self.code.bind(self)
         self.params = kwargs
 
     def is_relevant_to(self, reference:Union[Field, Structure, StructRef]):
         if isinstance(reference, StructRef):
             reference = reference.struct
         return reference == self.field
+
+    def as_dict(self, code2msg=None):
+        d = {
+            "path": unity.path(self.field),
+            "original_value": self.original_value,
+            "code": self.code.as_dict(code2msg, self.field),
+        }
+        return d
 
 class ValidationError(DataError):
     def __init__(self, field:Union[Field, Structure, StructRef],
@@ -813,8 +822,20 @@ class ValidationError(DataError):
         return False
 
     @property
-    def relevant_references(self):
+    def relevant_references(self) -> list:
         return self._relevant_references
+
+    def as_dict(self, code2msg=None):
+        d = super().as_dict(code2msg)
+        d["data_context"] = self.data_context
+        if len(self.relevant_references) > 0:
+            d["relevant_to"] = []
+        for rr in self.relevant_references:
+            d["relevant_to"].append({
+                "path": unity.path(rr),
+                "code": self.code.as_dict(code2msg, rr),
+            })
+        return d
 
     def __str__(self):
         s = (f"ValidationError: `{self.code}` "
@@ -844,6 +865,24 @@ class ErrorCode:
 
     def __init__(self, validator, *args, **kwargs):
         self._validator = validator
+        self._error = kwargs.get("error", None)
+
+    @property
+    def validator(self):
+        return self._validator
+
+    @property
+    def error(self):
+        return self._error
+
+    def bind(self, error):
+        self._error = error
+
+    def as_dict(self, code2msg=None, field=None):
+        d = {"id": self.id}
+        if code2msg is not None:
+            d["msg"] = code2msg(self, field)
+        return d
 
     def __str__(self):
         s = f"ErrorCode: `{self.id}`"
@@ -877,4 +916,17 @@ class DataProcessingResult(Exception):
                 codes.append(e.code)
 
         return codes
+
+    def as_dict(self, code2msg=None):
+        report = []
+        for error in self.errors:
+            report.append(error.as_dict(code2msg=code2msg))
+
+        result = {
+            "valid": self.is_valid,
+        }
+        if len(report) > 0:
+            result["errors"] = report
+        return result
+
 
