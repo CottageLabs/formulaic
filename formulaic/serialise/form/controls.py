@@ -337,3 +337,44 @@ class Textarea(FormControl):
         }]
 
         return tags
+
+class Buttons(FormControl):
+    def inputs_and_labels(self, id_prefix, val, *args, **kwargs):
+        attrs = self._generic_attributes()
+        attrs["name"] = id_prefix
+        attrs["id"] = id_prefix
+
+        label = self._capability.label or ""
+        options = self._capability.get_options()
+
+        tags = []
+        if not isinstance(val, list):
+            val = [val]
+        field_options = self._capability.get_options()
+
+        for i, opt in enumerate(field_options):
+            form_cap = self._capability.field.root.ref_.get_capability(FormCapability)
+            id = id_prefix + form_cap.separator + str(i)
+            onclick = opt.get('onclick', '')
+            type = opt.get('type', "submit")
+
+            option_attrs = deepcopy(attrs)
+            option_attrs["id"] = id
+            option_attrs["onclick"] = onclick
+            option_attrs["class"] = opt.get("class", "")
+            option_attrs["role"] = opt.get("role", "")
+            option_attrs["type"] = type
+
+            option = {
+                "tag": "button",
+                "attrs": option_attrs,
+            }
+
+            label = opt.get('label', '')
+            label_tag = {
+                "tag": "label",
+                "content": label,
+            }
+
+            tags.append({"control": option, "label": label_tag})
+        return tags
