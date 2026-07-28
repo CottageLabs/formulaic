@@ -741,6 +741,8 @@ class Validator:
         else:
             self._reference = reference
 
+        self.fields_bound = False
+
     def validate_list(self, context_vals, data) -> Union[list["ValidationError"], Literal[True]]:
         errors = []
         for val, context in context_vals:
@@ -763,6 +765,15 @@ class Validator:
             self._reference = reference.struct
         else:
             self._reference = reference
+
+    def bind_field(self, field):
+        path = field.path
+        if field.parent is not None:
+            path = [field.root.ref_.name] + path
+        context = self._reference
+        for entry in path:
+            context = context.ref_.by_name(entry)
+        return context
 
 #########################################
 ## Exceptions and Error Handling

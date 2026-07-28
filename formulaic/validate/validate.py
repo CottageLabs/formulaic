@@ -75,8 +75,12 @@ class Different(Validator):
         return True
 
     def _bind_fields(self):
-        self._field1 = self._reference.ref_.by_name(self._field1.name)
-        self._field2 = self._reference.ref_.by_name(self._field2.name)
+        if self.fields_bound:
+            return
+
+        self._field1 = self.bind_field(self._field1)
+        self._field2 = self.bind_field(self._field2)
+        self.fields_bound = True
 
 class RequiredIfNot(Validator):
     def __init__(self, conditionally_required_field, depends_on_field, reference=None):
@@ -114,8 +118,29 @@ class RequiredIfNot(Validator):
         return True
 
     def _bind_fields(self):
-        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
-        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+        if self.fields_bound:
+            return
+
+        self._conditionally_required_field = self.bind_field(self._conditionally_required_field)
+        self._depends_on_field = self.bind_field(self._depends_on_field)
+        self.fields_bound = True
+
+        # # FIXME: I have hacked this in to get a result on a specific use case, but this needs to be generally
+        # # available to validators somehow, and on all fields.
+        # if self._bound:
+        #     return
+        #
+        # self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
+        # # self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+        # path = self._depends_on_field.path
+        # if self._depends_on_field.parent is not None:
+        #     path = [self._depends_on_field.root.ref_.name] + path
+        # context = self._reference
+        # for entry in path:
+        #     context = context.ref_.by_name(entry)
+        # self._depends_on_field = context
+        #
+        # self._bound = True
 
     def _match_single(self, compare_to):
         if isinstance(compare_to, list):
@@ -171,8 +196,12 @@ class RequiredIf(Validator):
         return True
 
     def _bind_fields(self):
-        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
-        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+        if self.fields_bound:
+            return
+
+        self._conditionally_required_field = self.bind_field(self._conditionally_required_field)
+        self._depends_on_field = self.bind_field(self._depends_on_field)
+        self.fields_bound = True
 
     def _match_single(self, compare_to):
         if isinstance(compare_to, list):
