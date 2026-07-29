@@ -240,6 +240,8 @@ class Checkbox(FormControl):
             value = opt.get('value', '')
 
             option_attrs = deepcopy(attrs)
+            additional_attrs = opt.get("attrs", {})
+            option_attrs.update(additional_attrs)
             option_attrs["id"] = id
             option_attrs["value"] = value
             if value in val:
