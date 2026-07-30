@@ -51,6 +51,9 @@ class Different(Validator):
         self._ignore_empty = ignore_empty
         self._field1 = field1
         self._field2 = field2
+        # Cached once, never overwritten - see _bind_fields for why.
+        self._field1_name = field1.name
+        self._field2_name = field2.name
 
     def validate(self, val, data, value_context):
         self._bind_fields()
@@ -75,14 +78,25 @@ class Different(Validator):
         return True
 
     def _bind_fields(self):
-        self._field1 = self._reference.ref_.by_name(self._field1.name)
-        self._field2 = self._reference.ref_.by_name(self._field2.name)
+        # Re-resolve from the cached original names, not from whatever the
+        # previous call happened to leave in self._field1/self._field2. Struct
+        # objects like TriageSubmission's are process-lifetime singletons
+        # shared by every request, so these Validator instances are too -
+        # resolving from self._fieldN.name would mean a single request where
+        # by_name() returns None (e.g. a field not present in that request's
+        # context) permanently breaks this validator for every request after
+        # it, since None has no .name to re-resolve from on the next call.
+        self._field1 = self._reference.ref_.by_name(self._field1_name)
+        self._field2 = self._reference.ref_.by_name(self._field2_name)
 
 class RequiredIfNot(Validator):
     def __init__(self, conditionally_required_field, depends_on_field, reference=None):
         super(RequiredIfNot, self).__init__(reference)
         self._conditionally_required_field = conditionally_required_field
         self._depends_on_field = depends_on_field
+        # Cached once, never overwritten - see _bind_fields for why.
+        self._conditionally_required_field_name = conditionally_required_field.name
+        self._depends_on_field_name = depends_on_field.name
 
     def validate(self, val, data, value_context):
         self._bind_fields()
@@ -114,8 +128,10 @@ class RequiredIfNot(Validator):
         return True
 
     def _bind_fields(self):
-        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
-        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+        # See RequiredIf._bind_fields (same pattern) for why these resolve
+        # from cached names rather than self._conditionally_required_field.name.
+        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field_name)
+        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field_name)
 
     def _match_single(self, compare_to):
         if isinstance(compare_to, list):
@@ -135,6 +151,9 @@ class RequiredIf(Validator):
         self._conditionally_required_field = conditionally_required_field
         self._depends_on_field = depends_on_field
         self._depends_on_value = depends_on_value
+        # Cached once, never overwritten - see _bind_fields for why.
+        self._conditionally_required_field_name = conditionally_required_field.name
+        self._depends_on_field_name = depends_on_field.name
 
     def validate(self, val, data, value_context):
         self._bind_fields()
@@ -171,8 +190,15 @@ class RequiredIf(Validator):
         return True
 
     def _bind_fields(self):
-        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field.name)
-        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field.name)
+        # Struct objects (e.g. TriageSubmission.struct) are process-lifetime
+        # singletons shared by every request, so this Validator instance is
+        # too - resolving from self._fieldN.name instead of a separately
+        # cached name would mean a single request where by_name() returns
+        # None (e.g. a field not present in that request's context)
+        # permanently breaks this validator for every request after it,
+        # since None has no .name to re-resolve from on the next call.
+        self._conditionally_required_field = self._reference.ref_.by_name(self._conditionally_required_field_name)
+        self._depends_on_field = self._reference.ref_.by_name(self._depends_on_field_name)
 
     def _match_single(self, compare_to):
         if isinstance(compare_to, list):
