@@ -34,13 +34,14 @@ class GenericFormStructureCapability(StructureCapability):
     attributes: dict[str, str] = {}
     list_render_class = None
     render_class = None
+    alt_render = {}
     error_messages: dict[ErrorCode, Union[str, Callable]] = {}
     """Map from error codes to messages: either a plain string, or a function which can be called with the error code instance"""
 
     def __init__(self):
         super().__init__()
-        self._list_renderer = None
-        self._renderer = None
+        self._list_renderer = {}
+        self._renderer = {}
 
     def get_in_order(self, detach=False):
         return [x for x in self.ordered_iterator(detach=detach)]
@@ -69,26 +70,42 @@ class GenericFormStructureCapability(StructureCapability):
                         yield entry
             # if it doesn't match a form capability, we skip over it
 
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
+    def get_renderer(self, render_context=None):
+        cache_key = "_"
+        if render_context is not None:
+            cache_key = render_context
+        if self._renderer.get(cache_key) is not None:
+            return self._renderer[cache_key]
+
         rc = self.render_class
+        if render_context is not None:
+            rc = self.alt_render.get(render_context, {}).get("render_class")
+
         if rc is None:
             rc = DefaultRendererFactory.get(self)
         if rc is None:
             raise ValueError(f"Renderer not defined on {self.__class__}")
-        self._renderer = rc()
-        return self._renderer
 
-    def get_list_renderer(self):
-        if self._list_renderer is not None:
-            return self._list_renderer
+        rc = cast(Callable, rc)
+        self._renderer[cache_key] = rc()
+        return self._renderer[cache_key]
+
+    def get_list_renderer(self, render_context=None):
+        cache_key = "_"
+        if render_context is not None:
+            cache_key = render_context
+        if self._list_renderer.get(cache_key) is not None:
+            return self._list_renderer[cache_key]
+
         rc = self.list_render_class
+        if render_context is not None:
+            rc = self.alt_render.get(render_context, {}).get("list_render_class")
+
         if rc is None:
             from formulaic.serialise.form.render import DefaultElementListHTML
             rc = DefaultElementListHTML
-        self._list_renderer = rc()
-        return self._list_renderer
+        self._list_renderer[cache_key] = rc()
+        return self._list_renderer[cache_key]
 
     def error_message(self, error_code):
         msg = self.error_messages.get(error_code.__class__)
@@ -174,6 +191,9 @@ class FormFieldCapability(FieldCapability):
     render_class = None # DefaultFieldHTML
     """Class which will render this form field, including all its controls and labels"""
 
+    alt_render = {}
+    """Alternative renderers for this field, keyed by a string which can be passed to the getter"""
+
     control_render_class = None # DefaultControlHTML
     """Class which will render the control itsef"""
 
@@ -186,9 +206,9 @@ class FormFieldCapability(FieldCapability):
     def __init__(self, **kwargs):
         self._control_instance = None
         self._options_from_fn = None
-        self._renderer = None
-        self._control_renderer = None
-        self._list_renderer = None
+        self._renderer = {}
+        self._control_renderer = {}
+        self._list_renderer = {}
         super().__init__()
 
     def get_control(self):
@@ -211,37 +231,59 @@ class FormFieldCapability(FieldCapability):
             return self._options_from_fn
         return []
 
-    def get_renderer(self):
-        if self._renderer is not None:
-            return self._renderer
+    def get_renderer(self, render_context=None):
+        cache_key = "_"
+        if render_context is not None:
+            cache_key = render_context
+        if self._renderer.get(cache_key) is not None:
+            return self._renderer[cache_key]
+
         rc = self.render_class
+        if render_context is not None:
+            rc = self.alt_render.get(render_context, {}).get("render_class")
+
         if rc is None:
             rc = DefaultRendererFactory.get(self)
         if rc is None:
             raise ValueError(f"Renderer not defined on {self.__class__}")
-        rc = cast(Callable, rc)
-        self._renderer = rc()
-        return self._renderer
 
-    def get_control_renderer(self):
-        if self._control_renderer is not None:
-            return self._control_renderer
+        rc = cast(Callable, rc)
+        self._renderer[cache_key] = rc()
+        return self._renderer[cache_key]
+
+    def get_control_renderer(self, render_context=None):
+        cache_key = "_"
+        if render_context is not None:
+            cache_key = render_context
+        if self._control_renderer.get(cache_key) is not None:
+            return self._control_renderer[cache_key]
+
         rc = self.control_render_class
+        if render_context is not None:
+            rc = self.alt_render.get(render_context, {}).get("control_render_class")
+
         if rc is None:
             from formulaic.serialise.form.render import DefaultControlHTML
             rc = DefaultControlHTML
-        self._control_renderer = rc()
-        return self._control_renderer
+        self._control_renderer[cache_key] = rc()
+        return self._control_renderer[cache_key]
 
-    def get_list_renderer(self):
-        if self._list_renderer is not None:
-            return self._list_renderer
+    def get_list_renderer(self, render_context=None):
+        cache_key = "_"
+        if render_context is not None:
+            cache_key = render_context
+        if self._list_renderer.get(cache_key) is not None:
+            return self._list_renderer[cache_key]
+
         rc = self.list_render_class
+        if render_context is not None:
+            rc = self.alt_render.get(render_context, {}).get("list_render_class")
+
         if rc is None:
             from formulaic.serialise.form.render import DefaultElementListHTML
             rc = DefaultElementListHTML
-        self._list_renderer = rc()
-        return self._list_renderer
+        self._list_renderer[cache_key] = rc()
+        return self._list_renderer[cache_key]
 
     def error_message(self, error_code:ErrorCode):
         msg = self.error_messages.get(error_code.__class__)
@@ -259,12 +301,13 @@ AnyContainerCapability = Union[GenericFormStructureCapability, FormFieldCapabili
 TElementCapability = TypeVar("TElementCapability", bound=AnyContainerCapability)
 
 class ElementContainerRepresentation(Generic[TElementCapability]):
-    def __init__(self, capability: TElementCapability, prefix="", elements=None, parent=None, error_codes=None):
+    def __init__(self, capability: TElementCapability, prefix="", elements=None, parent=None, error_codes=None, render_context=None):
         self._capability = capability
         self._prefix = prefix
         self._elements = elements or []
         self._parent = parent
         self._error_codes = error_codes or []
+        self._render_context = render_context
 
     @property
     def capability(self):
@@ -321,7 +364,7 @@ class ElementContainerRepresentation(Generic[TElementCapability]):
 
     @property
     def renderer(self):
-        return self._capability.get_renderer()
+        return self._capability.get_renderer(render_context=self._render_context)
 
     @property
     def attributes(self):
@@ -352,7 +395,7 @@ class FormRepresentation(ElementContainerRepresentation[FormCapability]):
 class ListRepresentation(ElementContainerRepresentation[AnyContainerCapability]):
     @property
     def renderer(self):
-        return self._capability.get_list_renderer()
+        return self._capability.get_list_renderer(render_context=self._render_context)
 
     @property
     def repeatable_label(self):
@@ -368,12 +411,13 @@ class CompoundRepresentation(ElementContainerRepresentation[CompoundFieldCapabil
     pass
 
 class FieldRepresentation:
-    def __init__(self, capability:FormFieldCapability, prefix="", control=None, parent=None, error_codes=None):
+    def __init__(self, capability:FormFieldCapability, prefix="", control=None, parent=None, error_codes=None, render_context=None):
         self._capability = capability
         self._prefix = prefix
         self._control = control or []
         self._parent = parent
         self._error_codes = error_codes or []
+        self._render_context = render_context
 
     @property
     def parent(self):
@@ -410,7 +454,7 @@ class FieldRepresentation:
 
     @property
     def control_renderer(self):
-        return self._capability.get_control_renderer()
+        return self._capability.get_control_renderer(render_context=self._render_context)
 
     @property
     def required(self):
@@ -418,7 +462,7 @@ class FieldRepresentation:
 
     @property
     def renderer(self):
-        return self._capability.get_renderer()
+        return self._capability.get_renderer(render_context=self._render_context)
 
     @property
     def attributes(self):
@@ -480,6 +524,7 @@ class FormSerialiser(Serialiser):
     def data_to_representation(self, data:Union[dict, FormulaicObject, FormulaicMixin],
                                struct:Optional[Structure]=None,
                                errors:Optional[DataProcessingResult]=None,
+                               render_context=None,
                                **kwargs):
         mixin, fo, struct, data = unity.expand(data, struct)
         form_cap = struct.ref_.get_capability(FormCapability)
@@ -488,7 +533,7 @@ class FormSerialiser(Serialiser):
             errors = DataProcessingResult()
 
         form_errors = errors.error_codes_for(struct)
-        repr = FormRepresentation(form_cap, error_codes=form_errors)
+        repr = FormRepresentation(form_cap, error_codes=form_errors, render_context=render_context)
 
         if form_cap.use_form_in_name:
             repr.prefix = struct.name_ + form_cap.separator
@@ -510,7 +555,7 @@ class FormSerialiser(Serialiser):
                         # If you want a repeatable multi-input, you will need to nest the field in another repeatable container
                         new_prefix = prefix + element.name + form_cap.separator
                         error_codes = errors.error_codes_for(element)
-                        rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
+                        rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes, render_context=render_context)
                         representation.add_element(rrepr)
 
                         vals = engine.get_list(element, data)
@@ -518,7 +563,7 @@ class FormSerialiser(Serialiser):
                             for i, val in enumerate(vals):
                                 index_prefix = new_prefix + str(i)
                                 inl = control.inputs_and_labels(index_prefix, val)
-                                erepr = FieldRepresentation(cap, prefix=index_prefix, control=inl, error_codes=error_codes)
+                                erepr = FieldRepresentation(cap, prefix=index_prefix, control=inl, error_codes=error_codes, render_context=render_context)
                                 rrepr.add_element(erepr)
 
                             remaining = cap.repeatable_initial - len(vals)
@@ -526,21 +571,21 @@ class FormSerialiser(Serialiser):
                                 for i in range(len(vals), cap.repeatable_initial):
                                     index_prefix = new_prefix + str(i)
                                     inl = control.inputs_and_labels(index_prefix, None)
-                                    erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                                    erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, render_context=render_context)
                                     rrepr.add_element(erepr)
                         else:
                             target = cap.repeatable_initial
                             for i in range(target):
                                 index_prefix = new_prefix + str(i)
                                 inl = control.inputs_and_labels(index_prefix, None)
-                                erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl)
+                                erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, render_context=render_context)
                                 rrepr.add_element(erepr)
                     else:
                         new_prefix = prefix + element.name
                         val = engine.get_single(element, data) # this will still return a list if the value is a list
                         inl = control.inputs_and_labels(new_prefix, val)
                         error_codes = errors.error_codes_for(element)
-                        erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, error_codes=error_codes)
+                        erepr = FieldRepresentation(cap, prefix=new_prefix, control=inl, error_codes=error_codes, render_context=render_context)
                         representation.add_element(erepr)
                 else:
                     if element.ref_.has_capability(FieldsetCapability):
@@ -554,7 +599,7 @@ class FormSerialiser(Serialiser):
 
                         cap = element.ref_.get_capability(FieldsetCapability)
                         error_codes = errors.error_codes_for(element)
-                        erepr = FieldsetRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
+                        erepr = FieldsetRepresentation(cap, prefix=new_prefix, error_codes=error_codes, render_context=render_context)
                         representation.add_element(erepr)
 
                         next_ordered_elements = cap.get_in_order()
@@ -566,7 +611,7 @@ class FormSerialiser(Serialiser):
 
                         if element.ref_.repeatable:
                             error_codes = errors.error_codes_for(element)
-                            rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
+                            rrepr = ListRepresentation(cap, prefix=new_prefix, error_codes=error_codes, render_context=render_context)
                             representation.add_element(rrepr)
 
                             objs = engine.get_list(element, data)
@@ -574,7 +619,7 @@ class FormSerialiser(Serialiser):
                                 next_ordered_elements = cap.get_in_order(detach=True)
                                 for i, obj in enumerate(objs):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = CompoundRepresentation(cap, prefix=index_prefix, error_codes=error_codes)
+                                    erepr = CompoundRepresentation(cap, prefix=index_prefix, error_codes=error_codes, render_context=render_context)
                                     rrepr.add_element(erepr)
                                     recurse(index_prefix, obj, next_ordered_elements, erepr)
 
@@ -582,7 +627,7 @@ class FormSerialiser(Serialiser):
                                 if remaining > 0:
                                     for i in range(len(objs), cap.repeatable_initial):
                                         index_prefix = new_prefix + str(i) + form_cap.separator
-                                        erepr = CompoundRepresentation(cap, prefix=index_prefix)
+                                        erepr = CompoundRepresentation(cap, prefix=index_prefix, render_context=render_context)
                                         rrepr.add_element(erepr)
                                         recurse(index_prefix, {}, next_ordered_elements, erepr)
                             else:
@@ -591,12 +636,12 @@ class FormSerialiser(Serialiser):
                                 error_codes = errors.error_codes_for(element)
                                 for i in range(target):
                                     index_prefix = new_prefix + str(i) + form_cap.separator
-                                    erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
+                                    erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes, render_context=render_context)
                                     rrepr.add_element(erepr)
                                     recurse(index_prefix, data, next_ordered_elements, erepr)
                         else:
                             error_codes = errors.error_codes_for(element)
-                            erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes)
+                            erepr = CompoundRepresentation(cap, prefix=new_prefix, error_codes=error_codes, render_context=render_context)
                             representation.add_element(erepr)
                             next_ordered_elements = cap.get_in_order()
                             recurse(new_prefix, data, next_ordered_elements, erepr)
@@ -604,9 +649,9 @@ class FormSerialiser(Serialiser):
         recurse(repr.prefix, data, ordered_elements, repr)
         return repr
 
-    def representation_to_string(self, representation:FormRepresentation, **kwargs):
+    def representation_to_string(self, representation:FormRepresentation, render_context=None, **kwargs):
         form_cap = representation.capability
-        form_renderer = form_cap.get_renderer()
+        form_renderer = form_cap.get_renderer(render_context=render_context)
         html = form_renderer.draw(representation, **kwargs)
         return html
 
