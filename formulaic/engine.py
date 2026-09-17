@@ -5,6 +5,8 @@ from formulaic.core import Field, Structure, CoerceError, ValidationError, DataP
 from formulaic.error_codes import ValueNotInAllowedList, NoneNotAllowed, ListNotFound, \
     EmptyArrayNotPermitted, IsRequired, FieldNotInAllowedList
 from formulaic.lib import unity
+from formulaic.validate.validate import Required
+
 
 ################################################
 ## Data retrieval
@@ -449,7 +451,7 @@ def apply_structure(structure: Structure, data: dict, required_check=True, silen
         if not allow_other_fields and not silent_prune:
             for k in keyset:
                 if k not in known:
-                    dpr.add_error(ValidationError(structure, None, FieldNotInAllowedList(), subfield=k))
+                    dpr.add_error(ValidationError(structure, None, FieldNotInAllowedList(None), subfield=k))
 
         # prepare to construct the new object
         constructed = {}
