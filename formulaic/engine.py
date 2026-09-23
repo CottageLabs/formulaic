@@ -244,7 +244,7 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
     validation_result = DataProcessingResult()
 
     for v in value:
-        if value is None and reference.ignore_none:
+        if value is None and isinstance(reference, Field) and reference.ignore_none:
             continue
 
         try:
@@ -266,11 +266,11 @@ def set_list(reference: Union[Field, Structure, StructRef], value, data: dict, r
     # check that the cleaned array isn't empty
     if len(coerced) == 0 and not force_accept_empty:
         # this is equivalent to a None, so we need to decide what to do
-        if reference.ignore_none:
+        if isinstance(reference, Field) and reference.ignore_none:
             # if we are ignoring nones, just do nothing
             return None
-        elif not reference.allow_none:
-            e = ValidationError(reference, None, EmptyArrayNotPermitted())
+        elif isinstance(reference, Field) and not reference.allow_none:
+            e = ValidationError(reference, None, EmptyArrayNotPermitted(None))
             raise DataProcessingResult(errors=[e])
 
     return _set_path(reference, coerced, data)

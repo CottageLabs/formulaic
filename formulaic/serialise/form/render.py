@@ -165,7 +165,7 @@ class DefaultCompoundHTML(CompoundHTML):
         ]
 
         for element in compound.elements:
-            render = element.get_renderer()
+            render = element.renderer
             element_frags.append(render.draw(element))
 
         elements_frag = "\n" + "\n".join(element_frags) + "\n"
